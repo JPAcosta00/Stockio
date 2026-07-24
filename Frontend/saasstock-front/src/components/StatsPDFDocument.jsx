@@ -1,7 +1,6 @@
 // src/components/StatsPDFDocument.jsx
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
-import axios from "axios";
 
 const styles = StyleSheet.create({
   page: { padding: 30, backgroundColor: '#f8fafc', fontFamily: 'Helvetica' },
@@ -25,7 +24,7 @@ export const StatsPDFDocument = ({ data }) => (
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
         <Text style={styles.title}>SaaSStock — Reporte de Estadísticas</Text>
-        <Text style={styles.subtitle}>Generado automáticamente vía QR</Text>
+        <Text style={styles.subtitle}>Generado en tiempo real desde la aplicación</Text>
       </View>
 
       <View style={styles.kpiContainer}>
