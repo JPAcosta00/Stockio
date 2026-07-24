@@ -1,9 +1,11 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function MobileStatsQR() {
-  // Ahora apunta específicamente a la vista que gatilla el PDF
-  const statsUrl = `${window.location.origin}/stats/download`;
+export default function MobileStatsQR({ tenantId }) {
+  // Le agregamos un parámetro a la URL con el ID de tu negocio o usuario
+  // Ejemplo: https://tu-app.vercel.app/stats/download?tenant=123
+  const baseUrl = `${window.location.origin}/stats/download`;
+  const statsUrl = tenantId ? `${baseUrl}?tenant=${tenantId}` : baseUrl;
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-xl flex flex-col items-center text-center shadow-lg">
@@ -13,7 +15,7 @@ export default function MobileStatsQR() {
         </h4>
       </div>
 
-      {/* Fondo blanco para garantizar legibilidad */}
+      {/* QR Code */}
       <div className="bg-white p-3 rounded-lg shadow-inner mb-3 border border-zinc-200">
         <QRCodeSVG 
           value={statsUrl} 
