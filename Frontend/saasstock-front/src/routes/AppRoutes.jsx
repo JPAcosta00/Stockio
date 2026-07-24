@@ -6,7 +6,6 @@ import Inventario from '../pages/Inventario';
 import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
 import Settings from '../pages/Settings'; 
-import StatsDownloadPage from "../pages/StatsDownloadPage";
 
 
 const PrivateRoute = ({ children }) => {
@@ -62,8 +61,6 @@ export default function AppRoutes() {
       
       {/* CONFIGURACIÓN (temporal) */}
       <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
-
-      <Route path="/stats/download" element={<StatsDownloadPage />} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

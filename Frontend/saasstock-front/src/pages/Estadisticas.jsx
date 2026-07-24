@@ -165,7 +165,7 @@ export default function Estadisticas() {
               <div className="space-y-4">
                 {/* Columna Derecha: Widget con el Código QR */}
                     <div className="lg:col-span-1">
-                      <MobileStatsQR tenantId={tenantId} data={statsData} />
+                      aca va un QR 
                     </div>
               </div>
             </div>
