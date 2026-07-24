@@ -6,7 +6,7 @@ import Inventario from '../pages/Inventario';
 import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
 import Settings from '../pages/Settings'; 
-import { StatsDownloadPage } from "../pages/StatsDownloadPage";
+import StatsDownloadPage from "../pages/StatsDownloadPage";
 
 
 const PrivateRoute = ({ children }) => {
