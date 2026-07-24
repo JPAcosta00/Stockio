@@ -1,65 +1,67 @@
 // src/pages/StatsDownloadPage.jsx
-import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
 import { StatsPDFDocument } from '../components/StatsPDFDocument';
 
-export const StatsDownloadPage = () => {
+const StatsDownloadPage = () => {
   const location = useLocation();
+  const [status, setStatus] = useState('Generando PDF...');
 
-  // Tomamos la información directamente del estado de la ruta enviada desde la vista anterior
-  const statsData = location.state?.statsData;
+  useEffect(() => {
+    const handleAutoDownload = async () => {
+      try {
+        // 1. Intentar obtener datos desde los query params de la URL (?data=...)
+        const searchParams = new URLSearchParams(location.search);
+        const rawData = searchParams.get('data');
+        
+        let statsData = null;
 
-  // Si no hay datos en memoria (ej. el usuario entró pegando la URL directamente)
-  if (!statsData) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem', fontFamily: 'sans-serif' }}>
-        <h3 style={{ color: '#0f172a', marginBottom: '0.5rem' }}>No hay datos disponibles para exportar</h3>
-        <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
-          Para generar un reporte, navega desde el panel principal de estadísticas.
-        </p>
-        <Link 
-          to="/stats" 
-          style={{ 
-            color: '#2563eb', 
-            textDecoration: 'none', 
-            fontWeight: 'bold',
-            border: '1px solid #2563eb',
-            padding: '8px 16px',
-            borderRadius: '6px'
-          }}
-        >
-          Volver a Estadísticas
-        </Link>
-      </div>
-    );
-  }
+        if (rawData) {
+          statsData = JSON.parse(decodeURIComponent(rawData));
+        } else {
+          // Fallback por si viniera por el estado de React Router
+          statsData = location.state?.statsData;
+        }
+
+        if (!statsData) {
+          setStatus('No se encontraron datos para generar el reporte.');
+          return;
+        }
+
+        // 2. Generar el blob del PDF en memoria en el celular
+        const blob = await pdf(<StatsPDFDocument data={statsData} />).toBlob();
+
+        // 3. Crear un enlace invisible y simular clic para iniciar la descarga automáticamente
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reporte_saasstock_${new Date().toISOString().slice(0, 10)}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpieza de memoria
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setStatus('¡Descarga completada!');
+      } catch (error) {
+        console.error('Error al generar el PDF:', error);
+        setStatus('Ocurrió un error al generar el archivo.');
+      }
+    };
+
+    handleAutoDownload();
+  }, [location]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem', fontFamily: 'sans-serif' }}>
-      <h2 style={{ color: '#0f172a', marginBottom: '0.5rem' }}>Reporte Listo para Descargar</h2>
-      <p style={{ color: '#64748b', marginBottom: '2rem', textAlign: 'center', maxWidth: '400px' }}>
-        El documento PDF ha sido construido en tiempo real con la información actual de tu pantalla.
-      </p>
-
-      <PDFDownloadLink
-        document={<StatsPDFDocument data={statsData} />}
-        fileName={`reporte_saasstock_${new Date().toISOString().slice(0, 10)}.pdf`}
-        style={{
-          textDecoration: 'none',
-          padding: '12px 24px',
-          color: '#ffffff',
-          backgroundColor: '#2563eb',
-          borderRadius: '6px',
-          fontWeight: 'bold',
-          boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
-          transition: 'background-color 0.2s'
-        }}
-      >
-        {({ loading }) =>
-          loading ? 'Procesando PDF en el navegador...' : 'Descargar Reporte PDF'
-        }
-      </PDFDownloadLink>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f8fafc' }}>
+      <div style={{ padding: '2rem', textAlign: 'center', borderRadius: '12px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+        <h2 style={{ color: '#0f172a', marginBottom: '0.5rem', fontSize: '1.25rem' }}>SaaSStock</h2>
+        <p style={{ color: '#2563eb', fontWeight: 'bold', fontSize: '1rem' }}>{status}</p>
+      </div>
     </div>
   );
 };
+
+export default StatsDownloadPage;
