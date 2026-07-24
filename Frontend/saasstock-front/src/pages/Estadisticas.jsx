@@ -160,7 +160,7 @@ export default function Estadisticas() {
               </div>
             </div>
 
-            {/* Tarjeta de Resumen Dinámico */}
+            {/* Codigo QR */}
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col justify-between">
               <div className="space-y-4">
                 {/* Columna Derecha: Widget con el Código QR */}
