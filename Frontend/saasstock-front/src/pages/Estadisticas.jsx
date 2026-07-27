@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import apiClient from '../api/apiClient'
-import MobileStatsQR from '../components/MobileStatsQR';
+import { QRCodeSVG } from 'qrcode.react';
 import { Search, Calendar, Loader2, DollarSign, ShoppingBag, Package, AlertTriangle } from 'lucide-react';
 
 export default function Estadisticas() {
@@ -164,11 +164,30 @@ export default function Estadisticas() {
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col justify-between">
               <div className="space-y-4">
                 {/* Columna Derecha: Widget con el Código QR */}
-                    <div className="lg:col-span-1">
-                      aca va un QR 
-                    </div>
+                  <div className="lg:col-span-1 flex flex-col items-center text-center space-y-3">
+                    <h3 className="text-white font-semibold text-lg">Descargar Reporte</h3>
+                    <p className="text-zinc-400 text-xs max-w-[200px]">
+                       Escanea con la cámara de tu celular para descargar las estadísticas en PDF.
+                    </p>
+
+                {/* Contenedor del QR */}
+                  <div className="p-3 bg-white rounded-lg shadow-md border border-zinc-700">
+                    <QRCodeSVG 
+                      value={`${import.meta.env.VITE_API_URL || 'http://localhost:7046'}/api/Stats/download-pdf?tenantId=${tenantId}${searchTerm ? `&name=${searchTerm}` : ''}${selectedPeriod ? `&period=${selectedPeriod}` : ''}`}
+                      size={160}
+                      bgColor="#FFFFFF"
+                      fgColor="#000000"
+                      level="M"
+                   />
+                  </div>
+
+                <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-medium pt-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                   Listo para escanear
+               </span>
               </div>
             </div>
+         </div>
 
           </div>
         </>
