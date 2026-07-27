@@ -21,6 +21,8 @@ export default function Estadisticas() {
         setError(null);
         
         const token = sessionStorage.getItem('token'); //recupera el JWT
+        // Obtener tenantId directamente de localStorage o decodificando el token
+        const tenantId = sessionStorage.getItem('tenantId');
 
         // Arma los parámetros de consulta que mapean al controlador
         const response = await apiClient.get('/stats/dashboard', {
