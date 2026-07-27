@@ -5,7 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import Inventario from '../pages/Inventario';
 import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
-import Settings from '../pages/Settings'; 
+import Settings from '../pages/Perfil'; 
 
 
 const PrivateRoute = ({ children }) => {
@@ -60,7 +60,7 @@ export default function AppRoutes() {
       <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
       
       {/* CONFIGURACIÓN (temporal) */}
-      <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
+      <Route path="/Perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

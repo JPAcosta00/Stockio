@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext'; // Asumo que tenés el contexto para sacar los datos del usuario actual
+import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
+import { User, Shield, LogOut } from 'lucide-react'; // Íconos opcionales para mejorar la UI
 import '../estilos/Settings.css';
 
-export default function Settings() {
-  const { user } = useAuth(); // O de donde obtengas el usuario logueado actualmente
+export default function Perfil() {
+  const { user, logout } = useAuth(); // Extraemos logout de AuthContext
   
   // Pestaña activa
   const [activeTab, setActiveTab] = useState('profile');
@@ -40,7 +41,6 @@ export default function Settings() {
     e.preventDefault();
     setLoading(true);
     try {
-      // Ajustá el endpoint según tu backend en .NET
       await apiClient.put('/user/update-profile', { name, email });
       showFeedback('Perfil actualizado correctamente.', 'success');
     } catch (err) {
@@ -58,10 +58,8 @@ export default function Settings() {
       return;
     }
 
-    setLoading(false);
     setLoading(true);
     try {
-      // Ajustá el endpoint según tu backend en .NET
       await apiClient.put('/user/change-password', { currentPassword, newPassword });
       showFeedback('Contraseña modificada con éxito.', 'success');
       setCurrentPassword('');
@@ -80,8 +78,8 @@ export default function Settings() {
         
         {/* Encabezado */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Configuración</h1>
-          <p className="text-sm text-zinc-400 mt-1">Administrá la información de tu cuenta y preferencias de seguridad.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Mi Perfil</h1>
+          <p className="text-sm text-zinc-400 mt-1">Administrá la información de tu cuenta, preferencias de seguridad y sesión.</p>
         </div>
 
         {/* Notificaciones flotantes/superiores */}
@@ -98,72 +96,106 @@ export default function Settings() {
         <div className="flex flex-col md:flex-row gap-8">
           
           {/* Menú de pestañas lateral */}
-          <div className="w-full md:w-64 flex flex-row md:flex-col gap-2 border-b md:border-b-0 md:border-r border-zinc-800 pb-4 md:pb-0 md:pr-4">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={`flex-1 md:flex-none text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'profile' 
-                  ? 'bg-zinc-800 text-white shadow' 
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
-              }`}
-            >
-              Mi Perfil
-            </button>
-            <button
-              onClick={() => setActiveTab('security')}
-              className={`flex-1 md:flex-none text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'security' 
-                  ? 'bg-zinc-800 text-white shadow' 
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
-              }`}
-            >
-              Seguridad
-            </button>
+          <div className="w-full md:w-64 flex flex-col justify-between border-b md:border-b-0 md:border-r border-zinc-800 pb-4 md:pb-0 md:pr-4">
+            <div className="flex flex-row md:flex-col gap-2">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex-1 md:flex-none flex items-center gap-2.5 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === 'profile' 
+                    ? 'bg-zinc-800 text-white shadow' 
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>Perfil</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`flex-1 md:flex-none flex items-center gap-2.5 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  activeTab === 'security' 
+                    ? 'bg-zinc-800 text-white shadow' 
+                    : 'text-zinc-400 hover:text-white hover:bg-zinc-900/50'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                <span>Seguridad</span>
+              </button>
+            </div>
+
+            {/* OPCIÓN 1: Botón de Cerrar Sesión en el menú lateral */}
+            <div className="pt-4 mt-4 border-t border-zinc-800/80 hidden md:block">
+              <button
+                onClick={logout}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Cerrar Sesión</span>
+              </button>
+            </div>
           </div>
 
           {/* Área del Formulario */}
           <div className="flex-1 settings-card bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6 backdrop-blur-md">
             
+            {/* Pestaña: PERFIL */}
             {activeTab === 'profile' && (
-              <form onSubmit={handleUpdateProfile} className="space-y-6">
-                <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Información Personal</h3>
-                
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nombre Completo</label>
-                    <input
-                      type="text"
-                      required
-                      className="w-full bg-zinc-950/60 border border-zinc-800 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-zinc-500 transition-colors"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                    />
+              <div className="space-y-8">
+                <form onSubmit={handleUpdateProfile} className="space-y-6">
+                  <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Información Personal</h3>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-400 mb-1.5">Nombre Completo</label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full bg-zinc-950/60 border border-zinc-800 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-zinc-500 transition-colors"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-400 mb-1.5">Correo Electrónico</label>
+                      <input
+                        type="email"
+                        required
+                        className="w-full bg-zinc-950/60 border border-zinc-800 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-zinc-500 transition-colors"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-zinc-400 mb-1.5">Correo Electrónico</label>
-                    <input
-                      type="email"
-                      required
-                      className="w-full bg-zinc-950/60 border border-zinc-800 text-white rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-zinc-500 transition-colors"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="bg-white text-zinc-950 font-semibold text-sm rounded-lg px-5 py-2 hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                    >
+                      {loading ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
                   </div>
-                </div>
+                </form>
 
-                <div className="flex justify-end pt-2">
+                {/* OPCIÓN 2: Bloque de Gestión de Sesión dentro de la vista de Perfil */}
+                <div className="pt-6 border-t border-zinc-800">
+                  <h4 className="text-sm font-medium text-zinc-300 mb-1">Sesión de Cuenta</h4>
+                  <p className="text-xs text-zinc-500 mb-4">Si terminaste de trabajar, podés finalizar tu sesión de forma segura.</p>
+                  
                   <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-white text-zinc-950 font-semibold text-sm rounded-lg px-5 py-2 hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                    onClick={logout}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
                   >
-                    {loading ? 'Guardando...' : 'Guardar Cambios'}
+                    <LogOut className="w-4 h-4" />
+                    <span>Cerrar Sesión</span>
                   </button>
                 </div>
-              </form>
+              </div>
             )}
 
+            {/* Pestaña: SEGURIDAD */}
             {activeTab === 'security' && (
               <form onSubmit={handleChangePassword} className="space-y-6">
                 <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Actualizar Contraseña</h3>

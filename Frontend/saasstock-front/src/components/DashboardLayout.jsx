@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }) {
     { name: 'Inicio', href: '/' },                  //la parte de estadisticas esta en el inicio
     { name: 'Inventario', href: '/inventario' },
     { name: 'Ventas', href: '/ventas' },
-    { name: 'Configuración', href: '/settings' },
+    { name: 'Mi perfil', href: '/Perfil' },
   ];
 
   return (
@@ -58,12 +58,6 @@ export default function DashboardLayout({ children }) {
             <p className="text-xs font-medium text-zinc-400 truncate">{user?.email}</p>   
             {/* se puede agregar el rol del usuario y demas detalles*/}
           </div>
-          <button
-            onClick={logout}
-            className="w-full text-left px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-          >
-            Cerrar Sesión
-          </button>
         </div>
       </aside>
 
