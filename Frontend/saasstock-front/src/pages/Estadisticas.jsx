@@ -156,9 +156,6 @@ export default function Estadisticas() {
               <div className="space-y-4">
                 <div className="lg:col-span-1 flex flex-col items-center text-center space-y-3">
                   <h3 className="text-white font-semibold text-lg">Descargar Reporte</h3>
-                  <p className="text-zinc-400 text-xs max-w-[200px]">
-                    Escanea con la cámara de tu celular para descargar las estadísticas en PDF.
-                  </p>
 
                   <div className="p-3 bg-white rounded-lg shadow-md border border-zinc-700 flex items-center justify-center min-h-[160px] min-w-[160px]">
                     {qrDownloadUrl ? (
