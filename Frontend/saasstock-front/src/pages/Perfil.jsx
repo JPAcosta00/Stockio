@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import { User, Shield, LogOut } from 'lucide-react'; // Íconos opcionales para mejorar la UI
-import '../estilos/Settings.css';
 
 export default function Perfil() {
   const { user, logout } = useAuth(); // Extraemos logout de AuthContext

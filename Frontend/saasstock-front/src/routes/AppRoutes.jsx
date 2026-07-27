@@ -60,7 +60,7 @@ export default function AppRoutes() {
       <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
       
       {/* CONFIGURACIÓN (temporal) */}
-      <Route path="/Perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+      <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
 
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
