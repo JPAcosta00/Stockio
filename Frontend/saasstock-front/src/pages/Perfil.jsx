@@ -177,20 +177,6 @@ export default function Perfil() {
                     </button>
                   </div>
                 </form>
-
-                {/* OPCIÓN 2: Bloque de Gestión de Sesión dentro de la vista de Perfil */}
-                <div className="pt-6 border-t border-zinc-800">
-                  <h4 className="text-sm font-medium text-zinc-300 mb-1">Sesión de Cuenta</h4>
-                  <p className="text-xs text-zinc-500 mb-4">Si terminaste de trabajar, podés finalizar tu sesión de forma segura.</p>
-                  
-                  <button
-                    onClick={logout}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors border border-red-500/20"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Cerrar Sesión</span>
-                  </button>
-                </div>
               </div>
             )}
 
