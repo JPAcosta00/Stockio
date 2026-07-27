@@ -1,48 +1,49 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import apiClient from '../api/apiClient';
 import { QRCodeSVG } from 'qrcode.react';
 import { Search, Calendar, Loader2, DollarSign, ShoppingBag, Package, AlertTriangle } from 'lucide-react';
 
 export default function Estadisticas() {
-  // Estados para los filtros exactos del backend
   const [name, setName] = useState('');
-  const [period, setPeriod] = useState(''); // "" (Todos), "hoy", "semana", "mes", "anio"
-  
-  const tenantId = sessionStorage.getItem('tenantId');
+  const [period, setPeriod] = useState('');
+
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Efecto para escuchar los cambios de filtro
+  // Recuperamos el Token de la sesión actual de la PC
+  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        const token = sessionStorage.getItem('token'); // recupera el JWT
 
-        // Arma los parámetros de consulta que mapean al controlador
         const response = await apiClient.get('/stats/dashboard', {
           params: {
-            name: name || undefined,   // Si está vacío, no lo envía
-            period: period || undefined // switch de períodos ("hoy", "semana", etc.)
+            name: name || undefined,
+            period: period || undefined
           }
         });
         
         setData(response.data);
       } catch (err) {
-        console.error("Error al obtener estadísticas filtradas:", err);
+        console.error("Error al obtener estadísticas:", err);
         setError("No se pudieron cargar las estadísticas. Intentalo de nuevo.");
       } finally {
         setLoading(false);
       }
-    }, 400); // Espera 400ms antes de disparar la petición al escribir
+    }, 400);
 
-    // Limpieza del timeout si el usuario sigue escribiendo
     return () => clearTimeout(delayDebounceFn);
   }, [name, period]);
+
+  // Construcción de la URL que leerá la cámara del celular
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:7046';
+  const qrDownloadUrl = token 
+    ? `${baseUrl}/api/Stats/download-pdf?token=${encodeURIComponent(token)}${name ? `&name=${encodeURIComponent(name)}` : ''}${period ? `&period=${encodeURIComponent(period)}` : ''}`
+    : '';
 
   return (
     <div className="p-6 bg-zinc-950 min-h-screen space-y-6 text-zinc-100">
@@ -51,13 +52,10 @@ export default function Estadisticas() {
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Rendimiento del Inventario</h1>
-          <p className="text-sm text-zinc-400 mt-1"></p>
         </div>
 
-        {/* CONTROLES DE FILTRO */}
+        {/* Filtros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-          
-          {/* Input de Búsqueda */}
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4.5 w-4.5 text-zinc-500" />
             <input
@@ -69,7 +67,6 @@ export default function Estadisticas() {
             />
           </div>
 
-          {/* Selector de Período */}
           <div className="relative">
             <Calendar className="absolute left-3 top-2.5 h-4.5 w-4.5 text-zinc-500 pointer-events-none" />
             <select
@@ -84,11 +81,9 @@ export default function Estadisticas() {
               <option value="anio">Actualizados este Año</option>
             </select>
           </div>
-
         </div>
       </div>
 
-      {/* Manejo de estados de carga y error */}
       {loading ? (
         <div className="flex h-64 items-center justify-center text-zinc-500 gap-3">
           <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
@@ -100,23 +95,20 @@ export default function Estadisticas() {
         </div>
       ) : data ? (
         <>
-          {/* --- KPI CARDS DINÁMICOS CON TUS DATOS REALES --- */}
+          {/* Métricas KPI */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
             <KpiCard 
               title="Ventas del Grupo" 
               value={`$${data.metrics.totalRevenue.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`} 
               icon={<DollarSign className="w-5 h-5 text-emerald-400" />}
               colorClass="bg-emerald-950/30 border-emerald-900/50"
             />
-
             <KpiCard 
               title="Unidades Vendidas" 
               value={data.metrics.totalSalesCount} 
               icon={<ShoppingBag className="w-5 h-5 text-blue-400" />}
               colorClass="bg-blue-950/30 border-blue-900/50"
             />
-
             <KpiCard 
               title="Variedad de Productos" 
               value={data.metrics.activeProductsCount} 
@@ -124,7 +116,6 @@ export default function Estadisticas() {
               colorClass="bg-indigo-950/30 border-indigo-900/50"
               subtitle="Coincidentes con tu filtro"
             />
-
             <KpiCard 
               title="Stock Crítico en Filtro" 
               value={data.metrics.lowStockAlertsCount} 
@@ -132,12 +123,11 @@ export default function Estadisticas() {
               colorClass="bg-amber-950/30 border-amber-900/50"
               subtitle="Por debajo del mínimo"
             />
-
           </div>
 
-          {/* --- TABLA DE TOP PRODUCTOS DEL FILTRO --- */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
+            {/* Tabla Productos */}
             <div className="lg:col-span-2 bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-zinc-100 text-base mb-4">Productos más vendidos bajo este filtro</h3>
@@ -161,28 +151,26 @@ export default function Estadisticas() {
               </div>
             </div>
 
-            {/* Codigo QR */}
+            {/* Widget QR para Celular */}
             <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col justify-between">
               <div className="space-y-4">
-                {/* Columna Derecha: Widget con el Código QR */}
                 <div className="lg:col-span-1 flex flex-col items-center text-center space-y-3">
                   <h3 className="text-white font-semibold text-lg">Descargar Reporte</h3>
                   <p className="text-zinc-400 text-xs max-w-[200px]">
                     Escanea con la cámara de tu celular para descargar las estadísticas en PDF.
                   </p>
 
-                  {/* Contenedor del QR */}
                   <div className="p-3 bg-white rounded-lg shadow-md border border-zinc-700 flex items-center justify-center min-h-[160px] min-w-[160px]">
-                    {tenantId ? (
+                    {qrDownloadUrl ? (
                       <QRCodeSVG 
-                        value={`${import.meta.env.VITE_API_URL || 'http://localhost:7046'}/api/Stats/download-pdf?tenantId=${tenantId}${name ? `&name=${encodeURIComponent(name)}` : ''}${period ? `&period=${encodeURIComponent(period)}` : ''}`}
+                        value={qrDownloadUrl}
                         size={160}
                         bgColor="#FFFFFF"
                         fgColor="#000000"
                         level="M"
                       />
                     ) : (
-                      <span className="text-xs text-zinc-500">Sin Identificador Tenant</span>
+                      <span className="text-xs text-zinc-500">Sesión no válida</span>
                     )}
                   </div>
 
@@ -201,7 +189,6 @@ export default function Estadisticas() {
   );
 }
 
-// Subcomponente para los KPIs
 function KpiCard({ title, value, icon, colorClass, subtitle }) {
   return (
     <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-sm flex justify-between items-start">
