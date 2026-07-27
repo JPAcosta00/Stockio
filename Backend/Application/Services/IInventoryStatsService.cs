@@ -16,37 +16,28 @@ public class InventoryStatsService : IInventoryStatsService
     {
         _productService = productService;
         _saleRepository = saleRepository;
-        // Configuramos la licencia gratuita de QuestPDF
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public async Task<DashboardDataDto> GetStatsByInventoryFiltersAsync(Guid tenantId, ProductReportFilterDto filter){
-        // reuso el filtro que existe en el servicio de producto
+    public async Task<DashboardDataDto> GetStatsByInventoryFiltersAsync(Guid tenantId, ProductReportFilterDto filter)
+    {
         var filteredProducts = await _productService.GetFilteredProductsAsync(filter, tenantId);
         var filteredProductsList = filteredProducts.ToList();
 
-        // se trae las ventas del ultimo mes
         var startDate = DateTime.UtcNow.AddDays(-30);
         var sales = await _saleRepository.GetSalesWithDetailsAsync(tenantId, startDate);
 
-        // hashSet con los productos filtrados
         var filteredProductIds = filteredProductsList.Select(p => p.Id).ToHashSet();
 
-        // Se filtran los SaleDetail de los productos filtrados antes
         var filteredDetails = sales
             .SelectMany(s => s.Details)
             .Where(d => filteredProductIds.Contains(d.ProductId))
             .ToList();
 
-        
-        //calculo de estadisticas (unidades vendidas y demas )
         decimal totalRevenue = filteredDetails.Sum(d => d.Quantity * d.UnitPrice);
         int unitsSold = filteredDetails.Sum(d => d.Quantity);
-        
-        // Alertas de stock critico 
         int lowStockCount = filteredProductsList.Count(p => p.Stock <= p.MinimumStock);
 
-        // Se agrupan los productos mas vendidos con el filtro que esta activo
         var topProducts = filteredDetails
             .GroupBy(d => d.Product?.Name ?? "Producto Sin Nombre")
             .Select(g => new TopProductDto
@@ -65,7 +56,7 @@ public class InventoryStatsService : IInventoryStatsService
             {
                 TotalRevenue = totalRevenue,
                 TotalSalesCount = unitsSold,
-                ActiveProductsCount = filteredProductsList.Count, // Cantidad de ítems en la grilla actual
+                ActiveProductsCount = filteredProductsList.Count,
                 LowStockAlertsCount = lowStockCount
             },
             TopProducts = topProducts
@@ -74,95 +65,132 @@ public class InventoryStatsService : IInventoryStatsService
 
     public async Task<byte[]> GenerateStatsPdfAsync(Guid tenantId, ProductReportFilterDto filter)
     {
-        // Reutilizamos el cálculo de métricas de tu método
         var stats = await GetStatsByInventoryFiltersAsync(tenantId, filter);
 
-        // Generamos el documento en memoria
-        var pdfBytes = Document.Create(container =>
+        var primaryColor = "#0F172A"; // Slate 900
+        var bgLight = "#F8FAFC";      // Slate 50
+        var borderLight = "#E2E8F0";  // Slate 200
+        var textMuted = "#64748B";    // Slate 500
+
+        return Document.Create(container =>
         {
             container.Page(page =>
             {
                 page.Margin(30);
                 page.Size(PageSizes.A4);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(11));
+                page.DefaultTextStyle(x => x.FontSize(10).FontColor(primaryColor));
 
-                // Encabezado
-                page.Header().Row(row =>
+                // Encabezado + Caja de Filtro
+                page.Header().Column(col =>
                 {
-                    row.RelativeItem().Column(col =>
+                    col.Item().Row(row =>
                     {
-                        col.Item().Text("Reporte de Estadísticas de Inventario")
-                           .FontSize(18).Bold().FontColor(Colors.Blue.Darken2);
-                        col.Item().Text($"Generado el: {DateTime.Now:dd/MM/yyyy HH:mm}")
-                           .FontSize(9).FontColor(Colors.Grey.Medium);
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("Reporte de Estadísticas de Inventario").FontSize(18).Bold().FontColor(primaryColor);
+                            c.Item().Text($"Generado el: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(textMuted);
+                        });
                     });
+
+                    col.Item().PaddingTop(8).Background(bgLight).Border(1).BorderColor(borderLight).Padding(6).Row(row =>
+                    {
+                        row.RelativeItem().Text($"Filtro: {(string.IsNullOrWhiteSpace(filter.Name) ? "Todos" : filter.Name)}").FontSize(8).Bold();
+                        row.RelativeItem().AlignRight().Text($"Período: {(string.IsNullOrWhiteSpace(filter.Period) ? "Últimos 30 días" : filter.Period)}").FontSize(8).Bold();
+                    });
+
+                    col.Item().PaddingTop(8).LineHorizontal(1).LineColor(borderLight);
                 });
 
                 // Contenido
-                page.Content().PaddingVertical(15).Column(col =>
+                page.Content().PaddingVertical(10).Column(col =>
                 {
                     col.Spacing(15);
 
-                    // Métrica Resumen
-                    col.Item().Text("Resumen General").FontSize(14).Bold();
-
-                    col.Item().Table(table =>
+                    // KPIs estructurados con Row / Column (remplaza Grid deprecado)
+                    col.Item().Text("Resumen General").FontSize(12).Bold();
+                    col.Item().Column(kpiCol =>
                     {
-                        table.ColumnsDefinition(columns =>
+                        kpiCol.Spacing(8);
+
+                        // Fila 1 de tarjetas
+                        kpiCol.Item().Row(row =>
                         {
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
+                            row.Spacing(8);
+
+                            row.RelativeItem().Border(1).BorderColor(borderLight).Background(bgLight).Padding(8).Column(c =>
+                            {
+                                c.Item().Text("INGRESOS TOTALES (30D)").FontSize(8).Bold().FontColor(textMuted);
+                                c.Item().Text($"$ {stats.Metrics.TotalRevenue:N2}").FontSize(14).Bold().FontColor("#059669");
+                            });
+
+                            row.RelativeItem().Border(1).BorderColor(borderLight).Background(bgLight).Padding(8).Column(c =>
+                            {
+                                c.Item().Text("UNIDADES VENDIDAS").FontSize(8).Bold().FontColor(textMuted);
+                                c.Item().Text($"{stats.Metrics.TotalSalesCount:N0} u.").FontSize(14).Bold().FontColor("#0284C7");
+                            });
                         });
 
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("Ingresos Totales (30d)").Bold();
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text($"$ {stats.Metrics.TotalRevenue:N2}");
+                        // Fila 2 de tarjetas
+                        kpiCol.Item().Row(row =>
+                        {
+                            row.Spacing(8);
 
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("Unidades Vendidas").Bold();
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text($"{stats.Metrics.TotalSalesCount}");
+                            row.RelativeItem().Border(1).BorderColor(borderLight).Background(bgLight).Padding(8).Column(c =>
+                            {
+                                c.Item().Text("PRODUCTOS FILTRADOS").FontSize(8).Bold().FontColor(textMuted);
+                                c.Item().Text($"{stats.Metrics.ActiveProductsCount:N0} ítems").FontSize(14).Bold();
+                            });
 
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("Productos Filtrados").Bold();
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text($"{stats.Metrics.ActiveProductsCount}");
-
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text("Alertas de Stock Bajo").Bold();
-                        table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(6).Text($"{stats.Metrics.LowStockAlertsCount}");
+                            row.RelativeItem().Border(1).BorderColor(borderLight).Background(bgLight).Padding(8).Column(c =>
+                            {
+                                c.Item().Text("ALERTAS DE STOCK BAJO").FontSize(8).Bold().FontColor(textMuted);
+                                c.Item().Text($"{stats.Metrics.LowStockAlertsCount:N0} alertas").FontSize(14).Bold().FontColor("#D97706");
+                            });
+                        });
                     });
 
-                    // Productos más vendidos
-                    col.Item().Text("Productos Más Vendidos").FontSize(14).Bold();
-
+                    // Tabla de Productos Más Vendidos
+                    col.Item().Text("Productos Más Vendidos").FontSize(12).Bold();
                     col.Item().Table(table =>
                     {
-                        table.ColumnsDefinition(columns =>
+                        table.ColumnsDefinition(cols =>
                         {
-                            columns.RelativeColumn(2);
-                            columns.RelativeColumn(1);
-                            columns.RelativeColumn(1);
+                            cols.RelativeColumn(3);
+                            cols.RelativeColumn(1);
+                            cols.RelativeColumn(1.5f);
                         });
 
-                        // Headers de la tabla
-                        table.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Producto").Bold();
-                        table.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Cant. Vendida").Bold();
-                        table.Cell().Background(Colors.Grey.Lighten3).Padding(5).Text("Total").Bold();
+                        table.Header(header =>
+                        {
+                            header.Cell().Background(primaryColor).Padding(5).Text("Producto").Bold().FontColor(Colors.White).FontSize(8);
+                            header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Cant. Vendida").Bold().FontColor(Colors.White).FontSize(8);
+                            header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Total").Bold().FontColor(Colors.White).FontSize(8);
+                        });
 
                         foreach (var top in stats.TopProducts)
                         {
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(top.ProductName);
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(top.SalesCount.ToString());
-                            table.Cell().BorderBottom(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text($"$ {top.TotalAmount:N2}");
+                            table.Cell().BorderBottom(1).BorderColor(borderLight).Padding(5).Text(top.ProductName).FontSize(9);
+                            table.Cell().BorderBottom(1).BorderColor(borderLight).Padding(5).AlignRight().Text(top.SalesCount.ToString()).FontSize(9);
+                            table.Cell().BorderBottom(1).BorderColor(borderLight).Padding(5).AlignRight().Text($"$ {top.TotalAmount:N2}").FontSize(9).Bold();
                         }
                     });
                 });
 
                 // Pie de página
-                page.Footer().AlignCenter().Text(text =>
+                page.Footer().Row(row =>
                 {
-                    text.Span("Página ");
-                    text.CurrentPageNumber();
+                    row.RelativeItem().Text("Reporte del sistema de inventarios").FontSize(7).FontColor(textMuted);
+                    row.RelativeItem().AlignRight().Text(t =>
+                    {
+                        t.DefaultTextStyle(x => x.FontSize(8).FontColor(textMuted));
+                        t.Span("Página ");
+                        t.CurrentPageNumber();
+                        t.Span(" de ");
+                        t.TotalPages();
+                    });
                 });
             });
         }).GeneratePdf();
-
-        return pdfBytes;
     }
 }
