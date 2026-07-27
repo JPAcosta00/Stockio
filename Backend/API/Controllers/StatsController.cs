@@ -2,41 +2,41 @@ using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace WebApi.Controllers;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/stats")] // Ruta en minúsculas para compatibilidad total con servidores Linux (Render)
 public class StatsController : ControllerBase
 {
     private readonly IInventoryStatsService _statsService;
+
+    // Almacenamiento temporal en memoria para tickets de descarga (Expira en 3 min)
+    private static readonly ConcurrentDictionary<string, (Guid TenantId, string? Name, string? Period, DateTime ExpiresAt)> _downloadTickets = new();
 
     public StatsController(IInventoryStatsService statsService)
     {
         _statsService = statsService;
     }
 
-    [HttpGet ("dashboard")]
-    public async Task<ActionResult<DashboardDataDto>> GetDashboardStats([FromQuery] string? name,[FromQuery] string? period)
+    [HttpGet("dashboard")]
+    public async Task<ActionResult<DashboardDataDto>> GetDashboardStats([FromQuery] string? name, [FromQuery] string? period)
     {
-        var tenantClaim = User.FindFirst("TenantId")?.Value;
+        var tenantClaim = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
 
         if (string.IsNullOrEmpty(tenantClaim))
         {
             return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
         }
 
-        // Convierto el string a guid
         if (!Guid.TryParse(tenantClaim, out Guid tenantId))
         {
             return BadRequest("El identificador del Tenant no es válido.");
         }
 
-
-        // Mapeao el DTO del producto filtrado
         var filter = new ProductReportFilterDto
         {
             Name = name,
@@ -48,53 +48,59 @@ public class StatsController : ControllerBase
     }
 
     /// <summary>
-    /// Descarga pública de PDF autorizada vía Token enviado en la URL por el QR
+    /// Endpoint Autenticado: Genera un ticket corto y temporal para incluir en la URL del QR.
     /// </summary>
-    [HttpGet("download-pdf")]
-[AllowAnonymous]
-public async Task<IActionResult> DownloadStatsPdf(
-    [FromQuery] string token, 
-    [FromQuery] string? name, 
-    [FromQuery] string? period)
-{
-    if (string.IsNullOrEmpty(token))
+    [HttpGet("qr-ticket")]
+    public IActionResult GetQrTicket([FromQuery] string? name, [FromQuery] string? period)
     {
-        return Unauthorized("Token no proporcionado.");
-    }
+        var tenantClaim = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
 
-    try
-    {
-        var handler = new JwtSecurityTokenHandler();
-        var jwtToken = handler.ReadJwtToken(token);
-
-        if (jwtToken.ValidTo < DateTime.UtcNow)
-        {
-            return Unauthorized("El código QR ha expirado. Por favor, actualizá la pantalla.");
-        }
-
-        var tenantClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "TenantId" || c.Type == "tenantId")?.Value;
         if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
         {
-            return Unauthorized("Identificador de organización no válido.");
+            return Unauthorized("No se pudo determinar la organización activa.");
         }
+
+        // Generamos un ticket único de 32 caracteres y fijamos vigencia de 3 minutos
+        var ticket = Guid.NewGuid().ToString("N");
+        var expiresAt = DateTime.UtcNow.AddMinutes(3);
+
+        _downloadTickets[ticket] = (tenantId, name, period, expiresAt);
+
+        return Ok(new { ticket });
+    }
+
+    /// <summary>
+    /// Endpoint Público: Recibe el ticket del QR, valida que exista y no haya expirado, y descarga el PDF.
+    /// </summary>
+    [HttpGet("download-pdf")]
+    [AllowAnonymous]
+    public async Task<IActionResult> DownloadStatsPdf([FromQuery] string ticket)
+    {
+        if (string.IsNullOrEmpty(ticket) || !_downloadTickets.TryGetValue(ticket, out var ticketData))
+        {
+            return NotFound("El código QR es inválido o ha sido utilizado.");
+        }
+
+        // Verificamos si expiró
+        if (DateTime.UtcNow > ticketData.ExpiresAt)
+        {
+            _downloadTickets.TryRemove(ticket, out _);
+            return Unauthorized("El código QR ha expirado. Generá uno nuevo actualizando la pantalla.");
+        }
+
+        // Se elimina el ticket una vez usado para evitar reutilizaciones
+        _downloadTickets.TryRemove(ticket, out _);
 
         var filter = new ProductReportFilterDto
         {
-            Name = string.IsNullOrEmpty(name) ? null : name,
-            Period = string.IsNullOrEmpty(period) ? null : period
+            Name = string.IsNullOrEmpty(ticketData.Name) ? null : ticketData.Name,
+            Period = string.IsNullOrEmpty(ticketData.Period) ? null : ticketData.Period
         };
 
-        var pdfBytes = await _statsService.GenerateStatsPdfAsync(tenantId, filter);
-
-        // Forzamos la descarga asignando el nombre de archivo y Content-Type explícito
+        var pdfBytes = await _statsService.GenerateStatsPdfAsync(ticketData.TenantId, filter);
         var fileName = $"Estadisticas_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
-        Response.Headers.Append("Content-Disposition", $"inline; filename={fileName}");
 
+        Response.Headers.Append("Content-Disposition", $"attachment; filename={fileName}");
         return File(pdfBytes, "application/pdf", fileName);
     }
-    catch (Exception)
-    {
-        return BadRequest("El código QR no es válido o está corrupto.");
-    }
-}
 }

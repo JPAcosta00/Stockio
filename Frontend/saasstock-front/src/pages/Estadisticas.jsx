@@ -8,11 +8,9 @@ export default function Estadisticas() {
   const [period, setPeriod] = useState('');
 
   const [data, setData] = useState(null);
+  const [qrTicket, setQrTicket] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Recuperamos el Token de la sesión actual de la PC
-  const token = sessionStorage.getItem('token') || localStorage.getItem('token');
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
@@ -20,14 +18,24 @@ export default function Estadisticas() {
         setLoading(true);
         setError(null);
 
+        // 1. Obtenemos los datos del Dashboard
         const response = await apiClient.get('/stats/dashboard', {
           params: {
             name: name || undefined,
             period: period || undefined
           }
         });
-        
         setData(response.data);
+
+        // 2. Solicitamos el ticket corto para el QR
+        const ticketRes = await apiClient.get('/stats/qr-ticket', {
+          params: {
+            name: name || undefined,
+            period: period || undefined
+          }
+        });
+        setQrTicket(ticketRes.data.ticket);
+
       } catch (err) {
         console.error("Error al obtener estadísticas:", err);
         setError("No se pudieron cargar las estadísticas. Intentalo de nuevo.");
@@ -39,10 +47,10 @@ export default function Estadisticas() {
     return () => clearTimeout(delayDebounceFn);
   }, [name, period]);
 
-  // Construcción de la URL que leerá la cámara del celular
+  // Construcción de la URL limpia y corta para la cámara del celular
   const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:7046';
-  const qrDownloadUrl = token 
-    ? `${baseUrl}/api/Stats/download-pdf?token=${encodeURIComponent(token)}${name ? `&name=${encodeURIComponent(name)}` : ''}${period ? `&period=${encodeURIComponent(period)}` : ''}`
+  const qrDownloadUrl = qrTicket 
+    ? `${baseUrl}/api/stats/download-pdf?ticket=${qrTicket}`
     : '';
 
   return (
@@ -157,17 +165,18 @@ export default function Estadisticas() {
                 <div className="lg:col-span-1 flex flex-col items-center text-center space-y-3">
                   <h3 className="text-white font-semibold text-lg">Descargar Reporte</h3>
 
-                  <div className="p-3 bg-white rounded-lg shadow-md border border-zinc-700 flex items-center justify-center min-h-[160px] min-w-[160px]">
+                  <div className="p-3 bg-white rounded-lg shadow-md border border-zinc-700 flex items-center justify-center min-h-[190px] min-w-[190px]">
                     {qrDownloadUrl ? (
                       <QRCodeSVG 
                         value={qrDownloadUrl}
-                        size={200}
+                        size={180}
                         bgColor="#FFFFFF"
                         fgColor="#000000"
-                        level="L"
+                        level="M"
+                        includeMargin={true}
                       />
                     ) : (
-                      <span className="text-xs text-zinc-500">Sesión no válida</span>
+                      <span className="text-xs text-zinc-500">Generando QR...</span>
                     )}
                   </div>
 
