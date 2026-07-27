@@ -5,7 +5,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import Inventario from '../pages/Inventario';
 import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
-import Settings from '../pages/Perfil'; 
+import Perfil from './pages/Perfil'; 
 
 
 const PrivateRoute = ({ children }) => {

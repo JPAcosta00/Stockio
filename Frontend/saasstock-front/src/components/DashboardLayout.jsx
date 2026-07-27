@@ -12,7 +12,7 @@ export default function DashboardLayout({ children }) {
     { name: 'Inicio', href: '/' },                  //la parte de estadisticas esta en el inicio
     { name: 'Inventario', href: '/inventario' },
     { name: 'Ventas', href: '/ventas' },
-    { name: 'Mi perfil', href: '/Perfil' },
+    { name: 'Mi perfil', href: '/perfil' },
   ];
 
   return (
