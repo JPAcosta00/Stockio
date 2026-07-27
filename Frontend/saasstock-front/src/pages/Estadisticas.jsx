@@ -8,7 +8,8 @@ export default function Estadisticas() {
   //Estados para los filtros exactos del backend
   const [name, setName] = useState('');
   const [period, setPeriod] = useState(''); // "" (Todos), "hoy", "semana", "mes", "anio"
-
+  
+  const tenantId = sessionStorage.getItem('tenantId');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,8 +22,6 @@ export default function Estadisticas() {
         setError(null);
         
         const token = sessionStorage.getItem('token'); //recupera el JWT
-        // Obtener tenantId directamente de localStorage o decodificando el token
-        const tenantId = sessionStorage.getItem('tenantId');
 
         // Arma los parámetros de consulta que mapean al controlador
         const response = await apiClient.get('/stats/dashboard', {
