@@ -161,10 +161,10 @@ export default function Estadisticas() {
                     {qrDownloadUrl ? (
                       <QRCodeSVG 
                         value={qrDownloadUrl}
-                        size={160}
+                        size={200}
                         bgColor="#FFFFFF"
                         fgColor="#000000"
-                        level="M"
+                        level="L"
                       />
                     ) : (
                       <span className="text-xs text-zinc-500">Sesión no válida</span>

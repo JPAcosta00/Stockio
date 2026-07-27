@@ -51,51 +51,50 @@ public class StatsController : ControllerBase
     /// Descarga pública de PDF autorizada vía Token enviado en la URL por el QR
     /// </summary>
     [HttpGet("download-pdf")]
-    [AllowAnonymous] // Se permite el acceso libre porque la validación del Token se hace manualmente adentro
-    public async Task<IActionResult> DownloadStatsPdf(
-        [FromQuery] string token, 
-        [FromQuery] string? name, 
-        [FromQuery] string? period)
+[AllowAnonymous]
+public async Task<IActionResult> DownloadStatsPdf(
+    [FromQuery] string token, 
+    [FromQuery] string? name, 
+    [FromQuery] string? period)
+{
+    if (string.IsNullOrEmpty(token))
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return Unauthorized("Se requiere un token válido para acceder al reporte.");
-        }
-
-        try
-        {
-            // Decodificamos el token JWT enviado por la cámara
-            var handler = new JwtSecurityTokenHandler();
-            var jwtToken = handler.ReadJwtToken(token);
-
-            // Verificamos expiración del token
-            if (jwtToken.ValidTo < DateTime.UtcNow)
-            {
-                return Unauthorized("El código QR ha expirado. Por favor, actualizá la pantalla.");
-            }
-
-            // Extraemos el TenantId desde los claims del token
-            var tenantClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "TenantId" || c.Type == "tenantId")?.Value;
-            if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
-            {
-                return Unauthorized("Identificador de organización no válido.");
-            }
-
-            // Armamos el filtro con los parámetros que venían en la URL
-            var filter = new ProductReportFilterDto
-            {
-                Name = string.IsNullOrEmpty(name) ? null : name,
-                Period = string.IsNullOrEmpty(period) ? null : period
-            };
-
-            // Generamos el archivo PDF
-            var pdfBytes = await _statsService.GenerateStatsPdfAsync(tenantId, filter);
-            
-            return File(pdfBytes, "application/pdf", $"Estadisticas_{DateTime.Now:yyyyMMdd_HHmmss}.pdf");
-        }
-        catch (Exception)
-        {
-            return BadRequest("El código QR no es válido o está corrupto.");
-        }
+        return Unauthorized("Token no proporcionado.");
     }
+
+    try
+    {
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+
+        if (jwtToken.ValidTo < DateTime.UtcNow)
+        {
+            return Unauthorized("El código QR ha expirado. Por favor, actualizá la pantalla.");
+        }
+
+        var tenantClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "TenantId" || c.Type == "tenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("Identificador de organización no válido.");
+        }
+
+        var filter = new ProductReportFilterDto
+        {
+            Name = string.IsNullOrEmpty(name) ? null : name,
+            Period = string.IsNullOrEmpty(period) ? null : period
+        };
+
+        var pdfBytes = await _statsService.GenerateStatsPdfAsync(tenantId, filter);
+
+        // Forzamos la descarga asignando el nombre de archivo y Content-Type explícito
+        var fileName = $"Estadisticas_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+        Response.Headers.Append("Content-Disposition", $"inline; filename={fileName}");
+
+        return File(pdfBytes, "application/pdf", fileName);
+    }
+    catch (Exception)
+    {
+        return BadRequest("El código QR no es válido o está corrupto.");
+    }
+}
 }
