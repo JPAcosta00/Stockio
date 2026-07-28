@@ -14,6 +14,7 @@ export default function Ventas() {
 
   // Estados de UI
   const [loadingHistorial, setLoadingHistorial] = useState(false);
+  const [loadingDetalle, setLoadingDetalle] = useState(false); // <-- Estado para carga de detalle
   const [enviando, setEnviando] = useState(false);
   const [buscandoProducto, setBuscandoProducto] = useState(false);
 
@@ -39,6 +40,21 @@ export default function Ventas() {
       console.error("Error al cargar historial de ventas:", error);
     } finally {
       setLoadingHistorial(false);
+    }
+  };
+
+  // NUEVA FUNCIÓN: Obtener detalle completo de una venta específica desde el backend
+  const abrirDetalleVenta = async (venta) => {
+    setVentaSeleccionada(venta); // Abrimos la modal inmediatamente con los datos básicos
+    try {
+      setLoadingDetalle(true);
+      const response = await apiClient.get(`/sales/${venta.id}`);
+      setVentaSeleccionada(response.data); // Actualizamos la modal con la venta completa (incluyendo items)
+    } catch (error) {
+      console.error("Error al obtener el detalle de la venta:", error);
+      alert("No se pudo cargar el detalle completo de la venta.");
+    } finally {
+      setLoadingDetalle(false);
     }
   };
 
@@ -309,7 +325,7 @@ export default function Ventas() {
                 {historialVentas.map((v) => (
                   <tr 
                     key={v.id} 
-                    onClick={() => setVentaSeleccionada(v)}
+                    onClick={() => abrirDetalleVenta(v)} // <-- Llama a la función para cargar el detalle
                     className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
                   >
                     <td className="py-3 font-mono text-emerald-500 text-[11px] group-hover:underline">
@@ -361,8 +377,9 @@ export default function Ventas() {
             <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
               <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Productos Vendidos</span>
               
-              {/* Adapta 'items' o 'saleDetails' según cómo lo devuelva tu backend */}
-              {(ventaSeleccionada.items || ventaSeleccionada.saleDetails || []).length === 0 ? (
+              {loadingDetalle ? (
+                <p className="text-xs text-zinc-500 italic text-center py-4">Cargando productos de la venta...</p>
+              ) : (ventaSeleccionada.items || ventaSeleccionada.saleDetails || []).length === 0 ? (
                 <p className="text-xs text-zinc-500 italic text-center py-4">No se incluyeron detalles de items en la respuesta del backend.</p>
               ) : (
                 <div className="divide-y divide-zinc-800/60 border-t border-b border-zinc-800/60">

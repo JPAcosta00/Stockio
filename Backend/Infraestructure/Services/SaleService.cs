@@ -96,6 +96,30 @@ namespace Application.Services
             }
         }
   
+        // -- OBTENER DETALLES DE UNA VENTA
+        public async Task<SaleResponseDto?> GetSaleByIdAsync(Guid tenantId, Guid saleId){
+            var sale = await _saleRepository.GetByIdWithDetailsAsync(tenantId, saleId);
+
+            if (sale == null)
+                return null;
+
+            var argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
+
+            return new SaleResponseDto{
+                Id = sale.Id,
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(sale.CreatedAt, argentinaZone),
+                Total = sale.Total,
+                Items = sale.Details.Select(d => new SaleDetailDto{
+                    Id = d.Id,
+                    ProductId = d.ProductId,
+                    ProductName = d.Product?.Name ?? "Producto no disponible",
+                    ProductBarcode = d.Product?.Barcode ?? string.Empty,
+                    Quantity = d.Quantity,
+                    UnitPrice = d.UnitPrice
+                }).ToList()
+            };
+        }
+       
         // agregar la baja de venta
     }
 }

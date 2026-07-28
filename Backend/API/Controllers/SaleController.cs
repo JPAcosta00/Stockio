@@ -23,17 +23,16 @@ namespace WebAPI.Controllers
         // 1. GET: api/sales (Historial)
         [HttpGet]
         public async Task<IActionResult> GetHistory(){
-        // NOTA: Acá necesitás obtener el TenantId del usuario logueado.
-        // Si usás JWT, lo ideal es sacarlo de los Claims. Si no, temporalmente podés usar uno de prueba.
-        var tenantIdClaim = User.FindFirst("TenantId")?.Value; 
-        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        
+            var tenantIdClaim = User.FindFirst("TenantId")?.Value; 
+            if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
                 {
                     return Unauthorized(new { Message = "El identificador de organización (Tenant) no es válido o no está presente." });
                 }
 
-        var history = await _saleService.GetSalesHistoryAsync(tenantId);
-        return Ok(history);
-    }
+            var history = await _saleService.GetSalesHistoryAsync(tenantId);
+            return Ok(history);
+        }
 
         [HttpPost]
         public async Task<IActionResult> CreateSale([FromBody] CreateSaleDto dto)
@@ -65,5 +64,22 @@ namespace WebAPI.Controllers
             }
         }
     
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetSaleById(Guid id){
+            var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+            if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
+            {
+                return Unauthorized(new { Message = "El identificador de organización (Tenant) no es válido o no está presente." });
+            }
+
+            var sale = await _saleService.GetSaleByIdAsync(tenantId, id);
+
+            if (sale == null)
+            {
+                return NotFound(new { Message = "La venta solicitada no existe o no pertenece a su organización." });
+            }
+
+            return Ok(sale);
+        }
     }
 }

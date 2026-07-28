@@ -9,5 +9,7 @@ namespace Application.Interfaces
         Task<Guid> CreateSaleAsync(Guid tenantId, CreateSaleDto dto);
 
         Task<IEnumerable<SaleHistoryDto>> GetSalesHistoryAsync(Guid tenantId);
+
+        Task<SaleResponseDto?> GetSaleByIdAsync(Guid tenantId, Guid saleId);
     }
 }
