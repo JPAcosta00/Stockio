@@ -75,7 +75,6 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
       {/* Encabezado compacto */}
       <div className="text-center space-y-0.5">
         <h2 className="text-xl md:text-2xl font-bold text-white">Creá tu cuenta en el sistema de stock y ventas</h2>
-        <p className="text-xs text-zinc-400">Comenzá a gestionar tu negocio de forma inteligente</p>
       </div>
 
       {/* Mensaje de error */}

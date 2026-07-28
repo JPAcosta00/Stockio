@@ -9,6 +9,9 @@ export default function Ventas() {
   });
   const [historialVentas, setHistorialVentas] = useState([]);
   
+  // Estado para la venta seleccionada en la modal (null = modal cerrada)
+  const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
+
   // Estados de UI
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -41,9 +44,8 @@ export default function Ventas() {
 
   const limpiarMostrador = () => {
     const confirmar = window.confirm("¿Estás seguro de que querés vaciar todo el mostrador actual?");
-  
     if (confirmar) {
-      setCarrito([]); // Setea el array vacio
+      setCarrito([]);
     }
   };
 
@@ -69,7 +71,6 @@ export default function Ventas() {
         return;
       }
 
-      // Verifica si ya existe
       const existeEnCarrito = carrito.find(item => item.productId === prod.id);
       
       if (existeEnCarrito) {
@@ -144,7 +145,7 @@ export default function Ventas() {
       
       alert("¡Venta registrada con éxito!");
       setCarrito([]);
-      await obtenerHistorialVentas(); // Refresca el historial de ventas
+      await obtenerHistorialVentas();
     } catch (error) {
       console.error("Error al registrar venta:", error);
       alert(error.response?.data?.message || "Error al guardar la venta.");
@@ -202,8 +203,19 @@ export default function Ventas() {
         {/* DETALLE DEL CARRITO */}
         <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-5 rounded-xl flex flex-col justify-between min-h-[260px]">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider mb-4">Mostrador Actual</h2>
-            <button type="button" onClick={limpiarMostrador} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-sm">🗑️ Vaciar Mostrador</button>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Mostrador Actual</h2>
+              {carrito.length > 0 && (
+                <button 
+                  type="button" 
+                  onClick={limpiarMostrador} 
+                  className="text-xs bg-red-950/40 border border-red-800/50 hover:bg-red-900/60 text-red-300 font-medium py-1 px-3 rounded-lg flex items-center gap-1.5 transition-all duration-200"
+                >
+                  🗑️ Vaciar
+                </button>
+              )}
+            </div>
+
             {carrito.length === 0 ? (
               <div className="text-center py-12 text-zinc-600 text-xs">
                 Mostrador vacío. Ingresá un código a la izquierda.
@@ -290,17 +302,27 @@ export default function Ventas() {
                   <th className="pb-3">ID Venta</th>
                   <th className="pb-3">Fecha y Hora</th>
                   <th className="pb-3 text-right">Monto Total</th>
+                  <th className="pb-3 text-center">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
                 {historialVentas.map((v) => (
-                  <tr key={v.id} className="hover:bg-zinc-950/40 transition-colors">
-                    <td className="py-3 font-mono text-emerald-500 text-[11px]">{v.id}</td>
+                  <tr 
+                    key={v.id} 
+                    onClick={() => setVentaSeleccionada(v)}
+                    className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                  >
+                    <td className="py-3 font-mono text-emerald-500 text-[11px] group-hover:underline">
+                      #{v.id}
+                    </td>
                     <td className="py-3 text-zinc-300">
                       {new Date(v.createdAt).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} hs.
                     </td>
                     <td className="py-3 text-right font-mono text-zinc-100 font-bold text-sm">
-                      ${v.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-3 text-center text-xs text-zinc-500 group-hover:text-zinc-300">
+                      🔍 Ver Detalle
                     </td>
                   </tr>
                 ))}
@@ -309,6 +331,76 @@ export default function Ventas() {
           </div>
         )}
       </div>
+
+      {/* MODAL DE DETALLE DE VENTA */}
+      {ventaSeleccionada && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl space-y-4 p-6">
+            
+            {/* Header del Modal */}
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-zinc-100">
+                  Detalle de Venta <span className="font-mono text-emerald-400">#{ventaSeleccionada.id}</span>
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {new Date(ventaSeleccionada.createdAt).toLocaleString('es-AR', { 
+                    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                  })} hs.
+                </p>
+              </div>
+              <button
+                onClick={() => setVentaSeleccionada(null)}
+                className="text-zinc-400 hover:text-zinc-100 text-lg px-2 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Listado de items de la venta */}
+            <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider block">Productos Vendidos</span>
+              
+              {/* Adapta 'items' o 'saleDetails' según cómo lo devuelva tu backend */}
+              {(ventaSeleccionada.items || ventaSeleccionada.saleDetails || []).length === 0 ? (
+                <p className="text-xs text-zinc-500 italic text-center py-4">No se incluyeron detalles de items en la respuesta del backend.</p>
+              ) : (
+                <div className="divide-y divide-zinc-800/60 border-t border-b border-zinc-800/60">
+                  {(ventaSeleccionada.items || ventaSeleccionada.saleDetails || []).map((item, index) => (
+                    <div key={item.id || index} className="py-2.5 flex justify-between items-center text-xs">
+                      <div>
+                        <p className="font-medium text-zinc-200">{item.product?.name || item.name || `Producto #${item.productId}`}</p>
+                        <p className="text-[10px] text-zinc-500 font-mono">
+                          {item.quantity} un. x ${item.unitPrice?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <p className="font-mono font-semibold text-zinc-300">
+                        ${((item.quantity || 1) * (item.unitPrice || 0)).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer con el total */}
+            <div className="pt-3 border-t border-zinc-800 flex justify-between items-baseline">
+              <span className="text-xs font-semibold text-zinc-400">TOTAL:</span>
+              <span className="text-lg font-mono font-bold text-emerald-400">
+                ${ventaSeleccionada.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {/* Botón cerrar */}
+            <button
+              onClick={() => setVentaSeleccionada(null)}
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold py-2 rounded-lg text-xs transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
