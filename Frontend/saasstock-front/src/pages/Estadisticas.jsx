@@ -74,7 +74,7 @@ export default function Estadisticas() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Rendimiento del Inventario</h1>
-          <p className="text-xs text-zinc-400">Visualizá y exportá las métricas clave de tu stock.</p>
+          <p className="text-xs text-zinc-400">Estadisticas del negocio hasta el momento.</p>
         </div>
 
         {/* Botón Descargar PDF */}

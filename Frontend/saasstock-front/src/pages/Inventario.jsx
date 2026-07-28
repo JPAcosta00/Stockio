@@ -162,6 +162,11 @@ export default function Inventario() {
             placeholder="Ej: Amortiguador..." 
             value={filtroNombre} 
             onChange={(e) => setFiltroNombre(e.target.value)} 
+            onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setFiltroNombre(e.target.value); // Reemplazá por tu función que hace la petición/filtrado
+                }
+            }}
             className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-zinc-600" 
           />
         </div>

@@ -12,21 +12,20 @@ public class UserService : IUserService
 
     public async Task<bool> UpdateProfileAsync(Guid userId, UpdateUserByAdminDto dto)
     {
-        // 1. Buscamos al usuario por su ID (usando el método genérico heredado)
+        // Busca el usuario por el ID global
         var user = await _userRepository.GetByIdAsync(userId); 
         if (user == null) return false;
 
-        // 2. Validamos si el email ya existe en la BD global
+        // Valida si el mail ya existe
         var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
         if (existingUser != null && existingUser.Id != userId)
         {
             throw new Exception("El correo electrónico ya se encuentra registrado por otro usuario.");
         }
 
-        // 3. Actualizamos los datos
+        // Actualiza los datos
         user.updateDatos(dto.Username, dto.Role, dto.IsActive, dto.Email, dto.TenantId);
 
-        // 4. Guardamos los cambios
          _userRepository.Update(user); 
          await _userRepository.SaveChangesAsync();
         return true; 

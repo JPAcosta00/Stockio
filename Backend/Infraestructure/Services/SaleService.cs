@@ -103,7 +103,6 @@ namespace Application.Services
             if (sale == null)
                 return null;
 
-            // Manejo robusto de la zona horaria para Linux (Render) y Windows
             TimeZoneInfo argentinaZone;
             try{
                 argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
@@ -112,7 +111,6 @@ namespace Application.Services
                  argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time");
             }
 
-            // Aseguramos que la fecha enviada desde la DB esté marcada como UTC antes de convertirla
             var utcDate = DateTime.SpecifyKind(sale.CreatedAt, DateTimeKind.Utc);
 
             return new SaleResponseDto{

@@ -21,7 +21,8 @@ export default function VentaDetalleModal({ venta, loading, onClose }) {
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <div>
                 <h3 className="text-base font-bold text-zinc-100">
-                  Detalle de Venta <span className="font-mono text-emerald-400">#{venta.id}</span>
+                  Detalle de Venta <br />
+                  <span className="font-mono text-emerald-400">#{venta.id}</span>
                 </h3>
                 <p className="text-xs text-zinc-400">
                   {new Date(venta.createdAt).toLocaleString('es-AR', { 

@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI.Controllers
 {
-    [Authorize] // Protegido para que solo usuarios autenticados operen
+    [Authorize] 
     [ApiController]
     [Route("api/sales")]
     public class SalesController : ControllerBase
@@ -39,7 +39,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                // Extraemos el TenantId de los Claims del usuario autenticado (JWT)
+                // Extra el TenantId
                 var tenantIdClaim = User.FindFirst("TenantId")?.Value;
                 
                 if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
@@ -47,7 +47,7 @@ namespace WebAPI.Controllers
                     return Unauthorized(new { Message = "El identificador de organización (Tenant) no es válido o no está presente." });
                 }
 
-                // Delegamos la lógica transaccional al servicio de aplicación
+                // Delega la creacion al servicio
                 var saleId = await _saleService.CreateSaleAsync(tenantId, dto);
 
                 return Ok(new { Message = "Venta registrada con éxito e inventario actualizado.", SaleId = saleId });
