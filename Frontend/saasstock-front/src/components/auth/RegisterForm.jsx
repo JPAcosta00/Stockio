@@ -17,30 +17,41 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Función de validación de contraseña
+  // Validación de formato de email
+  const isValidEmail = (emailStr) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(emailStr);
+  };
+
+  // Validación de contraseña (mínimo 6 caracteres, letras y al menos un número)
   const isValidPassword = (pass) => {
-    // Al menos 6 caracteres, al menos una letra (a-z) y al menos un número (0-9)
-    const regex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
-    return regex.test(pass);
+    const passRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
+    return passRegex.test(pass);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // 1. Validación de campos requeridos
+    // 1. Campos obligatorios
     if (!username || !companyName || !email || !password || !confirmPassword) {
       setError('Por favor, completá todos los campos.');
       return;
     }
 
-    // 2. Validación de formato de contraseña (6+ caracteres, letras y números)
+    // 2. Validación del formato de email
+    if (!isValidEmail(email)) {
+      setError('Por favor, ingresá un correo electrónico válido (ej: usuario@dominio.com).');
+      return;
+    }
+
+    // 3. Validación del formato de la contraseña
     if (!isValidPassword(password)) {
       setError('La contraseña debe tener al menos 6 caracteres, incluir letras y al menos un número.');
       return;
     }
 
-    // 3. Validación de coincidencia de contraseñas
+    // 4. Coincidencia de contraseñas
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
       return;
@@ -59,32 +70,32 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto space-y-6">
+    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-4 px-2">
       
-      {/* Encabezado */}
-      <div className="text-center space-y-1">
-        <h2 className="text-2xl font-bold text-white">Creá tu cuenta en el sistema de stock y ventas</h2>
-        <p className="text-sm text-zinc-400">Comenzá a gestionar tu negocio de forma inteligente</p>
+      {/* Encabezado compacto */}
+      <div className="text-center space-y-0.5">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Creá tu cuenta en el sistema de stock y ventas</h2>
+        <p className="text-xs text-zinc-400">Comenzá a gestionar tu negocio de forma inteligente</p>
       </div>
 
       {/* Mensaje de error */}
       {error && (
-        <div className="p-3 text-sm bg-red-950/50 border border-red-500/50 text-red-200 rounded-lg text-center font-medium">
+        <div className="p-2 text-xs bg-red-950/50 border border-red-500/50 text-red-200 rounded-lg text-center font-medium">
           {error}
         </div>
       )}
 
       {/* Contenedor principal de 2 columnas (Izquierda / Derecha) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 pt-1">
         
         {/* COLUMNA IZQUIERDA: Datos Personales y Empresa */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-2">
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
             Información de la Cuenta
           </h3>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
               Nombre Completo
             </label>
             <input
@@ -92,13 +103,13 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
               required
               value={username}
               onChange={(e) => setName(e.target.value)}
-              className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
               placeholder="Lionel Messi"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
               Nombre de tu Empresa
             </label>
             <input
@@ -106,13 +117,13 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
               required
               value={companyName}
               onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
               placeholder="Distribuidora Messi"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
               Correo Electrónico
             </label>
             <input
@@ -120,20 +131,20 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
               placeholder="correo@empresa.com"
             />
           </div>
         </div>
 
         {/* COLUMNA DERECHA: Seguridad / Contraseñas */}
-        <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-2">
+        <div className="space-y-3">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
             Seguridad
           </h3>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
               Contraseña
             </label>
             <input
@@ -141,16 +152,16 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
               placeholder="••••••••"
             />
-            <p className="text-[11px] text-zinc-500 mt-1">
+            <p className="text-[11px] text-zinc-500 mt-0.5">
               Mínimo 6 caracteres, incluyendo letras y al menos un número.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1.5">
+            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
               Confirmar Contraseña
             </label>
             <input
@@ -158,10 +169,10 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
+              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
               placeholder="••••••••"
             />
-            <p className="text-[11px] text-zinc-500 mt-1">
+            <p className="text-[11px] text-zinc-500 mt-0.5">
               Repetí la contraseña ingresada arriba.
             </p>
           </div>
@@ -169,17 +180,17 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
 
       </div>
 
-      {/* PIE DE FORMULARIO: Botón de acción e inicio de sesión */}
-      <div className="pt-4 border-t border-zinc-800/80 space-y-4">
+      {/* PIE DE FORMULARIO: Botón e inicio de sesión */}
+      <div className="pt-3 border-t border-zinc-800/80 space-y-2">
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors shadow-lg shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors shadow-lg shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? 'Registrando...' : 'Confirmar Registro'}
         </button>
 
-        <p className="text-sm text-center text-zinc-400">
+        <p className="text-xs text-center text-zinc-400">
           ¿Ya tenés cuenta?{' '}
           <button
             type="button"
