@@ -64,7 +64,7 @@ namespace WebAPI.Controllers
             }
         }
     
-        [HttpGet("{id:guid}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetSaleById(Guid id){
             var tenantIdClaim = User.FindFirst("TenantId")?.Value;
             if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))

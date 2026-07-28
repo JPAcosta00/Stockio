@@ -49,6 +49,7 @@ export default function Ventas() {
     try {
       setLoadingDetalle(true);
       const response = await apiClient.get(`/sales/${venta.id}`);
+      console.log("Datos de la venta elegida:", venta);
       setVentaSeleccionada(response.data); // Actualizamos la modal con la venta completa (incluyendo items)
     } catch (error) {
       console.error("Error al obtener el detalle de la venta:", error);
