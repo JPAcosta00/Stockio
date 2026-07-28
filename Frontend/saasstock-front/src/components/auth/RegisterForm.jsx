@@ -90,7 +90,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
         {/* COLUMNA IZQUIERDA: Datos Personales y Empresa */}
         <div className="space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
-            Información de la Cuenta
+            Datos de la Cuenta
           </h3>
 
           <div>
