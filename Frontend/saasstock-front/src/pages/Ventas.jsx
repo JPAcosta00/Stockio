@@ -46,8 +46,8 @@ export default function Ventas() {
 
   // NUEVA FUNCIÓN: Obtener detalle completo de una venta específica desde el backend
   const abrirDetalleVenta = (venta) => {
-    const auxVenta = await apiClient.get(venta.id);
-    setVentaSeleccionada(auxVenta);
+    //const auxVenta = await apiClient.get(venta.id);
+    setVentaSeleccionada(venta);
   };
 
   const limpiarMostrador = () => {
