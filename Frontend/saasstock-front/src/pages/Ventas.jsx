@@ -44,10 +44,18 @@ export default function Ventas() {
     }
   };
 
-  // NUEVA FUNCIÓN: Obtener detalle completo de una venta específica desde el backend
-  const abrirDetalleVenta = (venta) => {
-    //const auxVenta = await apiClient.get(venta.id);
-    setVentaSeleccionada(venta);
+  const abrirDetalleVenta = async (venta) => {
+    try {
+      setLoadingDetalle(true);
+      // Hacemos la petición para obtener los ítems/productos de la venta
+      const response = await apiClient.get(`/sales/${venta.id}`);
+      setVentaSeleccionada(response.data);
+    } catch (error) {
+      console.error("Error al obtener el detalle de la venta:", error);
+      alert("No se pudo cargar el detalle de esta venta.");
+    } finally {
+      setLoadingDetalle(false);
+    }
   };
 
   const limpiarMostrador = () => {
@@ -341,7 +349,11 @@ export default function Ventas() {
       </div>
 
       {/* MODAL DE VENTAS */}
-      <VentaDetalleModal venta={ventaSeleccionada} onClose={() => setVentaSeleccionada(null)} />
+      <VentaDetalleModal 
+        venta={ventaSeleccionada} 
+        loading={loadingDetalle}
+        onClose={() => setVentaSeleccionada(null)} 
+      />
     </div>
   );
 }
