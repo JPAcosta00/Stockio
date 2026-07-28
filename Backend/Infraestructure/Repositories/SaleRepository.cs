@@ -37,6 +37,7 @@ namespace Infrastructure.Repositories
         public async Task<Sale?> GetByIdWithDetailsAsync(Guid id, Guid tenantId){
             return await _context.Set<Sale>()
                 .Include(s => s.Details) 
+                .ThenInclude(d => d.Product)
                 .FirstOrDefaultAsync(s => s.Id == id && s.TenantId == tenantId);
         }
 

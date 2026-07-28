@@ -98,16 +98,26 @@ namespace Application.Services
   
         // -- OBTENER DETALLES DE UNA VENTA
         public async Task<SaleResponseDto?> GetSaleByIdAsync(Guid tenantId, Guid saleId){
-            var sale = await _saleRepository.GetByIdWithDetailsAsync(tenantId, saleId);
+            var sale = await _saleRepository.GetByIdWithDetailsAsync(saleId, tenantId);
 
             if (sale == null)
                 return null;
 
-            var argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
+            // Manejo robusto de la zona horaria para Linux (Render) y Windows
+            TimeZoneInfo argentinaZone;
+            try{
+                argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
+            }
+            catch (TimeZoneNotFoundException){
+                 argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time");
+            }
+
+            // Aseguramos que la fecha enviada desde la DB esté marcada como UTC antes de convertirla
+            var utcDate = DateTime.SpecifyKind(sale.CreatedAt, DateTimeKind.Utc);
 
             return new SaleResponseDto{
                 Id = sale.Id,
-                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(sale.CreatedAt, argentinaZone),
+                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(utcDate, argentinaZone),
                 Total = sale.Total,
                 Items = sale.Details.Select(d => new SaleDetailDto{
                     Id = d.Id,
@@ -115,7 +125,7 @@ namespace Application.Services
                     ProductName = d.Product?.Name ?? "Producto no disponible",
                     ProductBarcode = d.Product?.Barcode ?? string.Empty,
                     Quantity = d.Quantity,
-                    UnitPrice = d.UnitPrice
+                 UnitPrice = d.UnitPrice
                 }).ToList()
             };
         }
