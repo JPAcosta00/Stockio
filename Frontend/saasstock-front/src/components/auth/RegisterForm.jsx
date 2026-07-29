@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
   
-  // Estados para datos personales / empresa (Columna Izquierda)
+  // Estados para datos personales 
   const [username, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,25 +33,25 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     e.preventDefault();
     setError('');
 
-    // 1. Campos obligatorios
+    //  Campos obligatorios
     if (!username || !companyName || !email || !password || !confirmPassword) {
       setError('Por favor, completá todos los campos.');
       return;
     }
 
-    // 2. Validación del formato de email
+    //  Validación del formato de email
     if (!isValidEmail(email)) {
       setError('Por favor, ingresá un correo electrónico válido (ej: usuario@dominio.com).');
       return;
     }
 
-    // 3. Validación del formato de la contraseña
+    //  Validación del formato de la contraseña
     if (!isValidPassword(password)) {
       setError('La contraseña debe tener al menos 6 caracteres, incluir letras y al menos un número.');
       return;
     }
 
-    // 4. Coincidencia de contraseñas
+    // Coincidencia de contraseñas
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
       return;
@@ -84,10 +84,10 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
         </div>
       )}
 
-      {/* Contenedor principal de 2 columnas (Izquierda / Derecha) */}
+      {/* Contenedor principal del registro */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 pt-1">
         
-        {/* COLUMNA IZQUIERDA: Datos Personales y Empresa */}
+        {/* COLUMNA IZQUIERDA: Datos de la cuenta */}
         <div className="space-y-3">
           <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
             Datos de la Cuenta
@@ -179,7 +179,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
 
       </div>
 
-      {/* PIE DE FORMULARIO: Botón e inicio de sesión */}
+      {/* PIE DE FORMULARIO: Botón de inicio de sesión */}
       <div className="pt-3 border-t border-zinc-800/80 space-y-2">
         <button
           type="submit"

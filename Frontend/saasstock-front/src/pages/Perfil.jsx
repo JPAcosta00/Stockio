@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
-import { User, Shield, LogOut } from 'lucide-react'; // Íconos opcionales para mejorar la UI
+import { User, Shield, LogOut } from 'lucide-react'; 
 
 export default function Perfil() {
-  const { user, logout } = useAuth(); // Extraemos logout de AuthContext
+  // Uso el logout de authcontext
+  const { user, logout } = useAuth(); 
   
   // Pestaña activa
   const [activeTab, setActiveTab] = useState('profile');
@@ -35,7 +36,7 @@ export default function Perfil() {
     setTimeout(() => setMessage({ text: '', type: '' }), 4000);
   };
 
-  // Guardar cambios del Perfil
+  // Guardar cambios del Perfil (manda al backend)
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -59,6 +60,7 @@ export default function Perfil() {
 
     setLoading(true);
     try {
+      //falta implementar el metodo en el backend: en UserController y UserService
       await apiClient.put('/user/change-password', { currentPassword, newPassword });
       showFeedback('Contraseña modificada con éxito.', 'success');
       setCurrentPassword('');
@@ -122,7 +124,7 @@ export default function Perfil() {
               </button>
             </div>
 
-            {/* OPCIÓN 1: Botón de Cerrar Sesión en el menú lateral */}
+            {/* Botón de Cerrar Sesión en el menú lateral */}
             <div className="pt-4 mt-4 border-t border-zinc-800/80 hidden md:block">
               <button
                 onClick={logout}

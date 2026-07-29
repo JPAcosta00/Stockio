@@ -18,10 +18,8 @@ export default function Login() {
     setError('');
     setLoading(true);
 
-
-
     try {
-      // endpoint real del Backend
+      // endpoint del Backend
       const response = await apiClient.post('/auth/login', { email, password });
       // Si el backend no devuelve el token
       if (response.data && response.data.token) {

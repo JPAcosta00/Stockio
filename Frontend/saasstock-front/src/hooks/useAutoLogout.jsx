@@ -2,7 +2,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // El tiempo de inactividad por defecto es de 15 minutos
-const TIMEOUT_IN_MS = 15 * 60 * 1000; 
+const TIMEOUT_IN_MS = 10 * 60 * 1000; 
 
 export default function useAutoLogout() {
   const navigate = useNavigate();

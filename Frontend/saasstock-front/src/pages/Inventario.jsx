@@ -164,7 +164,7 @@ export default function Inventario() {
             onChange={(e) => setFiltroNombre(e.target.value)} 
             onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  setFiltroNombre(e.target.value); // Reemplazá por tu función que hace la petición/filtrado
+                  setFiltroNombre(e.target.value);
                 }
             }}
             className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-zinc-600" 
@@ -195,7 +195,7 @@ export default function Inventario() {
         </button>
       </div>
 
-      {/* ACCIONES EXPORT / IMPORT (Exporta exactamente el estado de "productos" cargado en pantalla) */}
+      {/* ACCIONES EXPORT / IMPORT (Exporta los productos de todo el inventario) */}
       <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <div className="flex flex-wrap items-center gap-3">
           <label className={`cursor-pointer bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}>

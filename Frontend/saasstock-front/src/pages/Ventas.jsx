@@ -19,13 +19,13 @@ export default function Ventas() {
   const [enviando, setEnviando] = useState(false);
   const [buscandoProducto, setBuscandoProducto] = useState(false);
 
-  // --- NUEVO: AUTOCOMPLETE PARA MOSTRADOR ---
+  // Para autocompletar el mostrador
   const [barcodeInput, setBarcodeInput] = useState('');
   const [sugerencias, setSugerencias] = useState([]);
   const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
 
-  // --- NUEVO: FILTRO EN HISTORIAL ---
+  // Filtro en el historial de ventas
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
 
   // Referencias UI
@@ -41,7 +41,7 @@ export default function Ventas() {
     if (barcodeRef.current) barcodeRef.current.focus();
   }, [carrito]);
 
-  // Cierra el dropdown del autocomplete si se hace click fuera del componente
+  // Cierra la busqueda de productos en el mostrador si se da click afuera
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -67,7 +67,7 @@ export default function Ventas() {
         const res = await apiClient.get('/products', { params: { search: query } });
         const listaProductos = res.data || [];
 
-        // FILTRO EN FRONTEND: descarta lo que no coincida exactamente con la búsqueda
+        // Filtro directamente desde el frontend
         const filtrados = listaProductos.filter(prod => {
           const nombreCoincide = prod.name?.toLowerCase().includes(query);
           const codigoCoincide = prod.barcode?.toLowerCase().includes(query);
@@ -86,7 +86,7 @@ export default function Ventas() {
     return () => clearTimeout(timer);
   }, [barcodeInput]);
 
-  // Cargar historial
+  // Cargar historial De ventas
   const obtenerHistorialVentas = async () => {
     try {
       setLoadingHistorial(true);
@@ -118,7 +118,7 @@ export default function Ventas() {
     }
   };
 
-  // Helper para añadir un producto (utilizado tanto por escáner como por el autocomplete)
+  // Agrega un producto por codigo de barra
   const agregarProductoAlCarrito = (prod) => {
     if (!prod) return;
 
@@ -153,6 +153,7 @@ export default function Ventas() {
     setMostrarDropdown(false);
   };
 
+  // Maneja cuando se da a confirmar en el mostrador
   const handleBarcodeSubmit = async (e) => {
     e.preventDefault();
     const codigoLimpio = barcodeInput.trim();
@@ -171,6 +172,8 @@ export default function Ventas() {
     }
   };
 
+  // Cambia cantidad de un producto en el carrito
+  //MEJORAR: Si se baja hasta 0, que no se borre el producto.
   const modificarCantidad = (productId, nuevaCantidad) => {
     const item = carrito.find(i => i.productId === productId);
     if (!item) return;
@@ -196,6 +199,7 @@ export default function Ventas() {
 
   const totalVenta = carrito.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
 
+  // Confirma la venta, mandando a registrar al backend
   const confirmarVenta = async () => {
     if (carrito.length === 0) return;
 
@@ -222,7 +226,7 @@ export default function Ventas() {
     }
   };
 
-  // Filtrado de historial por ID o Código de Barras
+  // Filtrado de historial por Código de Barras
   const historialFiltrado = historialVentas.filter(v => {
     const q = busquedaHistorial.trim().toLowerCase();
     if (!q) return true;
@@ -275,7 +279,7 @@ export default function Ventas() {
                 </button>
               </div>
 
-              {/* DROPDOWN DE SUGERENCIAS */}
+              {/* SUGERENCIAS */}
               {mostrarDropdown && (
                 <div className="absolute left-0 right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-zinc-800">
                   {buscandoSugerencias ? (
@@ -330,7 +334,7 @@ export default function Ventas() {
 
             {carrito.length === 0 ? (
               <div className="text-center py-12 text-zinc-600 text-xs">
-                Mostrador vacío. Escaneá un código de barras para comenzar.
+                Mostrador vacío. 
               </div>
             ) : (
               <div className="overflow-x-auto max-h-60 overflow-y-auto">
@@ -396,17 +400,17 @@ export default function Ventas() {
         </div>
       </div>
 
-      {/* SECCIÓN INFERIOR: HISTORIAL DE VENTAS */}
+      {/* HISTORIAL DE VENTAS */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
           
-          {/* LUPA / FILTRO DE BÚSQUEDA */}
+          {/* FILTRO DE BÚSQUEDA */}
           <div className="relative w-full sm:w-64">
             <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
             <input
               type="text"
-              placeholder="Buscar por ID o Código de Barras..."
+              placeholder="Buscar por Código de Barras..."
               value={busquedaHistorial}
               onChange={(e) => setBusquedaHistorial(e.target.value)}
               className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
@@ -425,7 +429,7 @@ export default function Ventas() {
             <table className="w-full text-left text-xs divide-y divide-zinc-800">
               <thead>
                 <tr className="text-zinc-500 font-semibold uppercase">
-                  <th className="pb-3">ID Venta</th>
+                  <th className="pb-3">Codigo de Barra</th>
                   <th className="pb-3">Fecha y Hora</th>
                   <th className="pb-3 text-right">Monto Total</th>
                   <th className="pb-3 text-center">Acción</th>

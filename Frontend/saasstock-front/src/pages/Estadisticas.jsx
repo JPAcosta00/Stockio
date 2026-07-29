@@ -44,7 +44,7 @@ export default function Estadisticas() {
           name: name || undefined,
           period: period || undefined
         },
-        responseType: 'blob' // Es fundamental especificar 'blob' para manejar archivos binarios
+        responseType: 'blob' 
       });
 
       // Crear URL temporal y disparar descarga en el navegador
@@ -167,7 +167,7 @@ export default function Estadisticas() {
             />
           </div>
 
-          {/* Tabla Productos (ocupa todo el ancho al remover la columna del QR) */}
+          {/* Tabla Productos */}
           <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800">
             <h3 className="font-bold text-zinc-100 text-base mb-4">Productos más vendidos bajo este filtro</h3>
             {data.topProducts.length === 0 ? (
