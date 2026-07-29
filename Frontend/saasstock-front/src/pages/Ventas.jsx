@@ -52,9 +52,9 @@ export default function Ventas() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounce para autocomplete de productos
+  // Debounce para autocomplete de productos 
   useEffect(() => {
-    const query = barcodeInput.trim();
+    const query = barcodeInput.trim().toLowerCase();
     if (query.length < 2) {
       setSugerencias([]);
       setMostrarDropdown(false);
@@ -65,7 +65,16 @@ export default function Ventas() {
       try {
         setBuscandoSugerencias(true);
         const res = await apiClient.get('/products', { params: { search: query } });
-        setSugerencias(res.data || []);
+        const listaProductos = res.data || [];
+
+        // FILTRO EN FRONTEND: descarta lo que no coincida exactamente con la búsqueda
+        const filtrados = listaProductos.filter(prod => {
+          const nombreCoincide = prod.name?.toLowerCase().includes(query);
+          const codigoCoincide = prod.barcode?.toLowerCase().includes(query);
+          return nombreCoincide || codigoCoincide;
+        });
+
+        setSugerencias(filtrados);
         setMostrarDropdown(true);
       } catch (err) {
         console.error("Error al buscar sugerencias:", err);
