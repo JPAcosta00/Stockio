@@ -30,4 +30,24 @@ public class UserService : IUserService
          await _userRepository.SaveChangesAsync();
         return true; 
     }
+
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto) // O string email
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+            throw new Exception("Usuario no encontrado.");
+
+        // 1. Validar si la contraseña actual coincide con el hash guardado
+        bool currentPasswordIsValid = BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash);
+        
+        if (!currentPasswordIsValid)
+        {
+            throw new ArgumentException("La contraseña actual es incorrecta.");
+        }
+
+        // 2. Hashear la nueva contraseña y actualizar
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+
+        _userRepository.Update(user);
+    }
 }

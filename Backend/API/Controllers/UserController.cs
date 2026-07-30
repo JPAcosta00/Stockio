@@ -40,5 +40,29 @@ public class UserController : ControllerBase
             {
                 return BadRequest(new { message = ex.Message });
             } 
-}
+    }
+
+    [HttpPut("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto){
+        try{
+        // Extrae el ID del usuario directamente de las claims del token JWT
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+            // Intenta parsear el claim a un tipo Guid
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)){
+                return Unauthorized(new { message = "Usuario no autenticado." });
+            }
+
+            await _userService.ChangePasswordAsync(userId, dto);
+
+            return Ok(new { message = "Contraseña modificada con éxito." });
+        }
+        catch (ArgumentException ex){
+            // Captura el mensaje si la contraseña actual no es correcta
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception){
+            return StatusCode(500, new { message = "Error al intentar cambiar la contraseña." });
+        }
+    }
 }
