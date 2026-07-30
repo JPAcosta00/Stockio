@@ -16,7 +16,11 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("update-profile")] // api/user/update-profile
-    public async Task<IActionResult> UpdateProfileAsync(Guid userId, UpdateProfileDto dto){
+    public async Task<IActionResult> UpdateProfileAsync(UpdateProfileDto dto){
+            if (!ModelState.IsValid){
+                return BadRequest(ModelState);
+            }
+
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid currentUserId))

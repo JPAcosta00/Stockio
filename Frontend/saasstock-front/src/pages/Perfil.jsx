@@ -41,7 +41,10 @@ export default function Perfil() {
     e.preventDefault();
     setLoading(true);
     try {
-      await apiClient.put('/user/update-profile', { name, email });
+      await apiClient.put('/user/update-profile', { 
+        username : name, 
+        email : email
+       });
       showFeedback('Perfil actualizado correctamente.', 'success');
     } catch (err) {
       showFeedback(err.response?.data?.message || 'Error al actualizar el perfil.', 'error');
@@ -60,7 +63,6 @@ export default function Perfil() {
 
     setLoading(true);
     try {
-      //falta implementar el metodo en el backend: en UserController y UserService
       await apiClient.put('/user/change-password', { currentPassword, newPassword });
       showFeedback('Contraseña modificada con éxito.', 'success');
       setCurrentPassword('');
