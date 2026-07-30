@@ -17,6 +17,7 @@ public class User : IMustHaveTenant
     public Guid TenantId { get; set; }
     public Tenant Tenant { get; set; } = null!;
 
+    //este metodo es para cuando el ADMIN quiera modificar todo el usuario.
     public void updateDatos(String userNombre, String rol, bool? estado, String mail, Guid tenantId)
     {
         Username = userNombre;
@@ -25,5 +26,12 @@ public class User : IMustHaveTenant
             IsActive = estado.Value;
         Email = mail; 
         TenantId = tenantId;
+    }
+    
+    //este metodo es para cuando el usuario quiera modificar su mail o nombre
+    public void updatePerfil(String userNombre, String unMail)
+    {
+        Username = userNombre;
+        Email = unMail;
     }
 }

@@ -10,7 +10,7 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<bool> UpdateProfileAsync(Guid userId, UpdateUserByAdminDto dto)
+    public async Task<bool> UpdateProfileAsync(Guid userId, UpdateProfileDto dto)
     {
         // Busca el usuario por el ID global
         var user = await _userRepository.GetByIdAsync(userId); 
@@ -24,7 +24,7 @@ public class UserService : IUserService
         }
 
         // Actualiza los datos
-        user.updateDatos(dto.Username, dto.Role, dto.IsActive, dto.Email, dto.TenantId);
+        user.updatePerfil(dto.Username, dto.Email);
 
          _userRepository.Update(user); 
          await _userRepository.SaveChangesAsync();

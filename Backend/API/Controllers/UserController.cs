@@ -16,8 +16,8 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("update-profile")] // api/user/update-profile
-    public async Task<IActionResult> UpdateProfileAsync(Guid userId, UpdateUserByAdminDto dto){
-        var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    public async Task<IActionResult> UpdateProfileAsync(Guid userId, UpdateProfileDto dto){
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid currentUserId))
             {
@@ -45,12 +45,12 @@ public class UserController : ControllerBase
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto){
         try{
-        // Extrae el ID del usuario directamente de las claims del token JWT
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                
-            // Intenta parsear el claim a un tipo Guid
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid userId)){
-                return Unauthorized(new { message = "Usuario no autenticado." });
+            // Extrae el ID del usuario directamente de las claims del token JWT
+            var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
+            {
+                return Unauthorized(new { message = "Token inválido o usuario no autenticado." });
             }
 
             await _userService.ChangePasswordAsync(userId, dto);
@@ -66,3 +66,6 @@ public class UserController : ControllerBase
         }
     }
 }
+
+
+//refactorizar la parte de extraer el id de usuario, CODIGO REPETIDO
