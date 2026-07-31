@@ -53,12 +53,12 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId){
         //busca todos los productos del usuario actual
-        var products = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
-    
-        // Si la lista está vacía, se retorna directamente 
-        if (products == null) return Enumerable.Empty<Product>();
+        var rawProducts = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
 
-        var listaLimpia = products.Where(p => p.IsActive && p.TenantId == tenantId);
+        if (rawProducts == null) return Enumerable.Empty<Product>();
+
+        //filtra los productos del usuario actual que ESTEN ACTIVOS
+        var products = rawProducts.Where(p => p.IsActive && p.TenantId == tenantId);
 
         // filtro de Nombre 
         if (!string.IsNullOrWhiteSpace(filter.Name)){

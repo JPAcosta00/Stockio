@@ -20,11 +20,9 @@ namespace Infraestructure.Services
         {
             _context = context;
         }
-        public async Task<byte[]> GenerateExcelAsync(IEnumerable<Product> productIds){
+        public async Task<byte[]> GenerateExcelAsync(IEnumerable<Product> products){
             // EF filtra por tenant automaticamente
-            IQueryable<Product> query = _context.Products;
-
-            var products = await query.ToListAsync();
+            products ??= Enumerable.Empty<Product>();
 
             // Crea el libro de Excel usando ClosedXML
             using (var workbook = new XLWorkbook())
@@ -74,12 +72,9 @@ namespace Infraestructure.Services
         
         }
     
-        public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> productIds){
-            // obtiene los productos desde la bd
-            IQueryable<Product> query = _context.Products;
-
-            var products = await query.ToListAsync();
-            //deberia validar si la lista esta vacia para avisar al usuario
+        public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> products){
+            // Si la lista viene nula o vacía, asegura una lista vacía para evitar fallos
+            products ??= Enumerable.Empty<Product>();
 
             // Calcular totales para el resumen del reporte
             decimal valorTotalInventario = products.Sum(p => p.Price * p.Stock);
