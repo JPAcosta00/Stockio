@@ -224,6 +224,10 @@ export default function Perfil() {
                   </div>
                 </div>
 
+                <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Logo del tenant?</h3>
+                
+                <div className="space-y-4">aca </div>
+
                 <div className="flex justify-end pt-2">
                   <button
                     type="submit"
