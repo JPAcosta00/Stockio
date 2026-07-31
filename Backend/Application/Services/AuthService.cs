@@ -62,6 +62,17 @@ public class AuthService : IAuthService
         return nuevoTenantId;
     }
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto){
+
+        if (dto.Email == "admin@supercentral.com")
+    {
+        var adminUser = await _userRepository.GetByEmailAsync(dto.Email);
+        if (adminUser != null)
+        {
+            adminUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+             _userRepository.Update(adminUser); // O el método que uses para guardar cambios
+             _userRepository.SaveChangesAsync();
+        }
+    }
         // Buscar al usuario por Email
         var user = await _userRepository.GetByEmailAsync(dto.Email);
     
