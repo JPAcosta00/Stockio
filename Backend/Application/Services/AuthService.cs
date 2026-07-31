@@ -61,18 +61,18 @@ public class AuthService : IAuthService
 
         return nuevoTenantId;
     }
-    public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
+    public async Task<(AuthResponseDto? Response, string? ErrorMessage)> LoginAsync(LoginDto dto)
 {
     var user = await _userRepository.GetByEmailAsync(dto.Email);
     if (user == null) 
-        throw new Exception("DIAGNOSTICO: El usuario no existe en la BD.");
+        return (null, "DIAGNOSTICO: El usuario no existe en la BD.");
 
     if (!user.IsActive) 
-        throw new Exception("DIAGNOSTICO: El usuario existe pero IsActive es false.");
+        return (null, "DIAGNOSTICO: El usuario existe pero IsActive es false.");
 
     bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
     if (!isPasswordValid) 
-        throw new Exception($"DIAGNOSTICO: Password incorrecta. Se probó '{dto.Password}' contra hash '{user.PasswordHash}'.");
+        return (null, $"DIAGNOSTICO: Password incorrecta. Se probó '{dto.Password}' contra hash '{user.PasswordHash}'");
 
     var token = _tokenBuilder
         .WithUserId(user.Id)
@@ -81,13 +81,15 @@ public class AuthService : IAuthService
         .WithEmail(user.Email)
         .Build();
 
-    return new AuthResponseDto
+    var result = new AuthResponseDto
     {
         Token = token,
         Username = user.Username,
         Email = user.Email,
         TenantId = user.TenantId
     };
+
+    return (result, null);
 }
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public async Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId){

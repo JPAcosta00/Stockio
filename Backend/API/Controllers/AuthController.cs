@@ -19,17 +19,17 @@ public class AuthController : ControllerBase{
     // Endpoint para el Login
     // URL: POST api/auth/login
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
+public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginDto dto)
+{
+    var (result, errorMessage) = await _authService.LoginAsync(dto);
+
+    if (result == null)
     {
-        var result = await _authService.LoginAsync(dto);
-
-        if (result == null){
-            return Unauthorized(new { message = "Email o contraseña incorrectos." });
-        }
-
-        return Ok(result);
+        return Unauthorized(new { message = errorMessage });
     }
 
+    return Ok(result);
+}
     [HttpPost("register")]
     [AllowAnonymous] // Permite que cualquiera se registre sin estar logueado
     public async Task<IActionResult> Register([FromBody] RegisterDto dto){
