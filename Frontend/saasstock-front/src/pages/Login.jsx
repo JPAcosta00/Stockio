@@ -17,11 +17,10 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
+    Console.error(email, password);
     try {
       // endpoint del Backend
       const response = await apiClient.post('/auth/login', { email, password });
-      Console.error(email, password);
       // Si el backend no devuelve el token
       if (response.data && response.data.token) {
         login(response.data.token);
