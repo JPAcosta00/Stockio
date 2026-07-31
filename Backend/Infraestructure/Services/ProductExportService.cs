@@ -85,6 +85,11 @@ namespace Infraestructure.Services
             decimal valorTotalInventario = products.Sum(p => p.Price * p.Stock);
             int totalItems = products.Sum(p => p.Stock);
 
+            // Obtiene la hora de Argentina independientemente de si corre en Windows o Linux/Render
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+            OperatingSystem.IsWindows() ? "Argentina Standard Time" : "America/Argentina/Buenos_Aires");
+            var fechaEmision = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+
             // Genera el documento PDF usando el contenedor de QuestPDF
             var document = Document.Create(container =>{
                 container.Page(page =>{
@@ -97,8 +102,8 @@ namespace Infraestructure.Services
                 page.Header().Row(row =>{
                     row.RelativeItem().Column(column =>{
                         column.Item().Text("REPORTE DE INVENTARIO").FontSize(20).Bold().FontColor("#1F4E78");
-                        column.Item().Text($"Fecha de Emisión: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
-                        column.Item().Text("Sistema de Gestión").FontSize(9).FontColor(Colors.Grey.Medium);
+                        column.Item().Text($"Fecha de Emisión: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
+                        column.Item().Text("Sistema de Stock y Ventas").FontSize(12).FontColor(Colors.Grey.Medium);
                     });
 
                 row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>{

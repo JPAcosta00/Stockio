@@ -91,6 +91,18 @@ public class ProductService : IProductService
         return products.ToList();
     }
     public async Task<ProductResponseDto> CreateProductAsync(ProductCreateDto dto){
+        //valida que el codigo de barras no exista
+        var existenProductos = await _productRepository.GetAllAsync(p => p.Barcode == dto.Barcode);
+
+        if (existenProductos.Any())
+        {
+            var failures = new List<FluentValidation.Results.ValidationFailure>
+            {
+                new FluentValidation.Results.ValidationFailure("Barcode", "El código de barras ya se encuentra registrado.")
+            };
+
+            throw new ValidationException(failures);
+        }
 
         var newProduct = new Product
         {

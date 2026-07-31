@@ -18,7 +18,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
     public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate){
         // Retorna la lista filtrada por la condición 
-        return await _dbSet.Where(predicate).ToListAsync();
+        IQueryable<T> query = _dbSet;
+
+        if (predicate != null){
+            query = query.Where(predicate);
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task<T?> GetByIdAsync(Guid id)

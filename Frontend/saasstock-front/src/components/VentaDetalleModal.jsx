@@ -54,10 +54,10 @@ export default function VentaDetalleModal({ venta, loading, onClose }) {
                     <div key={item.id || index} className="py-2.5 flex justify-between items-center text-xs">
                       <div>
                         <p className="font-medium text-zinc-200">
-                          {item.product?.name || item.name || `Producto #${item.productId}`}
+                          {item.product?.name || item.name || `Prod. #${item.Name}`}
                         </p>
                         <p className="text-[10px] text-zinc-500 font-mono">
-                          {item.quantity} un. x ${item.unitPrice?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                          {item.quantity} unidades. x ${item.unitPrice?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       <p className="font-mono font-semibold text-zinc-300">
