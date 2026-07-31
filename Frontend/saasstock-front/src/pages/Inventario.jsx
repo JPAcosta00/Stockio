@@ -204,11 +204,11 @@ export default function Inventario() {
           </label>
           
           {/* exporta lo que se ve en la grilla */}
-          <button onClick={() => exportarAExcel(filtrosActivos)} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={() => exportarAExcel({})} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             🟢 Exportar Excel (Vista)
           </button>
           
-          <button onClick={() => exportarAPDF(filtrosActivos)} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
+          <button onClick={() => exportarAPDF({})} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
             🛑 Exportar PDF (Vista)
           </button>
         </div>
