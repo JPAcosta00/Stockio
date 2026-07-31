@@ -64,43 +64,30 @@ public class AuthService : IAuthService
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
 {
     var user = await _userRepository.GetByEmailAsync(dto.Email);
-    
-    if (user == null) {
-        Console.WriteLine($"[LOGIN FAIL] No encontró el usuario: '{dto.Email}'");
-        return null;
-    }
+    if (user == null) 
+        throw new Exception("DIAGNOSTICO: El usuario no existe en la BD.");
 
-    if (!user.IsActive) {
-        Console.WriteLine($"[LOGIN FAIL] Usuario inactivo: '{dto.Email}'");
-        return null;
-    }
+    if (!user.IsActive) 
+        throw new Exception("DIAGNOSTICO: El usuario existe pero IsActive es false.");
 
     bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-    if (!isPasswordValid) {
-        Console.WriteLine($"[LOGIN FAIL] La contraseña no coincide con el hash en BD para: '{dto.Email}'");
-        return null;
-    }
+    if (!isPasswordValid) 
+        throw new Exception($"DIAGNOSTICO: Password incorrecta. Se probó '{dto.Password}' contra hash '{user.PasswordHash}'.");
 
-    try {
-        var token = _tokenBuilder
-            .WithUserId(user.Id)
-            .WithTenantId(user.TenantId)
-            .WithUsername(user.Username)
-            .WithEmail(user.Email)
-            .Build();
+    var token = _tokenBuilder
+        .WithUserId(user.Id)
+        .WithTenantId(user.TenantId)
+        .WithUsername(user.Username)
+        .WithEmail(user.Email)
+        .Build();
 
-        return new AuthResponseDto
-        {
-            Token = token,
-            Username = user.Username,
-            Email = user.Email,
-            TenantId = user.TenantId
-        };
-    } 
-    catch (Exception ex) {
-        Console.WriteLine($"[LOGIN FAIL] Error al construir el token: {ex.Message}");
-        return null;
-    }
+    return new AuthResponseDto
+    {
+        Token = token,
+        Username = user.Username,
+        Email = user.Email,
+        TenantId = user.TenantId
+    };
 }
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public async Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId){
