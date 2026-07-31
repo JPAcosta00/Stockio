@@ -17,7 +17,6 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    console.error(email, password);
     try {
       // endpoint del Backend
       const response = await apiClient.post('/auth/login', { email, password });

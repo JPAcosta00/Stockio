@@ -61,20 +61,27 @@ public class AuthService : IAuthService
 
         return nuevoTenantId;
     }
-    public async Task<AuthResponseDto?> LoginAsync(LoginDto dto){
-        // Buscar al usuario por Email
-        var user = await _userRepository.GetByEmailAsync(dto.Email);
-        
-        // Si no existe o está inactivo
-        if (user == null || !user.IsActive) return null;
-
-        //verifica que la contraseña ingresada sea la misma que la registrada para el mail ingresado.
-        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+    public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
+{
+    var user = await _userRepository.GetByEmailAsync(dto.Email);
     
-        if (!isPasswordValid) 
-            return null;
+    if (user == null) {
+        Console.WriteLine($"[LOGIN FAIL] No encontró el usuario: '{dto.Email}'");
+        return null;
+    }
 
-        //uso el builder para el token 
+    if (!user.IsActive) {
+        Console.WriteLine($"[LOGIN FAIL] Usuario inactivo: '{dto.Email}'");
+        return null;
+    }
+
+    bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+    if (!isPasswordValid) {
+        Console.WriteLine($"[LOGIN FAIL] La contraseña no coincide con el hash en BD para: '{dto.Email}'");
+        return null;
+    }
+
+    try {
         var token = _tokenBuilder
             .WithUserId(user.Id)
             .WithTenantId(user.TenantId)
@@ -82,7 +89,6 @@ public class AuthService : IAuthService
             .WithEmail(user.Email)
             .Build();
 
-        // respuesta armada para el Frontend
         return new AuthResponseDto
         {
             Token = token,
@@ -90,7 +96,12 @@ public class AuthService : IAuthService
             Email = user.Email,
             TenantId = user.TenantId
         };
+    } 
+    catch (Exception ex) {
+        Console.WriteLine($"[LOGIN FAIL] Error al construir el token: {ex.Message}");
+        return null;
     }
+}
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public async Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId){
         //  Si no es el superAdmin no puede modificar usuarios
