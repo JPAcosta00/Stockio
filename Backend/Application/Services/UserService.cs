@@ -46,8 +46,7 @@ public class UserService : IUserService
         }
 
         // 2. Hashear la nueva contraseña y actualizar
-        //user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
 
         _userRepository.Update(user);
         await _userRepository.SaveChangesAsync();
