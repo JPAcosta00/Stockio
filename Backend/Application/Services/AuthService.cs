@@ -61,36 +61,37 @@ public class AuthService : IAuthService
 
         return nuevoTenantId;
     }
-    public async Task<(AuthResponseDto? Response, string? ErrorMessage)> LoginAsync(LoginDto dto)
-{
-    var user = await _userRepository.GetByEmailAsync(dto.Email);
-    if (user == null) 
-        return (null, "DIAGNOSTICO: El usuario no existe en la BD.");
+    public async Task<(AuthResponseDto? Response, string? ErrorMessage)> LoginAsync(LoginDto dto){
+        var user = await _userRepository.GetByEmailAsync(dto.Email);
+        if (user == null) 
+            return (null, "DIAGNOSTICO: El usuario no existe en la BD.");
 
-    if (!user.IsActive) 
-        return (null, "DIAGNOSTICO: El usuario existe pero IsActive es false.");
+        if (!user.IsActive) 
+            return (null, "DIAGNOSTICO: El usuario existe pero IsActive es false.");
 
-    bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-    if (!isPasswordValid) 
-        return (null, $"DIAGNOSTICO: Password incorrecta. Se probó '{dto.Password}' contra hash '{user.PasswordHash}'");
+        var p = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-    var token = _tokenBuilder
-        .WithUserId(user.Id)
-        .WithTenantId(user.TenantId)
-        .WithUsername(user.Username)
-        .WithEmail(user.Email)
-        .Build();
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(p, user.PasswordHash);
+        if (!isPasswordValid) 
+            return (null, $"DIAGNOSTICO: Password incorrecta. Se probó '{p}' contra hash '{user.PasswordHash}'");
 
-    var result = new AuthResponseDto
-    {
-        Token = token,
-        Username = user.Username,
-        Email = user.Email,
-        TenantId = user.TenantId
-    };
+        var token = _tokenBuilder
+            .WithUserId(user.Id)
+            .WithTenantId(user.TenantId)
+            .WithUsername(user.Username)
+            .WithEmail(user.Email)
+            .Build();
 
-    return (result, null);
-}
+        var result = new AuthResponseDto
+        {
+            Token = token,
+            Username = user.Username,
+            Email = user.Email,
+            TenantId = user.TenantId
+        };
+
+        return (result, null);
+    }
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public async Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId){
         //  Si no es el superAdmin no puede modificar usuarios
