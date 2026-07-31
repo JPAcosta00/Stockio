@@ -61,20 +61,20 @@ public class AuthService : IAuthService
 
         return nuevoTenantId;
     }
-    public async Task<(AuthResponseDto? Response, string? ErrorMessage)> LoginAsync(LoginDto dto){
+    public async Task<AuthResponseDto?> LoginAsync(LoginDto dto){
+        // Buscar al usuario por Email
         var user = await _userRepository.GetByEmailAsync(dto.Email);
-        if (user == null) 
-            return (null, "DIAGNOSTICO: El usuario no existe en la BD.");
+    
+        // Si no existe o está inactivo
+        if (user == null || !user.IsActive) return null;
 
-        if (!user.IsActive) 
-            return (null, "DIAGNOSTICO: El usuario existe pero IsActive es false.");
+        // Verifica que la contraseña ingresada sea la misma que la registrada para el mail ingresado
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
 
-        var p = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-
-        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(p, user.PasswordHash);
         if (!isPasswordValid) 
-            return (null, $"DIAGNOSTICO: Password incorrecta. Se probó '{p}' contra hash '{user.PasswordHash}'");
+            return null;
 
+        // Uso el builder para el token 
         var token = _tokenBuilder
             .WithUserId(user.Id)
             .WithTenantId(user.TenantId)
@@ -82,16 +82,15 @@ public class AuthService : IAuthService
             .WithEmail(user.Email)
             .Build();
 
-        var result = new AuthResponseDto
+        // Respuesta armada para el Frontend
+        return new AuthResponseDto
         {
             Token = token,
             Username = user.Username,
             Email = user.Email,
             TenantId = user.TenantId
         };
-
-        return (result, null);
-    }
+    }    
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     public async Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId){
         //  Si no es el superAdmin no puede modificar usuarios
