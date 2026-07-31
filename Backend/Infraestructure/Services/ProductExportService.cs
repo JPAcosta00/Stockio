@@ -20,132 +20,137 @@ namespace Infraestructure.Services
         {
             _context = context;
         }
-        public async Task<byte[]> GenerateExcelAsync(IEnumerable<Product> products){
+        public async Task<byte[]> GenerateExcelAsync(IEnumerable<Product> products)
+        {
             products ??= Enumerable.Empty<Product>();
-
+            var productList = products.ToList(); // Convertimos a lista para calcular metadatos
+        
             using (var workbook = new XLWorkbook())
             {
                 var worksheet = workbook.Worksheets.Add("Inventario General");
-
+        
+                // -------------------------------------------------------------
+                // 1. CABECERAS
+                // -------------------------------------------------------------
+                worksheet.Cell(1, 1).Value = "Código de Barras";
+                worksheet.Cell(1, 2).Value = "Nombre";
+                worksheet.Cell(1, 3).Value = "Descripción";
+                worksheet.Cell(1, 4).Value = "Precio Unitario";
+                worksheet.Cell(1, 5).Value = "Stock Disponible";
+                worksheet.Cell(1, 6).Value = "Valor Total Stock";
+        
+                var headerRange = worksheet.Range("A1:F1");
+                headerRange.Style.Font.Bold = true;
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
+                headerRange.Style.Font.FontColor = XLColor.White;
+                headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        
+                // -------------------------------------------------------------
+                // 2. CARGA DE DATOS
+                // -------------------------------------------------------------
+                int startRow = 2;
+                int currentRow = startRow;
+        
+                foreach (var prod in productList)
+                {
+                    decimal price = prod.Price;
+                    int stock = prod.Stock;
+                    decimal totalValue = price * stock;
+        
+                    worksheet.Cell(currentRow, 1).Value = prod.Barcode ?? "";
+                    worksheet.Cell(currentRow, 2).Value = prod.Name ?? "";
+                    worksheet.Cell(currentRow, 3).Value = prod.Description ?? "";
+                    
+                    // Asignación explícita de valores numéricos
+                    worksheet.Cell(currentRow, 4).SetValue(price);
+                    worksheet.Cell(currentRow, 5).SetValue(stock);
+                    worksheet.Cell(currentRow, 6).SetValue(totalValue);
+        
+                    // Formatos de celda
+                    worksheet.Cell(currentRow, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
+                    worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+                    worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
+        
+                    currentRow++;
+                }
+        
+                // -------------------------------------------------------------
+                // 3. FILA DE TOTALES Y RESUMEN
+                // -------------------------------------------------------------
+                if (productList.Any())
+                {
+                    // Cálculos directos en C# (evita fallos de evaluación de fórmulas en ClosedXML)
+                    decimal avgPrice = productList.Average(p => p.Price);
+                    int totalStock = productList.Sum(p => p.Stock);
+                    decimal grandTotalValue = productList.Sum(p => p.Price * p.Stock);
+        
+                    worksheet.Cell(currentRow, 3).Value = "TOTALES / PROMEDIOS:";
+                    worksheet.Cell(currentRow, 3).Style.Font.Bold = true;
+                    worksheet.Cell(currentRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+        
+                    // Asignar los valores calculados
+                    worksheet.Cell(currentRow, 4).SetValue(avgPrice);
+                    worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
+        
+                    worksheet.Cell(currentRow, 5).SetValue(totalStock);
+                    worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+        
+                    worksheet.Cell(currentRow, 6).SetValue(grandTotalValue);
+                    worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
+        
+                    // Estilos para la fila de totales
+                    var totalRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                    totalRange.Style.Font.Bold = true;
+                    totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D9E1F2");
+                    totalRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                    totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
+        
                     // -------------------------------------------------------------
-                    // 1. CABECERAS
+                    // 4. TARJETAS DE RESUMEN EJECUTIVO (KPIs)
                     // -------------------------------------------------------------
-                    worksheet.Cell(1, 1).Value = "Código de Barras";
-                    worksheet.Cell(1, 2).Value = "Nombre";
-                    worksheet.Cell(1, 3).Value = "Descripción";
-                    worksheet.Cell(1, 4).Value = "Precio Unitario";
-                    worksheet.Cell(1, 5).Value = "Stock Disponible";
-                    worksheet.Cell(1, 6).Value = "Valor Total Stock";
-
-                    // Estilo a las cabeceras
-                    var headerRange = worksheet.Range("A1:F1");
-                    headerRange.Style.Font.Bold = true;
-                    headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
-                    headerRange.Style.Font.FontColor = XLColor.White;
-                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-
-                    // -------------------------------------------------------------
-                    // 2. CARGA DE DATOS
-                    // -------------------------------------------------------------
-                    int startRow = 2;
-                    int currentRow = startRow;
-
-                    foreach (var prod in products)
-                    {
-                        worksheet.Cell(currentRow, 1).Value = prod.Barcode;
-                        worksheet.Cell(currentRow, 2).Value = prod.Name;
-                        worksheet.Cell(currentRow, 3).Value = prod.Description;
-                        worksheet.Cell(currentRow, 4).Value = prod.Price;
-                        worksheet.Cell(currentRow, 5).Value = prod.Stock;
-            
-                        // Fórmulas nativas de Excel por fila (Precio * Stock)
-                        worksheet.Cell(currentRow, 6).FormulaA1 = $"=D{currentRow}*E{currentRow}";
-
-                        // Formatos de celda
-                        worksheet.Cell(currentRow, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
-                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
-
-                        currentRow++;
-                    }
-
-                    int lastDataRow = currentRow - 1;
-
-                    // -------------------------------------------------------------
-                    // 3. FILA DE TOTALES Y RESUMEN (Solo si hay productos)
-                    // -------------------------------------------------------------
-                    if (products.Any())
-                    {
-                         // Fila de Totales Generales
-                        worksheet.Cell(currentRow, 3).Value = "TOTALES / PROMEDIOS:";
-                        worksheet.Cell(currentRow, 3).Style.Font.Bold = true;
-                        worksheet.Cell(currentRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
-
-                        // Promedio de Precio Unitario
-                        worksheet.Cell(currentRow, 4).FormulaA1 = $"=AVERAGE(D{startRow}:D{lastDataRow})";
-                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
-
-                        // Total Unidades en Stock
-                        worksheet.Cell(currentRow, 5).FormulaA1 = $"=SUM(E{startRow}:E{lastDataRow})";
-                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
-
-                        // Valorización Total del Inventario
-                        worksheet.Cell(currentRow, 6).FormulaA1 = $"=SUM(F{startRow}:F{lastDataRow})";
-                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
-
-                        // Estilos para la fila de totales
-                        var totalRange = worksheet.Range(currentRow, 1, currentRow, 6);
-                        totalRange.Style.Font.Bold = true;
-                        totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D9E1F2");
-                        totalRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
-                        totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
-
-                        // -------------------------------------------------------------
-                        // 4. TARJETAS DE RESUMEN EJECUTIVO (KPIs al pie)
-                        // -------------------------------------------------------------
-                        int summaryStartRow = currentRow + 3;
-
-                        worksheet.Cell(summaryStartRow, 1).Value = "MÉTRICA DE INVENTARIO";
-                        worksheet.Cell(summaryStartRow, 2).Value = "VALOR";
-                        var kpiHeader = worksheet.Range(summaryStartRow, 1, summaryStartRow, 2);
-                        kpiHeader.Style.Font.Bold = true;
-                        kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#2F5597");
-                        kpiHeader.Style.Font.FontColor = XLColor.White;
-
-                        // Total de Ítems / Variedad
-                        worksheet.Cell(summaryStartRow + 1, 1).Value = "Cantidad de Productos Distintos:";
-                        worksheet.Cell(summaryStartRow + 1, 2).FormulaA1 = $"=COUNTA(B{startRow}:B{lastDataRow})";
-                        worksheet.Cell(summaryStartRow + 1, 2).Style.NumberFormat.Format = "#,##0";
-
-                        // Total Físico Unidades
-                        worksheet.Cell(summaryStartRow + 2, 1).Value = "Total Unidades Físicas:";
-                        worksheet.Cell(summaryStartRow + 2, 2).FormulaA1 = $"=E{currentRow}"; // Apunta al SUM de stock
-                        worksheet.Cell(summaryStartRow + 2, 2).Style.NumberFormat.Format = "#,##0";
-
-                        // Valor Capitalizado Total
-                        worksheet.Cell(summaryStartRow + 3, 1).Value = "Valorización Total del Stock:";
-                        worksheet.Cell(summaryStartRow + 3, 2).FormulaA1 = $"=F{currentRow}"; // Apunta al SUM de total $
-                        worksheet.Cell(summaryStartRow + 3, 2).Style.NumberFormat.Format = "$#,##0.00";
-                        worksheet.Cell(summaryStartRow + 3, 2).Style.Font.Bold = true;
-
-                        // Bordes a la tabla de KPIs
-                        var kpiTable = worksheet.Range(summaryStartRow, 1, summaryStartRow + 3, 2);
-                        kpiTable.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
-                        kpiTable.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
-                    }
-
-                    // -------------------------------------------------------------
-                    // 5. FORMATO FINAL Y AUTOFIT
-                    // -------------------------------------------------------------
-                     worksheet.Columns().AdjustToContents();
-
-                    using (var stream = new MemoryStream())
-                    {
-                        workbook.SaveAs(stream);
-                        return stream.ToArray();
-                    }
-             }
+                    int summaryStartRow = currentRow + 3;
+        
+                    worksheet.Cell(summaryStartRow, 1).Value = "MÉTRICA DE INVENTARIO";
+                    worksheet.Cell(summaryStartRow, 2).Value = "VALOR";
+                    var kpiHeader = worksheet.Range(summaryStartRow, 1, summaryStartRow, 2);
+                    kpiHeader.Style.Font.Bold = true;
+                    kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#2F5597");
+                    kpiHeader.Style.Font.FontColor = XLColor.White;
+        
+                    // Total Productos Únicos
+                    worksheet.Cell(summaryStartRow + 1, 1).Value = "Variedad de Productos:";
+                    worksheet.Cell(summaryStartRow + 1, 2).SetValue(productList.Count);
+                    worksheet.Cell(summaryStartRow + 1, 2).Style.NumberFormat.Format = "#,##0";
+        
+                    // Total Unidades Físicas
+                    worksheet.Cell(summaryStartRow + 2, 1).Value = "Total Unidades Físicas:";
+                    worksheet.Cell(summaryStartRow + 2, 2).SetValue(totalStock);
+                    worksheet.Cell(summaryStartRow + 2, 2).Style.NumberFormat.Format = "#,##0";
+        
+                    // Valorización Total
+                    worksheet.Cell(summaryStartRow + 3, 1).Value = "Valorización Total del Stock:";
+                    worksheet.Cell(summaryStartRow + 3, 2).SetValue(grandTotalValue);
+                    worksheet.Cell(summaryStartRow + 3, 2).Style.NumberFormat.Format = "$#,##0.00";
+                    worksheet.Cell(summaryStartRow + 3, 2).Style.Font.Bold = true;
+        
+                    // Bordes a la tabla de KPIs
+                    var kpiTable = worksheet.Range(summaryStartRow, 1, summaryStartRow + 3, 2);
+                    kpiTable.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                    kpiTable.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                }
+        
+                // -------------------------------------------------------------
+                // 5. AJUSTE DE COLUMNAS Y SALIDA
+                // -------------------------------------------------------------
+                worksheet.Columns().AdjustToContents();
+        
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return stream.ToArray();
+                }
+            }
         }
 
         public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> products){
