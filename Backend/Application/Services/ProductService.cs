@@ -58,6 +58,8 @@ public class ProductService : IProductService
         // Si la lista está vacía, se retorna directamente 
         if (products == null) return Enumerable.Empty<Product>();
 
+        var listaLimpia = products.Where(p => p.IsActive && p.TenantId == tenantId);
+
         // filtro de Nombre 
         if (!string.IsNullOrWhiteSpace(filter.Name)){
             products = products.Where(p => p.Name != null && 

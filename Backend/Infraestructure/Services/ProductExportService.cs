@@ -103,7 +103,7 @@ namespace Infraestructure.Services
                     row.RelativeItem().Column(column =>{
                         column.Item().Text("REPORTE DE INVENTARIO").FontSize(20).Bold().FontColor("#1F4E78");
                         column.Item().Text($"Fecha de Emisión: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
-                        column.Item().Text("Sistema de Stock y Ventas").FontSize(12).FontColor(Colors.Grey.Medium);
+                        column.Item().Text("Sistema de Stock y Ventas").FontSize(9).FontColor(Colors.Grey.Medium);
                     });
 
                 row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>{
