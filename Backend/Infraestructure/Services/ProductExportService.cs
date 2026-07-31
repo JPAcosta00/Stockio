@@ -21,57 +21,133 @@ namespace Infraestructure.Services
             _context = context;
         }
         public async Task<byte[]> GenerateExcelAsync(IEnumerable<Product> products){
-            // EF filtra por tenant automaticamente
             products ??= Enumerable.Empty<Product>();
 
-            // Crea el libro de Excel usando ClosedXML
             using (var workbook = new XLWorkbook())
             {
-                var worksheet = workbook.Worksheets.Add("Inventario Seleccionado");
+                var worksheet = workbook.Worksheets.Add("Inventario General");
 
-                //cabeceras
-                worksheet.Cell(1, 1).Value = "Código de Barras";
-                worksheet.Cell(1, 2).Value = "Nombre";
-                worksheet.Cell(1, 3).Value = "Descripción";
-                worksheet.Cell(1, 4).Value = "Precio";
-                worksheet.Cell(1, 5).Value = "Stock Disponible";
+                    // -------------------------------------------------------------
+                    // 1. CABECERAS
+                    // -------------------------------------------------------------
+                    worksheet.Cell(1, 1).Value = "Código de Barras";
+                    worksheet.Cell(1, 2).Value = "Nombre";
+                    worksheet.Cell(1, 3).Value = "Descripción";
+                    worksheet.Cell(1, 4).Value = "Precio Unitario";
+                    worksheet.Cell(1, 5).Value = "Stock Disponible";
+                    worksheet.Cell(1, 6).Value = "Valor Total Stock";
 
-                // Estilo a las cabeceras
-                var headerRange = worksheet.Range("A1:E1");
-                headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
-                headerRange.Style.Font.FontColor = XLColor.White;
+                    // Estilo a las cabeceras
+                    var headerRange = worksheet.Range("A1:F1");
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
+                    headerRange.Style.Font.FontColor = XLColor.White;
+                    headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                // Carga los datos
-                int currentRow = 2;
-                foreach (var prod in products)
-                {
-                    worksheet.Cell(currentRow, 1).Value = prod.Barcode;
-                    worksheet.Cell(currentRow, 2).Value = prod.Name;
-                    worksheet.Cell(currentRow, 3).Value = prod.Description;
-                    worksheet.Cell(currentRow, 4).Value = prod.Price;
-                    worksheet.Cell(currentRow, 5).Value = prod.Stock;
+                    // -------------------------------------------------------------
+                    // 2. CARGA DE DATOS
+                    // -------------------------------------------------------------
+                    int startRow = 2;
+                    int currentRow = startRow;
 
-                    // Formato numérico y de moneda a las celdas
-                    worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
-                    worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+                    foreach (var prod in products)
+                    {
+                        worksheet.Cell(currentRow, 1).Value = prod.Barcode;
+                        worksheet.Cell(currentRow, 2).Value = prod.Name;
+                        worksheet.Cell(currentRow, 3).Value = prod.Description;
+                        worksheet.Cell(currentRow, 4).Value = prod.Price;
+                        worksheet.Cell(currentRow, 5).Value = prod.Stock;
+            
+                        // Fórmulas nativas de Excel por fila (Precio * Stock)
+                        worksheet.Cell(currentRow, 6).FormulaA1 = $"=D{currentRow}*E{currentRow}";
 
-                    currentRow++;
-                }
+                        // Formatos de celda
+                        worksheet.Cell(currentRow, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
 
-                // Autoajustar el ancho de las columnas para que no se corte el texto
-                worksheet.Columns().AdjustToContents();
+                        currentRow++;
+                    }
 
-                // Convertir el Excel a un array de bytes para el controlador
-                using (var stream = new MemoryStream())
-                {
-                    workbook.SaveAs(stream);
-                    return stream.ToArray();
-                }
-            }
-        
+                    int lastDataRow = currentRow - 1;
+
+                    // -------------------------------------------------------------
+                    // 3. FILA DE TOTALES Y RESUMEN (Solo si hay productos)
+                    // -------------------------------------------------------------
+                    if (products.Any())
+                    {
+                         // Fila de Totales Generales
+                        worksheet.Cell(currentRow, 3).Value = "TOTALES / PROMEDIOS:";
+                        worksheet.Cell(currentRow, 3).Style.Font.Bold = true;
+                        worksheet.Cell(currentRow, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                        // Promedio de Precio Unitario
+                        worksheet.Cell(currentRow, 4).FormulaA1 = $"=AVERAGE(D{startRow}:D{lastDataRow})";
+                        worksheet.Cell(currentRow, 4).Style.NumberFormat.Format = "$#,##0.00";
+
+                        // Total Unidades en Stock
+                        worksheet.Cell(currentRow, 5).FormulaA1 = $"=SUM(E{startRow}:E{lastDataRow})";
+                        worksheet.Cell(currentRow, 5).Style.NumberFormat.Format = "#,##0";
+
+                        // Valorización Total del Inventario
+                        worksheet.Cell(currentRow, 6).FormulaA1 = $"=SUM(F{startRow}:F{lastDataRow})";
+                        worksheet.Cell(currentRow, 6).Style.NumberFormat.Format = "$#,##0.00";
+
+                        // Estilos para la fila de totales
+                        var totalRange = worksheet.Range(currentRow, 1, currentRow, 6);
+                        totalRange.Style.Font.Bold = true;
+                        totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D9E1F2");
+                        totalRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                        totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
+
+                        // -------------------------------------------------------------
+                        // 4. TARJETAS DE RESUMEN EJECUTIVO (KPIs al pie)
+                        // -------------------------------------------------------------
+                        int summaryStartRow = currentRow + 3;
+
+                        worksheet.Cell(summaryStartRow, 1).Value = "MÉTRICA DE INVENTARIO";
+                        worksheet.Cell(summaryStartRow, 2).Value = "VALOR";
+                        var kpiHeader = worksheet.Range(summaryStartRow, 1, summaryStartRow, 2);
+                        kpiHeader.Style.Font.Bold = true;
+                        kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#2F5597");
+                        kpiHeader.Style.Font.FontColor = XLColor.White;
+
+                        // Total de Ítems / Variedad
+                        worksheet.Cell(summaryStartRow + 1, 1).Value = "Cantidad de Productos Distintos:";
+                        worksheet.Cell(summaryStartRow + 1, 2).FormulaA1 = $"=COUNTA(B{startRow}:B{lastDataRow})";
+                        worksheet.Cell(summaryStartRow + 1, 2).Style.NumberFormat.Format = "#,##0";
+
+                        // Total Físico Unidades
+                        worksheet.Cell(summaryStartRow + 2, 1).Value = "Total Unidades Físicas:";
+                        worksheet.Cell(summaryStartRow + 2, 2).FormulaA1 = $"=E{currentRow}"; // Apunta al SUM de stock
+                        worksheet.Cell(summaryStartRow + 2, 2).Style.NumberFormat.Format = "#,##0";
+
+                        // Valor Capitalizado Total
+                        worksheet.Cell(summaryStartRow + 3, 1).Value = "Valorización Total del Stock:";
+                        worksheet.Cell(summaryStartRow + 3, 2).FormulaA1 = $"=F{currentRow}"; // Apunta al SUM de total $
+                        worksheet.Cell(summaryStartRow + 3, 2).Style.NumberFormat.Format = "$#,##0.00";
+                        worksheet.Cell(summaryStartRow + 3, 2).Style.Font.Bold = true;
+
+                        // Bordes a la tabla de KPIs
+                        var kpiTable = worksheet.Range(summaryStartRow, 1, summaryStartRow + 3, 2);
+                        kpiTable.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+                        kpiTable.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+                    }
+
+                    // -------------------------------------------------------------
+                    // 5. FORMATO FINAL Y AUTOFIT
+                    // -------------------------------------------------------------
+                     worksheet.Columns().AdjustToContents();
+
+                    using (var stream = new MemoryStream())
+                    {
+                        workbook.SaveAs(stream);
+                        return stream.ToArray();
+                    }
+             }
         }
-    
+
         public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> products){
             // Si la lista viene nula o vacía, asegura una lista vacía para evitar fallos
             products ??= Enumerable.Empty<Product>();
