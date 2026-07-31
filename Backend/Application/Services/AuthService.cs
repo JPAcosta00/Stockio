@@ -68,12 +68,11 @@ public class AuthService : IAuthService
         // Si no existe o está inactivo
         if (user == null || !user.IsActive) return null;
 
-        //verifica contraseña usando BCrypt
-        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-
-        // Compara el texto plano que viene de React contra el Hash encriptado de MySQL
+        //verifica que la contraseña ingresada sea la misma que la registrada para el mail ingresado.
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-        if (!isPasswordValid) return null;
+    
+        if (!isPasswordValid) 
+            return null;
 
         //uso el builder para el token 
         var token = _tokenBuilder
