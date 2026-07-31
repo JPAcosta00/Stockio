@@ -125,6 +125,7 @@ export default function Perfil() {
                 <span>Seguridad</span>
               </button>
             </div>
+            <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Logo del tenant?</h3>
 
             {/* Botón de Cerrar Sesión en el menú lateral */}
             <div className="pt-4 mt-4 border-t border-zinc-800/80 hidden md:block">
@@ -138,8 +139,6 @@ export default function Perfil() {
             </div>
           </div>
 
-          <h3 className="text-lg font-medium border-b border-zinc-800 pb-2">Logo del tenant?</h3>
-          <div className="space-y-4">aca </div>
 
           {/* Área del Formulario */}
           <div className="flex-1 settings-card bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-6 backdrop-blur-md">
