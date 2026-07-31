@@ -29,6 +29,7 @@ export default function Login() {
     } catch (err) {
       console.error(err);
       // Captura el mensaje de error que devuelve el backend
+      alert(err.response?.data?.message || 'Error desconocido');
       setError(err.response?.data?.message || 'Credenciales incorrectas o error en el servidor.');
     } finally {
       setLoading(false);
