@@ -148,7 +148,7 @@ export default function Perfil() {
           <div className="flex flex-col items-center p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
             
             {/* Display / Previsualizador de Logo */}
-            <div className="flex flex-col items-center p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
+            <div className="relative w-20 h-20 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center overflow-hidden group">
               {logoPreview ? (
                 <img 
                   src={logoPreview} 
