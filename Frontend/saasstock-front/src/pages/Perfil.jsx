@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
-import { User, Shield, LogOut } from 'lucide-react'; 
+import { User, Shield, LogOut, Upload, Building } from "lucide-react";
 
 export default function Perfil() {
   // Uso el logout de authcontext
