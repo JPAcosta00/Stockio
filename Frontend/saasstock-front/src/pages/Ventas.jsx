@@ -405,6 +405,10 @@ export default function Ventas() {
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
           
+          <div className="relative w-full sm:w-64">
+            <span className="absolute left-3 top-2 text-zinc-500 text-xs">FILTROS</span>
+          </div>
+          
           {/* FILTRO DE BÚSQUEDA */}
           <div className="relative w-full sm:w-64">
             <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
