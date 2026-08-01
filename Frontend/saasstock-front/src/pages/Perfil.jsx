@@ -23,6 +23,19 @@ export default function Perfil() {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [loading, setLoading] = useState(false);
 
+  const [logoPreview, setLogoPreview] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Manejador local de la imagen
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Crea una URL temporal del archivo subido en el cliente
+      const localUrl = URL.createObjectURL(file);
+      setLogoPreview(localUrl);
+    }
+  };
+
   // Cargar datos iniciales del usuario
   useEffect(() => {
     if (user) {
