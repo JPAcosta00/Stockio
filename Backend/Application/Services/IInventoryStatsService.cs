@@ -72,6 +72,10 @@ public class InventoryStatsService : IInventoryStatsService
         var borderLight = "#E2E8F0";  // Slate 200
         var textMuted = "#64748B";    // Slate 500
 
+        var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
+        OperatingSystem.IsWindows() ? "Argentina Standard Time" : "America/Argentina/Buenos_Aires");
+        var fechaEmision = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
+
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -89,7 +93,7 @@ public class InventoryStatsService : IInventoryStatsService
                         row.RelativeItem().Column(c =>
                         {
                             c.Item().Text("Reporte de Estadísticas de Inventario").FontSize(18).Bold().FontColor(primaryColor);
-                            c.Item().Text($"Generado el: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(textMuted);
+                            c.Item().Text($"Generado el: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(textMuted);
                         });
                     });
 
@@ -180,7 +184,7 @@ public class InventoryStatsService : IInventoryStatsService
                 // Pie de página
                 page.Footer().Row(row =>
                 {
-                    row.RelativeItem().Text("Reporte del sistema de inventarios").FontSize(7).FontColor(textMuted);
+                    row.RelativeItem().Text("Reporte del sistema del Stock y Ventas").FontSize(7).FontColor(textMuted);
                     row.RelativeItem().AlignRight().Text(t =>
                     {
                         t.DefaultTextStyle(x => x.FontSize(8).FontColor(textMuted));

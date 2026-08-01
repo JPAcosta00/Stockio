@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }) {
   // LISTA DE LINKS GENERALES:
   const navigationLinks = [
     { name: 'Inicio', href: '/' },                  //la parte de estadisticas esta en el inicio
+    { name: 'Caja', href: '/caja' },
     { name: 'Inventario', href: '/inventario' },
     { name: 'Ventas', href: '/ventas' },
     { name: 'Mi perfil', href: '/perfil' },

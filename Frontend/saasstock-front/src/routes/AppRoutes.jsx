@@ -6,6 +6,7 @@ import Inventario from '../pages/Inventario';
 import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
 import Perfil from '../pages/Perfil'; 
+import Caja from '../pages/Caja'; 
 
 
 const PrivateRoute = ({ children }) => {
@@ -52,6 +53,9 @@ export default function AppRoutes() {
           </PrivateRoute>
         } 
       />
+
+      {/* INVENTARIO REAL */}
+      <Route path="/caja" element={<PrivateRoute><Caja /></PrivateRoute>} />
 
       {/* INVENTARIO REAL */}
       <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />

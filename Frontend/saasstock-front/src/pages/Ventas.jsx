@@ -429,7 +429,7 @@ export default function Ventas() {
             <table className="w-full text-left text-xs divide-y divide-zinc-800">
               <thead>
                 <tr className="text-zinc-500 font-semibold uppercase">
-                  <th className="pb-3">Codigo de Barra</th>
+                  <th className="pb-3">ID de venta</th>
                   <th className="pb-3">Fecha y Hora</th>
                   <th className="pb-3 text-right">Monto Total</th>
                   <th className="pb-3 text-center">Acción</th>
