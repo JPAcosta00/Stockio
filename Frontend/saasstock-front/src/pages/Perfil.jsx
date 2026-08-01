@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import { User, Shield, LogOut } from 'lucide-react'; 
