@@ -9,7 +9,7 @@ export default function Caja() {
   const [montoIngresos, setMontoIngresos] = useState(0);
   const [montoEgresos, setMontoEgresos] = useState(0);
   
-  // Ventas según método de pago (Simuladas / Cargadas del sistema)
+  // Ventas según método de pago 
   const [ventas, setVentas] = useState({
     efectivo: 0,
     mercadoPago: 0,
@@ -66,7 +66,7 @@ export default function Caja() {
     setVentas({ efectivo: 0, mercadoPago: 0, tarjeta: 0 });
   };
 
-  // Botón para solicitar Reporte PDF al Backend
+  // Botón para el reporte en PDF
   const handleGenerarReportePDF = async () => {
     try {
       console.log("Solicitando reporte PDF de cierre de caja...");
@@ -112,7 +112,7 @@ export default function Caja() {
         </div>
       </div>
 
-      {/* SI LA CAJA ESTÁ CERRADA -> FORMULARIO DE APERTURA */}
+      {/* SI LA CAJA ESTÁ CERRADA -> se muestra formulario de apertura */}
       {!cajaAbierta ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md mx-auto text-center shadow-xl">
           <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
@@ -144,7 +144,7 @@ export default function Caja() {
         </div>
       ) : (
 
-        /* SI LA CAJA ESTÁ ABIERTA -> PANEL DE CONTROL */
+        /* SI LA CAJA ESTÁ ABIERTA -> se muestra panel de control */
         <div className="space-y-6">
           
           {/* TARJETAS DE MÉTODOS DE PAGO Y MOVIMIENTOS */}
