@@ -14,7 +14,6 @@ public class ProductValidator : AbstractValidator<Product>
 
         //regla para que el codigo de barras no este vacio
         RuleFor(p => p.Barcode)
-            .NotEmpty().WithMessage("El código de barras es obligatorio.")
             .Matches(@"^[0-9]+$").WithMessage("El código de barras solo debe contener números.")
             .Length(8, 14).WithMessage("El código de barras debe tener entre 8 y 14 dígitos (EAN-8 a EAN-14).");
 

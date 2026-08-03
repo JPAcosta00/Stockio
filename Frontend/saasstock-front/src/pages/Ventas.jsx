@@ -25,8 +25,9 @@ export default function Ventas() {
   const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
 
-  // Filtro en el historial de ventas
+  // Filtros en el historial de ventas
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
+  const [filtroTiempo, setFiltroTiempo] = useState('todos'); // 'hoy', 'semana', 'mes', 'anio', 'todos'
 
   // Referencias UI
   const barcodeRef = useRef(null);
@@ -41,7 +42,7 @@ export default function Ventas() {
     if (barcodeRef.current) barcodeRef.current.focus();
   }, [carrito]);
 
-  // Cierra la busqueda de productos en el mostrador si se da click afuera
+  // Cierra la búsqueda de productos en el mostrador si se hace click afuera
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -118,7 +119,7 @@ export default function Ventas() {
     }
   };
 
-  // Agrega un producto por codigo de barra
+  // Agrega un producto por código de barra
   const agregarProductoAlCarrito = (prod) => {
     if (!prod) return;
 
@@ -172,8 +173,6 @@ export default function Ventas() {
     }
   };
 
-  // Cambia cantidad de un producto en el carrito
-  //MEJORAR: Si se baja hasta 0, que no se borre el producto.
   const modificarCantidad = (productId, nuevaCantidad) => {
     const item = carrito.find(i => i.productId === productId);
     if (!item) return;
@@ -226,8 +225,28 @@ export default function Ventas() {
     }
   };
 
-  // Filtrado de historial por Código de Barras
+  // Lógica de filtrado por búsqueda y fecha
   const historialFiltrado = historialVentas.filter(v => {
+    const fechaVenta = new Date(v.createdAt);
+    const ahora = new Date();
+
+    // 1. Filtro por Fecha / Rango
+    if (filtroTiempo === 'hoy') {
+      const esHoy = fechaVenta.getDate() === ahora.getDate() &&
+                    fechaVenta.getMonth() === ahora.getMonth() &&
+                    fechaVenta.getFullYear() === ahora.getFullYear();
+      if (!esHoy) return false;
+    } else if (filtroTiempo === 'semana') {
+      const hace7Dias = new Date();
+      hace7Dias.setDate(ahora.getDate() - 7);
+      if (fechaVenta < hace7Dias) return false;
+    } else if (filtroTiempo === 'mes') {
+      const esMismoMes = fechaVenta.getMonth() === ahora.getMonth() &&
+                         fechaVenta.getFullYear() === ahora.getFullYear();
+      if (!esMismoMes) return false;
+    } 
+
+    // 2. Filtro por Texto (Código o ID)
     const q = busquedaHistorial.trim().toLowerCase();
     if (!q) return true;
     
@@ -402,22 +421,46 @@ export default function Ventas() {
 
       {/* HISTORIAL DE VENTAS */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
           
-          <h2 className="text-sm font-semibold text-zinc-130 uppercase tracking-wider">FILTROS</h2>
-    
-          
-          {/* FILTRO DE BÚSQUEDA */}
-          <div className="relative w-full sm:w-64">
-            <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
-            <input
-              type="text"
-              placeholder="Buscar por Código de Barras..."
-              value={busquedaHistorial}
-              onChange={(e) => setBusquedaHistorial(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
-            />
+          {/* BARRA DE FILTROS */}
+          <div className="flex flex-wrap items-center gap-2">
+            
+            {/* BOTONERA DE PERIODOS */}
+            <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-lg">
+              {[
+                { id: 'todos', label: 'Todos' },
+                { id: 'hoy', label: 'Hoy' },
+                { id: 'semana', label: 'Últ. Semana' },
+                { id: 'mes', label: 'Mes' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setFiltroTiempo(item.id)}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                    filtroTiempo === item.id
+                      ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
+                      : 'text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* FILTRO DE BÚSQUEDA */}
+            <div className="relative w-full sm:w-56">
+              <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
+              <input
+                type="text"
+                placeholder="Buscar por ID o Código..."
+                value={busquedaHistorial}
+                onChange={(e) => setBusquedaHistorial(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
+              />
+            </div>
+
           </div>
         </div>
 
@@ -425,7 +468,9 @@ export default function Ventas() {
           <p className="text-center py-6 text-zinc-500 text-xs">Cargando historial...</p>
         ) : historialFiltrado.length === 0 ? (
           <div className="text-center py-8 text-zinc-600 text-xs">
-            {busquedaHistorial ? 'No se encontraron ventas con esa coincidencia.' : 'No se registran transacciones previas.'}
+            {busquedaHistorial || filtroTiempo !== 'todos' 
+              ? 'No se encontraron ventas para los filtros seleccionados.' 
+              : 'No se registran transacciones previas.'}
           </div>
         ) : (
           <div className="overflow-x-auto max-h-72 overflow-y-auto">
