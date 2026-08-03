@@ -201,15 +201,23 @@ export default function Ventas() {
 
     try {
       setEnviando(true);
+      const paymentMethodMap = {
+        'EFECTIVO': 1,         // Efectivo
+        'TRANSFERENCIA': 2,    // Transferencia
+        'DEBITO': 3,           // TarjetaDebito
+        'CREDITO': 4           // TarjetaCredito
+      };
+
       const payload = {
         items: carrito.map(item => ({
           productId: item.productId,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice)
         })),
-        paymentMethod: datosCobro?.medioPago || 'EFECTIVO',
-        receivedAmount: datosCobro?.montoRecibido || totalVenta,
-        changeAmount: datosCobro?.vuelto || 0
+        // Mapea al número correspondiente (1 por defecto si no lo encuentra)
+        paymentMethod: paymentMethodMap[datosCobro?.medioPago] || 1,
+        receivedAmount: Number(datosCobro?.montoRecibido || totalVenta),
+        changeAmount: Number(datosCobro?.vuelto || 0)
       };
 
       await apiClient.post('/sales', payload);
