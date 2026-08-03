@@ -35,10 +35,10 @@ namespace Application.Services
         {
             if (dto.Items == null || !dto.Items.Any())
                 throw new ArgumentException("La venta debe contener artículos.");
-
+        
             // La transacción se maneja con el repositorio
             await _saleRepository.BeginTransactionAsync();
-
+        
             try
             {
                 var nuevaVenta = new Sale
@@ -46,25 +46,26 @@ namespace Application.Services
                     Id = Guid.NewGuid(),
                     TenantId = tenantId,
                     CreatedAt = DateTime.UtcNow,
-                    Total = 0
+                    Total = 0,
+                    PaymentMethod = dto.PaymentMethod // Asignación directa del Enum
                 };
-
+        
                 decimal acumuladorTotal = 0;
-
+        
                 foreach (var item in dto.Items)
                 {
                     var producto = await _productRepository.GetByIdAsync(item.ProductId);
-
+        
                     if (producto == null)
                         throw new Exception($"El producto no pertenece a tu inventario.");
-
+        
                     if (producto.Stock < item.Quantity)
                         throw new Exception($"Stock insuficiente para '{producto.Name}'.");
-
-                    // se resta al stock del producto 
+        
+                    // Se resta al stock del producto 
                     producto.Stock -= item.Quantity;
-                    _productRepository.Update(producto);        //manda a actualizar por el metodo del repo generico
-
+                    _productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
+        
                     var detalle = new SaleDetail
                     {
                         Id = Guid.NewGuid(),
@@ -74,19 +75,37 @@ namespace Application.Services
                         Quantity = item.Quantity,
                         UnitPrice = item.UnitPrice
                     };
-
+        
                     acumuladorTotal += (item.Quantity * item.UnitPrice);
                     nuevaVenta.Details.Add(detalle);
                 }
-
+        
                 nuevaVenta.Total = acumuladorTotal;
-
-                // se guarda la persistencia
+        
+                // --- LÓGICA DE COBRO Y VUELTO CON ENUM ---
+                if (nuevaVenta.PaymentMethod == PaymentMethod.Efectivo)
+                {
+                    if (dto.ReceivedAmount < nuevaVenta.Total)
+                    {
+                        throw new InvalidOperationException($"Monto recibido insuficiente. El total es {nuevaVenta.Total:C} y se recibió {dto.ReceivedAmount:C}.");
+                    }
+        
+                    nuevaVenta.ReceivedAmount = dto.ReceivedAmount;
+                    nuevaVenta.ChangeAmount = dto.ReceivedAmount - nuevaVenta.Total;
+                }
+                else
+                {
+                    // Transferencia, TarjetaDebito o TarjetaCredito
+                    nuevaVenta.ReceivedAmount = nuevaVenta.Total;
+                    nuevaVenta.ChangeAmount = 0m;
+                }
+        
+                // Se guarda la persistencia
                 await _saleRepository.AddAsync(nuevaVenta);
                 await _saleRepository.SaveChangesAsync();
-
+        
                 await _saleRepository.CommitTransactionAsync();
-
+        
                 return nuevaVenta.Id;
             }
             catch (Exception)

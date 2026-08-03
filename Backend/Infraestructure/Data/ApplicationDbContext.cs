@@ -24,6 +24,14 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder){
          base.OnModelCreating(modelBuilder);
+
+         //configura nombre en minuscula
+         modelBuilder.Entity<Tenant>().ToTable("tenants");
+         modelBuilder.Entity<User>().ToTable("users");
+         modelBuilder.Entity<Product>().ToTable("products");
+         modelBuilder.Entity<Sale>().ToTable("sales");
+         modelBuilder.Entity<SaleDetail>().ToTable("saledetails");
+
          modelBuilder.Entity<Tenant>().Property(t => t.Id).HasColumnType("char(36)");
          modelBuilder.Entity<User>().Property(u => u.Id).HasColumnType("char(36)");
          modelBuilder.Entity<User>().Property(u => u.TenantId).HasColumnType("char(36)"); 
@@ -79,12 +87,14 @@ public class ApplicationDbContext : DbContext
     {
         entity.HasKey(s => s.Id);
         entity.Property(s => s.Total).HasPrecision(18, 2);
+        entity.Property(s => s.PaymentMethod).HasConversion<string>();
     });
 
     modelBuilder.Entity<SaleDetail>(entity =>
     {
         entity.HasKey(sd => sd.Id);
         entity.Property(sd => sd.UnitPrice).HasPrecision(18, 2);
+
 
         // Relación: Una venta tiene muchos detalles
         entity.HasOne(sd => sd.Sale)
@@ -129,17 +139,6 @@ public class ApplicationDbContext : DbContext
             }
         );
 
-         // Productos de prueba
-          modelBuilder.Entity<Product>().HasData(
-            new Product { Id = Guid.NewGuid(), TenantId = defaultTenantId, Name = "Yerba Mate 1Kg", Barcode = "7791234567890", Price = 3500.00m, Stock = 50, IsActive = true },
-            new Product { Id = Guid.NewGuid(), TenantId = defaultTenantId, Name = "Azúcar Ledesma 1Kg", Barcode = "7799876543210", Price = 1200.00m, Stock = 100, IsActive = true }
-        );
-
-        modelBuilder.Entity<Tenant>().ToTable("tenants");
-        modelBuilder.Entity<User>().ToTable("users");
-        modelBuilder.Entity<Product>().ToTable("products");
-        modelBuilder.Entity<Sale>().ToTable("sales");
-        modelBuilder.Entity<SaleDetail>().ToTable("saledetails");
     }
 
     // Generador dinámico de expresiones Lambda para armar el "WHERE e.TenantId = actual"

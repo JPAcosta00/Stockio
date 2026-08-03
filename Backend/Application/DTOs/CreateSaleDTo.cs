@@ -8,6 +8,9 @@ namespace Application.DTOs
     {
         [Required]
         public List<CreateSaleItemDto> Items { get; set; } = new List<CreateSaleItemDto>();
+        public PaymentMethod PaymentMethod { get; set; }
+        public decimal ReceivedAmount { get; set; }
+        public decimal ChangeAmount { get; set; }
     }
 
     public class CreateSaleItemDto

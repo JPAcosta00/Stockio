@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
+import CobroModal from '../components/CobroModal'; // <-- IMPORTAMOS EL MODAL
 
 export default function Ventas() {
   // Estados de datos 
@@ -12,6 +13,9 @@ export default function Ventas() {
   
   // Modal de detalle
   const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
+
+  // NUEVO: Estado del modal de cobro/calculadora
+  const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
 
   // Estados de UI
   const [loadingHistorial, setLoadingHistorial] = useState(false);
@@ -27,7 +31,7 @@ export default function Ventas() {
 
   // Filtros en el historial de ventas
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
-  const [filtroTiempo, setFiltroTiempo] = useState('todos'); // 'hoy', 'semana', 'mes', 'anio', 'todos'
+  const [filtroTiempo, setFiltroTiempo] = useState('todos');
 
   // Referencias UI
   const barcodeRef = useRef(null);
@@ -42,7 +46,6 @@ export default function Ventas() {
     if (barcodeRef.current) barcodeRef.current.focus();
   }, [carrito]);
 
-  // Cierra la búsqueda de productos en el mostrador si se hace click afuera
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -53,7 +56,6 @@ export default function Ventas() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounce para autocomplete de productos 
   useEffect(() => {
     const query = barcodeInput.trim().toLowerCase();
     if (query.length < 2) {
@@ -68,7 +70,6 @@ export default function Ventas() {
         const res = await apiClient.get('/products', { params: { search: query } });
         const listaProductos = res.data || [];
 
-        // Filtro directamente desde el frontend
         const filtrados = listaProductos.filter(prod => {
           const nombreCoincide = prod.name?.toLowerCase().includes(query);
           const codigoCoincide = prod.barcode?.toLowerCase().includes(query);
@@ -87,7 +88,6 @@ export default function Ventas() {
     return () => clearTimeout(timer);
   }, [barcodeInput]);
 
-  // Cargar historial De ventas
   const obtenerHistorialVentas = async () => {
     try {
       setLoadingHistorial(true);
@@ -119,7 +119,6 @@ export default function Ventas() {
     }
   };
 
-  // Agrega un producto por código de barra
   const agregarProductoAlCarrito = (prod) => {
     if (!prod) return;
 
@@ -154,7 +153,6 @@ export default function Ventas() {
     setMostrarDropdown(false);
   };
 
-  // Maneja cuando se da a confirmar en el mostrador
   const handleBarcodeSubmit = async (e) => {
     e.preventDefault();
     const codigoLimpio = barcodeInput.trim();
@@ -198,8 +196,8 @@ export default function Ventas() {
 
   const totalVenta = carrito.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
 
-  // Confirma la venta, mandando a registrar al backend
-  const confirmarVenta = async () => {
+  // MODIFICADO: Ahora recibe la información del modal de cobro
+  const confirmarVenta = async (datosCobro) => {
     if (carrito.length === 0) return;
 
     try {
@@ -209,12 +207,16 @@ export default function Ventas() {
           productId: item.productId,
           quantity: item.quantity,
           unitPrice: item.unitPrice
-        }))
+        })),
+        paymentMethod: datosCobro?.medioPago || 'EFECTIVO',
+        receivedAmount: datosCobro?.montoRecibido || totalVenta,
+        changeAmount: datosCobro?.vuelto || 0
       };
 
       await apiClient.post('/sales', payload);
       alert("¡Venta registrada con éxito!");
       setCarrito([]);
+      setMostrarModalCobro(false); // Cerramos el modal tras guardar
       await obtenerHistorialVentas();
     } catch (error) {
       console.error("Error al registrar venta:", error);
@@ -225,12 +227,10 @@ export default function Ventas() {
     }
   };
 
-  // Lógica de filtrado por búsqueda y fecha
   const historialFiltrado = historialVentas.filter(v => {
     const fechaVenta = new Date(v.createdAt);
     const ahora = new Date();
 
-    // 1. Filtro por Fecha / Rango
     if (filtroTiempo === 'hoy') {
       const esHoy = fechaVenta.getDate() === ahora.getDate() &&
                     fechaVenta.getMonth() === ahora.getMonth() &&
@@ -246,7 +246,6 @@ export default function Ventas() {
       if (!esMismoMes) return false;
     } 
 
-    // 2. Filtro por Texto (Código o ID)
     const q = busquedaHistorial.trim().toLowerCase();
     if (!q) return true;
     
@@ -408,8 +407,9 @@ export default function Ventas() {
               </span>
             </div>
 
+            {/* CAMBIO AQUÍ: Ahora abre el modal de cobro */}
             <button
-              onClick={confirmarVenta}
+              onClick={() => setMostrarModalCobro(true)}
               disabled={carrito.length === 0 || enviando}
               className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-bold py-2.5 rounded-lg text-xs transition-colors disabled:opacity-20"
             >
@@ -424,10 +424,7 @@ export default function Ventas() {
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
           
-          {/* BARRA DE FILTROS */}
           <div className="flex flex-wrap items-center gap-2">
-            
-            {/* BOTONERA DE PERIODOS */}
             <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-lg">
               {[
                 { id: 'todos', label: 'Todos' },
@@ -449,7 +446,6 @@ export default function Ventas() {
               ))}
             </div>
 
-            {/* FILTRO DE BÚSQUEDA */}
             <div className="relative w-full sm:w-56">
               <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
               <input
@@ -510,11 +506,20 @@ export default function Ventas() {
         )}
       </div>
 
-      {/* MODAL DE VENTAS */}
+      {/* MODAL DE DETALLE DE VENTA */}
       <VentaDetalleModal 
         venta={ventaSeleccionada} 
         loading={loadingDetalle}
         onClose={() => setVentaSeleccionada(null)} 
+      />
+
+      {/* MODAL DE COBRO Y CALCULADORA DE VUELTO */}
+      <CobroModal
+        isOpen={mostrarModalCobro}
+        onClose={() => setMostrarModalCobro(false)}
+        totalVenta={totalVenta}
+        onConfirmarVenta={confirmarVenta}
+        enviando={enviando}
       />
     </div>
   );

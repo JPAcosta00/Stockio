@@ -14,22 +14,22 @@ namespace Infraestructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DeleteData(
-                table: "Products",
+                table: "products",
                 keyColumn: "Id",
                 keyValue: new Guid("2cacdc83-a55c-4b81-84af-7e67f9f3dcec"));
 
             migrationBuilder.DeleteData(
-                table: "Products",
+                table: "products",
                 keyColumn: "Id",
                 keyValue: new Guid("58612371-92de-4d92-b89b-c0035d53698e"));
 
             migrationBuilder.DeleteData(
-                table: "Users",
+                table: "users",
                 keyColumn: "Id",
                 keyValue: new Guid("b0a33ffb-394b-4276-8c15-80754637852f"));
 
             migrationBuilder.InsertData(
-                table: "Products",
+                table: "products",
                 columns: new[] { "Id", "Barcode", "Description", "IsActive", "MinimumStock", "Name", "Price", "Stock", "TenantId", "UpdatedAt" },
                 values: new object[,]
                 {
@@ -38,14 +38,14 @@ namespace Infraestructure.Migrations
                 });
 
             migrationBuilder.UpdateData(
-                table: "Tenants",
+                table: "tenants",
                 keyColumn: "Id",
                 keyValue: new Guid("11111111-1111-1111-1111-111111111111"),
                 column: "CreatedAt",
                 value: new DateTime(2026, 7, 4, 23, 2, 22, 569, DateTimeKind.Utc).AddTicks(5538));
 
             migrationBuilder.InsertData(
-                table: "Users",
+                table: "users",
                 columns: new[] { "Id", "Email", "IsActive", "PasswordHash", "Role", "TenantId", "Username" },
                 values: new object[] { new Guid("45e0ff49-a548-4614-86d4-7e0fb2cba388"), "admin@supercentral.com", true, "$2a$11$2E/7WxNZO1p8j34uEMlvmOCHL1MwbjqF6lZaj/deg6jXv6tKRaySG", "Admin", new Guid("11111111-1111-1111-1111-111111111111"), "admin" });
         }
@@ -54,22 +54,22 @@ namespace Infraestructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DeleteData(
-                table: "Products",
+                table: "products",
                 keyColumn: "Id",
                 keyValue: new Guid("661495ba-611f-4b23-9360-fbbc4aaaa44d"));
 
             migrationBuilder.DeleteData(
-                table: "Products",
+                table: "products",
                 keyColumn: "Id",
                 keyValue: new Guid("a485c374-5baa-4a1a-b0b3-c824e42e28d8"));
 
             migrationBuilder.DeleteData(
-                table: "Users",
+                table: "users",
                 keyColumn: "Id",
                 keyValue: new Guid("45e0ff49-a548-4614-86d4-7e0fb2cba388"));
 
             migrationBuilder.InsertData(
-                table: "Products",
+                table: "products",
                 columns: new[] { "Id", "Barcode", "Description", "IsActive", "MinimumStock", "Name", "Price", "Stock", "TenantId", "UpdatedAt" },
                 values: new object[,]
                 {
@@ -78,14 +78,14 @@ namespace Infraestructure.Migrations
                 });
 
             migrationBuilder.UpdateData(
-                table: "Tenants",
+                table: "tenants",
                 keyColumn: "Id",
                 keyValue: new Guid("11111111-1111-1111-1111-111111111111"),
                 column: "CreatedAt",
                 value: new DateTime(2026, 7, 2, 21, 9, 32, 653, DateTimeKind.Utc).AddTicks(1401));
 
             migrationBuilder.InsertData(
-                table: "Users",
+                table: "users",
                 columns: new[] { "Id", "Email", "IsActive", "PasswordHash", "Role", "TenantId", "Username" },
                 values: new object[] { new Guid("b0a33ffb-394b-4276-8c15-80754637852f"), "admin@supercentral.com", true, "$2a$11$oNEpfPt.oEqKOJqBY1iaMe10.uSGrAwB7jxvCJh2f0c16.loBIbMW", "Admin", new Guid("11111111-1111-1111-1111-111111111111"), "admin" });
         }
