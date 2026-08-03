@@ -139,55 +139,6 @@ export default function Perfil() {
               </button>
             </div>
 
-            {/* Sección: Logo del Tenant */}
-        <div className="border-t border-zinc-800/80 pt-4">
-          <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">
-            Logo del Negocio
-          </h3>
-
-          <div className="flex flex-col items-center p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-3">
-            
-            {/* Display / Previsualizador de Logo */}
-            <div className="relative w-20 h-20 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center overflow-hidden group">
-              {logoPreview ? (
-                <img 
-                  src={logoPreview} 
-                  alt="Logo del Tenant" 
-                  className="w-full h-full object-contain p-1"
-                />
-              ) : (
-                <Building className="w-8 h-8 text-zinc-500" />
-              )}
-
-              {/* Botón Overlay al pasar el mouse */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white text-xs gap-1 font-medium"
-              >
-                <Upload className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Input oculto */}
-            <input 
-              ref={fileInputRef}
-              type="file" 
-              accept="image/*" 
-              className="hidden" 
-              onChange={handleLogoChange}
-            />
-
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
-            >
-              {logoPreview ? 'Cambiar Logo' : 'Subir Logo'}
-            </button>
-          </div>
-        </div>
-
             {/* Botón de Cerrar Sesión en el menú lateral */}
             <div className="pt-4 mt-4 border-t border-zinc-800/80 hidden md:block">
               <button
