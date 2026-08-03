@@ -66,6 +66,12 @@ public class ProductService : IProductService
                                        p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
+        // 4. Filtro por Stock Crítico (CORREGIDO: Se aplica sobre 'products')
+        if (filter.IsCriticalStock.GetValueOrDefault())
+        {
+            products = products.Where(p => p.Stock <= p.MinimumStock);
+        }
+
         // filtro de Período
         if (!string.IsNullOrWhiteSpace(filter.Period)){
             var fechaLimite = DateTime.UtcNow;
