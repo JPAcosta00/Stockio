@@ -47,7 +47,7 @@ namespace Application.Services
                     TenantId = tenantId,
                     CreatedAt = DateTime.UtcNow,
                     Total = 0,
-                    PaymentMethod = dto.PaymentMethod // Asignación directa del Enum
+                    PaymentMethod = dto.PaymentMethod 
                 };
         
                 decimal acumuladorTotal = 0;

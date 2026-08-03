@@ -54,7 +54,8 @@ export default function Inventario() {
       // Se arma el objeto con los filtros actuales
       const nuevosFiltros = {
         Name: filtroNombre.trim(),
-        Period: filtroPeriodo
+        Period: esStockCritico ? '' : filtroPeriodo,
+        IsCriticalStock: esStockCritico
       };
 
       // Se guardan los filtros activos para usar en la exportacion de productos
@@ -179,6 +180,7 @@ export default function Inventario() {
             className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white focus:outline-none focus:border-emerald-500 cursor-pointer" 
           >
             <option value="">Todos los registros</option>
+            <option value="critico">⚠️ Stock Crítico</option>
             <option value="hoy">Hoy</option>
             <option value="semana">Esta Semana</option>
             <option value="mes">Este Mes</option>

@@ -39,7 +39,7 @@ namespace WebAPI.Controllers
         {
             try
             {
-                // Extra el TenantId
+                // Extrae el TenantId
                 var tenantIdClaim = User.FindFirst("TenantId")?.Value;
                 
                 if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))

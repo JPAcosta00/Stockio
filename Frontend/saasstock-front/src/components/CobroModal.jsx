@@ -5,7 +5,6 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
   const [medioPago, setMedioPago] = useState('EFECTIVO');
   const inputRef = useRef(null);
 
-  // Al abrir el modal, reinicia los valores y hace foco en el input
   useEffect(() => {
     if (isOpen) {
       setMontoRecibido('');
