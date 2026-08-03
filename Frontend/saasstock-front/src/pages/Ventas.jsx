@@ -196,7 +196,6 @@ export default function Ventas() {
 
   const totalVenta = carrito.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
 
-  // MODIFICADO: Ahora recibe la información del modal de cobro
   const confirmarVenta = async (datosCobro) => {
     if (carrito.length === 0) return;
 
@@ -221,6 +220,8 @@ export default function Ventas() {
     } catch (error) {
       console.error("Error al registrar venta:", error);
       alert(error.response?.data?.message || "Error al guardar la venta.");
+      const mensajeBackend = error.response?.data?.message || JSON.stringify(error.response?.data) || "Error al guardar la venta.";
+      alert("Error del servidor: " + mensajeBackend);
     } finally {
       setEnviando(false);
       if (barcodeRef.current) barcodeRef.current.focus();
