@@ -50,6 +50,8 @@ export default function Inventario() {
     try {
       setLoading(true);
       setPaginaActual(1);
+
+      const esStockCritico = filtroPeriodo === 'critico';
       
       // Se arma el objeto con los filtros actuales
       const nuevosFiltros = {
