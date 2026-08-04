@@ -33,7 +33,6 @@ public class ProductService : IProductService
             IsActive = p.IsActive
         });
     }
-
     public async Task<ProductResponseDto?> GetProductByBarcodeAsync(string barcode, Guid tenantId){
         var p = await _productRepository.GetByBarcodeAsync(barcode);
         if (p == null) return null;
@@ -50,7 +49,6 @@ public class ProductService : IProductService
             IsActive = p.IsActive
         };
     }
-
     public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId){
         //busca todos los productos del usuario actual
         var rawProducts = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
@@ -66,7 +64,7 @@ public class ProductService : IProductService
                                        p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
-        // 4. Filtro por Stock Crítico (CORREGIDO: Se aplica sobre 'products')
+        // Filtro por Stock Crítico 
         if (filter.IsCriticalStock.GetValueOrDefault())
         {
             products = products.Where(p => p.Stock <= p.MinimumStock);

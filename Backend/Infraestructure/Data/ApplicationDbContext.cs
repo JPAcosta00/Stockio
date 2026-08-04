@@ -22,122 +22,144 @@ public class ApplicationDbContext : DbContext
     public DbSet<Sale> Sales { get; set; }
     public DbSet<SaleDetail> SaleDetails { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder){
-         base.OnModelCreating(modelBuilder);
+    public DbSet<Caja> Cajas { get; set; } = null!;
+    public DbSet<MovimientoCaja> MovimientosCaja { get; set; } = null!;
 
-         //configura nombre en minuscula
-         modelBuilder.Entity<Tenant>().ToTable("tenants");
-         modelBuilder.Entity<User>().ToTable("users");
-         modelBuilder.Entity<Product>().ToTable("products");
-         modelBuilder.Entity<Sale>().ToTable("sales");
-         modelBuilder.Entity<SaleDetail>().ToTable("saledetails");
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-         modelBuilder.Entity<Tenant>().Property(t => t.Id).HasColumnType("char(36)");
-         modelBuilder.Entity<User>().Property(u => u.Id).HasColumnType("char(36)");
-         modelBuilder.Entity<User>().Property(u => u.TenantId).HasColumnType("char(36)"); 
-         modelBuilder.Entity<Product>().Property(p => p.TenantId).HasColumnType("char(36)");
-         modelBuilder.Entity<Product>().Property(p => p.Id).HasColumnType("char(36)");
-         modelBuilder.Entity<Sale>().Property(s => s.Id).HasColumnType("char(36)");
-         modelBuilder.Entity<Sale>().Property(s => s.TenantId).HasColumnType("char(36)"); // Si Sale implementa IMustHaveTenant
+        // =========================================================================
+        // 1. CONVENCIÓN GLOBAL DE TIPOS (Mapeo automático de Guid a char(36))
+        // =========================================================================
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(Guid) || property.ClrType == typeof(Guid?))
+                {
+                    property.SetColumnType("char(36)");
+                }
+            }
+        }
 
-         modelBuilder.Entity<SaleDetail>().Property(sd => sd.Id).HasColumnType("char(36)");
-         modelBuilder.Entity<SaleDetail>().Property(sd => sd.SaleId).HasColumnType("char(36)");
-         modelBuilder.Entity<SaleDetail>().Property(sd => sd.ProductId).HasColumnType("char(36)");
-         modelBuilder.Entity<SaleDetail>().Property(sd => sd.TenantId).HasColumnType("char(36)");
+        // =========================================================================
+        // 2. CONFIGURACIÓN Y MAPEO DE ENTIDADES 
+        // =========================================================================
 
-         // Configuración de clave primaria para Tenant
-         modelBuilder.Entity<Tenant>(entity =>{
+        // Tenant
+        modelBuilder.Entity<Tenant>(entity =>
+        {
+            entity.ToTable("tenants");
             entity.HasKey(t => t.Id);
             entity.Property(t => t.Name).IsRequired().HasMaxLength(100);
-         });
+        });
 
-          // Configuración para User
-         modelBuilder.Entity<User>(entity =>{
+        // User
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.ToTable("users");
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Username).IsRequired().HasMaxLength(50);
             entity.Property(u => u.Email).IsRequired().HasMaxLength(100);
             entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(255);
-        
-            // Relación: Un Tenant tiene muchos Usuarios
-            entity.HasOne(u => u.Tenant)
-              .WithMany(t => t.Users)
-              .HasForeignKey(u => u.TenantId)
-              .OnDelete(DeleteBehavior.Restrict);
-            });
 
-        // Configuración para Product
-        modelBuilder.Entity<Product>(entity =>{
+            entity.HasOne(u => u.Tenant)
+                  .WithMany(t => t.Users)
+                  .HasForeignKey(u => u.TenantId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Product
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("products");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Barcode).IsRequired().HasMaxLength(50);
             entity.Property(p => p.Name).IsRequired().HasMaxLength(150);
             entity.Property(p => p.Price).HasPrecision(18, 2);
 
-        // Relación: Un Tenant tiene muchos Productos
-        entity.HasOne(p => p.Tenant)
-              .WithMany(t => t.Products)
-              .HasForeignKey(p => p.TenantId)
-              .OnDelete(DeleteBehavior.Cascade);
-              
-        // Index de Barcode y TenantId
-        entity.HasIndex(p => new { p.TenantId, p.Barcode }).IsUnique();
-    });
+            entity.HasOne(p => p.Tenant)
+                  .WithMany(t => t.Products)
+                  .HasForeignKey(p => p.TenantId)
+                  .OnDelete(DeleteBehavior.Cascade);
 
-    //  Ventas y Detalles
-    modelBuilder.Entity<Sale>(entity =>
-    {
-        entity.HasKey(s => s.Id);
-        entity.Property(s => s.Total).HasPrecision(18, 2);
-        entity.Property(s => s.PaymentMethod).HasConversion<string>();
-    });
+            entity.HasIndex(p => new { p.TenantId, p.Barcode }).IsUnique();
+        });
 
-    modelBuilder.Entity<SaleDetail>(entity =>
-    {
-        entity.HasKey(sd => sd.Id);
-        entity.Property(sd => sd.UnitPrice).HasPrecision(18, 2);
+        // Caja (Estandarizado nombre de tabla en minúscula)
+        modelBuilder.Entity<Caja>(entity =>
+        {
+            entity.ToTable("cajas");
+            entity.HasKey(c => c.Id);
 
+            entity.HasIndex(c => new { c.TenantId, c.IsOpen });
 
-        // Relación: Una venta tiene muchos detalles
-        entity.HasOne(sd => sd.Sale)
-              .WithMany(s => s.Details)
-              .HasForeignKey(sd => sd.SaleId)
-              .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(c => c.MontoInicial).HasPrecision(18, 2);
+            entity.Property(c => c.VentasEfectivo).HasPrecision(18, 2);
+            entity.Property(c => c.VentasMercadoPago).HasPrecision(18, 2);
+            entity.Property(c => c.VentasTarjeta).HasPrecision(18, 2);
+            entity.Property(c => c.MontoIngresosExtra).HasPrecision(18, 2);
+            entity.Property(c => c.MontoEgresosExtra).HasPrecision(18, 2);
+            entity.Property(c => c.EfectivoEsperado).HasPrecision(18, 2);
+            entity.Property(c => c.EfectivoRealContado).HasPrecision(18, 2);
+            entity.Property(c => c.Diferencia).HasPrecision(18, 2);
+        });
 
-        // Relación: Un detalle apunta a un producto
-        entity.HasOne(sd => sd.Product)
-              .WithMany()
-              .HasForeignKey(sd => sd.ProductId)
-              .OnDelete(DeleteBehavior.Restrict); 
-       });
-    
-       foreach (var entityType in modelBuilder.Model.GetEntityTypes()){
-           if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType)){
+        // MovimientoCaja (Estandarizado nombre de tabla en minúscula)
+        modelBuilder.Entity<MovimientoCaja>(entity =>
+        {
+            entity.ToTable("movimientos_caja");
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Monto).HasPrecision(18, 2);
+            entity.Property(m => m.Tipo).HasMaxLength(10);
+            entity.Property(m => m.Concepto).HasMaxLength(250);
+
+            entity.HasOne(m => m.Caja)
+                  .WithMany(c => c.Movimientos)
+                  .HasForeignKey(m => m.CajaId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Sale
+        modelBuilder.Entity<Sale>(entity =>
+        {
+            entity.ToTable("sales");
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Total).HasPrecision(18, 2);
+            entity.Property(s => s.PaymentMethod).HasConversion<string>();
+        });
+
+        // SaleDetail
+        modelBuilder.Entity<SaleDetail>(entity =>
+        {
+            entity.ToTable("saledetails");
+            entity.HasKey(sd => sd.Id);
+            entity.Property(sd => sd.UnitPrice).HasPrecision(18, 2);
+
+            entity.HasOne(sd => sd.Sale)
+                  .WithMany(s => s.Details)
+                  .HasForeignKey(sd => sd.SaleId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sd => sd.Product)
+                  .WithMany()
+                  .HasForeignKey(sd => sd.ProductId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // =========================================================================
+        // 3. FILTRO DE CONSULTA MULTITENANT
+        // =========================================================================
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (typeof(IMustHaveTenant).IsAssignableFrom(entityType.ClrType))
+            {
                 modelBuilder.Entity(entityType.ClrType)
                     .HasQueryFilter(CreateTenantFilterExpression(entityType.ClrType));
-           }
-        }
-
-        //-------------------------------- Configuracion del superAdmin ------------------------------
-        //  Usuarios y datos base automáticos
-         var defaultTenantId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-
-         // Tenant de pruebas
-        modelBuilder.Entity<Tenant>().HasData(
-             new Tenant { Id = defaultTenantId, Name = "Supermercado Central", IsActive = true, CreatedAt = DateTime.UtcNow }
-         );
-
-        // Crea el SuperAdmin
-         var passwordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!");
-         modelBuilder.Entity<User>().HasData(
-          new User { 
-            Id = Guid.NewGuid(), 
-            TenantId = defaultTenantId, 
-            Username = "admin", 
-            Email = "admin@supercentral.com", 
-            PasswordHash = passwordHash, 
-            Role = "Admin", 
-            IsActive = true 
             }
-        );
+        }
 
     }
 

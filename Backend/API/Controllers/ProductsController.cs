@@ -29,7 +29,6 @@ public class ProductsController : ControllerBase
     }
 
     // GET: api/products
-    // Trae SOLO los productos del comercio dueño del Token
     [HttpGet]
     [Authorize]
     public async Task<ActionResult<IEnumerable<Product>>> GetAll([FromQuery] ProductReportFilterDto filter){

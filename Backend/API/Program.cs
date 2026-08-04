@@ -96,6 +96,7 @@ builder.Services.AddScoped<ISaleRepository, SaleRepository>();
 builder.Services.AddScoped<ISaleService, SaleService>();
 builder.Services.AddScoped<IInventoryStatsService, InventoryStatsService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICajaRepository, CajaRepository>();
 
 // --- ROBUSTEZ Y VALIDACIONES ---
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

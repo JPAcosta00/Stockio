@@ -1,78 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import apiClient from '../api/apiClient';
 
 export default function Caja() {
   // Estado general de la caja
-  const [cajaAbierta, setCajaAbierta] = useState(false);
-  const [montoInicial, setMontoInicial] = useState('');
-
-  // Movimientos y Ventas del turno
-  const [montoIngresos, setMontoIngresos] = useState(0);
-  const [montoEgresos, setMontoEgresos] = useState(0);
-  
-  // Ventas según método de pago 
-  const [ventas, setVentas] = useState({
-    efectivo: 0,
-    mercadoPago: 0,
-    tarjeta: 0
-  });
+  const [cajaActiva, setCajaActiva] = useState(null); 
+  const [loading, setLoading] = useState(true);
+  const [montoInicialInput, setMontoInicialInput] = useState('');
 
   // Estado para el Arqueo al intentar cerrar
   const [efectivoRealContado, setEfectivoRealContado] = useState('');
+  const [observaciones, setObservaciones] = useState('');
   const [mostrarModalCierre, setMostrarModalCierre] = useState(false);
 
-  // CÁLCULO DE LÓGICA DE ARQUEO:
-  // Efectivo esperado = Monto inicial + Ventas efectivo + Ingresos - Egresos
-  const efectivoEsperado = (Number(montoInicial) || 0) + ventas.efectivo + montoIngresos - montoEgresos;
-  const diferenciaEfectivo = (Number(efectivoRealContado) || 0) - efectivoEsperado;
-  const totalGeneralRecaudado = ventas.efectivo + ventas.mercadoPago + ventas.tarjeta;
+  // 1. Cargar el estado actual de la caja al montar el componente
+  useEffect(() => {
+    obtenerEstadoCaja();
+  }, []);
 
-  // Manejo de Apertura
-  const handleAbrirCaja = (e) => {
-    e.preventDefault();
-    if (Number(montoInicial) < 0) return alert("El monto inicial debe ser mayor o igual a 0");
-    
-    // Acá iría la llamada a la API: await apiClient.post('/caja/abrir', { montoInicial })
-    setCajaAbierta(true);
+  const obtenerEstadoCaja = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/caja/activa');
+      setCajaActiva(response.data);
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setCajaActiva(null); // No hay caja abierta
+      } else {
+        console.error("Error al obtener la caja activa:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Manejo de Cierre / Arqueo
-  const handleCerrarCajaSubmit = (e) => {
+  // 2. Manejo de Apertura
+  const handleAbrirCaja = async (e) => {
+    e.preventDefault();
+    const monto = Number(montoInicialInput);
+    if (monto < 0) return alert("El monto inicial debe ser mayor o igual a 0");
+
+    try {
+      const response = await apiClient.post(`/caja/abrir?montoDeInicio=${monto}`);
+      setCajaActiva(response.data);
+      setMontoInicialInput('');
+    } catch (error) {
+      alert(error.response?.data?.mensaje || "Error al abrir la caja");
+    }
+  };
+
+  // 3. Manejo de Cierre / Arqueo 
+  const handleCerrarCajaSubmit = async (e) => {
     e.preventDefault();
     
+    if (!cajaActiva) return;
+
     const datosCierre = {
-      montoInicial: Number(montoInicial),
-      ventasEfectivo: ventas.efectivo,
-      ventasMercadoPago: ventas.mercadoPago,
-      ventasTarjeta: ventas.tarjeta,
-      ingresosExtra: montoIngresos,
-      egresosExtra: montoEgresos,
-      efectivoEsperado,
+      cajaId: cajaActiva.id,
       efectivoRealContado: Number(efectivoRealContado),
-      diferencia: diferenciaEfectivo
+      observaciones: observaciones
     };
 
-    console.log("Enviando cierre de caja al backend:", datosCierre);
-    // Acá iría la llamada a la API: await apiClient.post('/caja/cerrar', datosCierre)
-
-    alert("Caja cerrada exitosamente.");
-    
-    // Resetear estados
-    setMostrarModalCierre(false);
-    setCajaAbierta(false);
-    setMontoInicial('');
-    setEfectivoRealContado('');
-    setMontoIngresos(0);
-    setMontoEgresos(0);
-    setVentas({ efectivo: 0, mercadoPago: 0, tarjeta: 0 });
+    try {
+      const response = await apiClient.post('/caja/cerrar', datosCierre);
+      alert(`Caja cerrada con éxito. Diferencia registrada: $${response.data.diferencia.toFixed(2)}`);
+      
+      // Resetear estados
+      setCajaActiva(null);
+      setMostrarModalCierre(false);
+      setEfectivoRealContado('');
+      setObservaciones('');
+    } catch (error) {
+      alert(error.response?.data?.mensaje || "Error al cerrar la caja");
+    }
   };
 
-  // Botón para el reporte en PDF
+  // 4. Generación de Reporte PDF
   const handleGenerarReportePDF = async () => {
     try {
-      console.log("Solicitando reporte PDF de cierre de caja...");
-      // Próxima implementación con backend:
-      /*
-      const response = await apiClient.get('/caja/reporte-pdf', { responseType: 'blob' });
+      const response = await apiClient.get('/caja/reporte-pdf?algunDato=test', { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -80,12 +85,20 @@ export default function Caja() {
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
-      */
-      alert("Función de descarga de PDF lista para conectar con el backend.");
     } catch (error) {
       console.error("Error al generar el reporte PDF:", error);
     }
   };
+
+  if (loading) {
+    return <div className="p-6 text-center text-zinc-400 font-mono">Cargando estado de la caja...</div>;
+  }
+
+  const cajaAbierta = !!cajaActiva;
+
+  // Valores calculados desde el DTO que viene del backend
+  const efectivoEsperado = cajaActiva?.efectivoEsperado || 0;
+  const diferenciaEfectivo = (Number(efectivoRealContado) || 0) - efectivoEsperado;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 text-zinc-100">
@@ -102,7 +115,6 @@ export default function Caja() {
             {cajaAbierta ? '● CAJA ABIERTA' : '○ CAJA CERRADA'}
           </span>
 
-          {/* Botón de Reporte PDF */}
           <button 
             onClick={handleGenerarReportePDF}
             className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
@@ -112,7 +124,7 @@ export default function Caja() {
         </div>
       </div>
 
-      {/* SI LA CAJA ESTÁ CERRADA -> se muestra formulario de apertura */}
+      {/* FORMULARIO APERTURA */}
       {!cajaAbierta ? (
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md mx-auto text-center shadow-xl">
           <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
@@ -129,8 +141,8 @@ export default function Caja() {
                 step="0.01"
                 required
                 placeholder="0.00"
-                value={montoInicial}
-                onChange={(e) => setMontoInicial(e.target.value)}
+                value={montoInicialInput}
+                onChange={(e) => setMontoInicialInput(e.target.value)}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
               />
             </div>
@@ -144,59 +156,56 @@ export default function Caja() {
         </div>
       ) : (
 
-        /* SI LA CAJA ESTÁ ABIERTA -> se muestra panel de control */
+        /* PANEL DE CAJA ABIERTA (Muestra datos directos del Backend) */
         <div className="space-y-6">
-          
-          {/* TARJETAS DE MÉTODOS DE PAGO Y MOVIMIENTOS */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
               <span className="text-xs font-semibold text-zinc-400 uppercase">Fondo Inicial</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${Number(montoInicial).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.montoInicial?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
               <span className="text-xs font-semibold text-emerald-400 uppercase">Ventas Efectivo</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${ventas.efectivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasEfectivo?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
               <span className="text-xs font-semibold text-sky-400 uppercase">Mercado Pago</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${ventas.mercadoPago.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasMercadoPago?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
             </div>
 
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-              <span className="text-xs font-semibold text-purple-400 uppercase">Tarjetas (Déb./Créd.)</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${ventas.tarjeta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+              <span className="text-xs font-semibold text-purple-400 uppercase">Tarjetas</span>
+              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasTarjeta?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
             </div>
           </div>
 
-          {/* CÁLCULO DE EFECTIVO ESPERADO EN CAJÓN */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <h3 className="text-lg font-bold text-white mb-4">Resumen de Efectivo en Cajón</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm font-mono bg-zinc-950 p-4 rounded-lg border border-zinc-800/80 mb-6">
               <div>
                 <span className="text-zinc-500 block text-xs">MONTO INICIAL</span>
-                <span className="text-white font-bold">${Number(montoInicial).toFixed(2)}</span>
+                <span className="text-white font-bold">${cajaActiva.montoInicial?.toFixed(2)}</span>
               </div>
               <div>
                 <span className="text-emerald-500 block text-xs">(+) VENTAS EFECTIVO</span>
-                <span className="text-white font-bold">+${ventas.efectivo.toFixed(2)}</span>
+                <span className="text-white font-bold">+${cajaActiva.ventasEfectivo?.toFixed(2)}</span>
               </div>
               <div>
                 <span className="text-emerald-500 block text-xs">(+) INGRESOS EXTRA</span>
-                <span className="text-white font-bold">+${montoIngresos.toFixed(2)}</span>
+                <span className="text-white font-bold">+${cajaActiva.montoIngresosExtra?.toFixed(2)}</span>
               </div>
               <div>
                 <span className="text-rose-500 block text-xs">(-) EGRESOS EXTRA</span>
-                <span className="text-white font-bold">-${montoEgresos.toFixed(2)}</span>
+                <span className="text-white font-bold">-${cajaActiva.montoEgresosExtra?.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center bg-emerald-950/30 border border-emerald-500/20 p-4 rounded-xl">
               <div>
                 <span className="text-xs font-semibold text-emerald-400 uppercase">Efectivo Esperado a la Salida</span>
-                <p className="text-2xl font-bold text-emerald-300 font-mono">${efectivoEsperado.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                <p className="text-2xl font-bold text-emerald-300 font-mono">${cajaActiva.efectivoEsperado?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
               </div>
 
               <button
@@ -210,8 +219,8 @@ export default function Caja() {
         </div>
       )}
 
-      {/* MODAL DE ARQUEO Y CIERRE DE CAJA */}
-      {mostrarModalCierre && (
+      {/* MODAL DE ARQUEO Y CIERRE */}
+      {mostrarModalCierre && cajaActiva && (
         <div 
           onClick={() => setMostrarModalCierre(false)}
           className="fixed top-0 left-0 w-screen min-h-screen bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
@@ -229,15 +238,11 @@ export default function Caja() {
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Total Mercado Pago:</span>
-                <span className="text-white font-bold">${ventas.mercadoPago.toFixed(2)}</span>
+                <span className="text-white font-bold">${cajaActiva.ventasMercadoPago?.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-zinc-400">
                 <span>Total Tarjetas:</span>
-                <span className="text-white font-bold">${ventas.tarjeta.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-zinc-300 font-bold border-t border-zinc-800 pt-2 text-base font-sans">
-                <span>Venta Total del Turno:</span>
-                <span className="text-emerald-400 font-mono">${totalGeneralRecaudado.toFixed(2)}</span>
+                <span className="text-white font-bold">${cajaActiva.ventasTarjeta?.toFixed(2)}</span>
               </div>
             </div>
 
@@ -254,6 +259,17 @@ export default function Caja() {
                   value={efectivoRealContado}
                   onChange={(e) => setEfectivoRealContado(e.target.value)}
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1">Observaciones (Opcional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="Ej: Faltó cambio / Retiro de efectivo..."
+                  value={observaciones}
+                  onChange={(e) => setObservaciones(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white text-sm focus:outline-none"
                 />
               </div>
 
