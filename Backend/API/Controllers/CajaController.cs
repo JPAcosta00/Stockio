@@ -39,7 +39,7 @@ public class CajaController : ControllerBase
     /// Abre un turno de caja con el monto inicial.
 
     [HttpPost("abrir")]
-    public async Task<ActionResult<CajaActivaResponseDto>> AbrirCaja([FromQuery] AbrirCajaDto dto)
+    public async Task<ActionResult<CajaActivaResponseDto>> AbrirCaja([FromBody] AbrirCajaDto dto)
     {
         // 1. Obtener y validar TenantId
         var tenantIdClaim = User.FindFirst("TenantId")?.Value;
