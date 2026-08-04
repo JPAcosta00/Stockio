@@ -110,6 +110,26 @@ public class CajaController : ControllerBase
         return Ok("Reporte pendiente de implementación.");
     }
 
+    [HttpPost("movimientos")]
+    public async Task<ActionResult<MovimientoCajaDto>> RegistrarMovimiento([FromBody] RegistrarMovimientoDto dto){
+        // 1. Validar TenantId del claim del usuario
+        var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        {
+            return Unauthorized(new { Message = "El identificador de la organización (Tenant) no es válido." });
+        }
+    
+        try
+        {
+            var movimientoCreado = await _cajaService.RegistrarMovimientoAsync(tenantId, dto);
+            return Ok(movimientoCreado);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { mensaje = ex.Message });
+        }
+    }
+
     // --- MÉTODOS AUXILIARES ---
 
     private Guid ObtenerTenantId()

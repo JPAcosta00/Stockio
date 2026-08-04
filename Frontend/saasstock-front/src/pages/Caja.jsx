@@ -12,6 +12,13 @@ export default function Caja() {
   const [observaciones, setObservaciones] = useState('');
   const [mostrarModalCierre, setMostrarModalCierre] = useState(false);
 
+  // Estado para Registro de Movimientos Extras (Gastos / Retiros / Ingresos)
+  const [mostrarModalMovimiento, setMostrarModalMovimiento] = useState(false);
+  const [tipoMovimiento, setTipoMovimiento] = useState('EGRESO'); // "EGRESO" o "INGRESO"
+  const [montoMovimiento, setMontoMovimiento] = useState('');
+  const [conceptoMovimiento, setConceptoMovimiento] = useState('');
+  const [guardandoMovimiento, setGuardandoMovimiento] = useState(false);
+
   // 1. Cargar el estado actual de la caja al montar el componente
   useEffect(() => {
     obtenerEstadoCaja();
@@ -48,7 +55,46 @@ export default function Caja() {
     }
   };
 
-  // 3. Manejo de Cierre / Arqueo 
+  // Registrar Movimiento (Ingreso / Egreso / Gasto)
+  const handleRegistrarMovimientoSubmit = async (e) => {
+    e.preventDefault();
+    const monto = Number(montoMovimiento);
+
+    if (!monto || monto <= 0) {
+      return alert("El monto debe ser un número positivo mayor a 0.");
+    }
+    if (!conceptoMovimiento.trim()) {
+      return alert("Debe ingresar un concepto para la transacción.");
+    }
+
+    try {
+      setGuardandoMovimiento(true);
+      
+      const payload = {
+        cajaId: cajaActiva.id,
+        tipo: tipoMovimiento,
+        monto: monto,
+        concepto: conceptoMovimiento.trim()
+      };
+
+      await apiClient.post('/caja/movimientos', payload);
+
+      // Limpiar formulario y cerrar modal
+      setMontoMovimiento('');
+      setConceptoMovimiento('');
+      setTipoMovimiento('EGRESO');
+      setMostrarModalMovimiento(false);
+
+      // Actualizar estado de la caja desde backend
+      await obtenerEstadoCaja();
+    } catch (error) {
+      alert(error.response?.data?.mensaje || "Error al registrar el movimiento.");
+    } finally {
+      setGuardandoMovimiento(false);
+    }
+  };
+
+  // 4. Manejo de Cierre / Arqueo 
   const handleCerrarCajaSubmit = async (e) => {
     e.preventDefault();
     
@@ -74,7 +120,7 @@ export default function Caja() {
     }
   };
 
-  // 4. Generación de Reporte PDF
+  // 5. Generación de Reporte PDF
   const handleGenerarReportePDF = async () => {
     try {
       const response = await apiClient.get('/caja/reporte-pdf?algunDato=test', { responseType: 'blob' });
@@ -156,7 +202,7 @@ export default function Caja() {
         </div>
       ) : (
 
-        /* PANEL DE CAJA ABIERTA (Muestra datos directos del Backend) */
+        /* PANEL DE CAJA ABIERTA */
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
@@ -181,7 +227,17 @@ export default function Caja() {
           </div>
 
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Resumen de Efectivo en Cajón</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+              <h3 className="text-lg font-bold text-white">Resumen de Efectivo en Cajón</h3>
+              
+              {/* BOTÓN PARA REGISTRAR MOVIMIENTO (GASTO O INGRESO EXTRA) */}
+              <button
+                onClick={() => setMostrarModalMovimiento(true)}
+                className="bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+              >
+                💸 Registrar Gasto / Movimiento Extra
+              </button>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm font-mono bg-zinc-950 p-4 rounded-lg border border-zinc-800/80 mb-6">
               <div>
@@ -215,6 +271,107 @@ export default function Caja() {
                 Hacer Arqueo y Cerrar Caja
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PARA REGISTRAR MOVIMIENTO EXTRA (INGRESO / EGRESO) */}
+      {mostrarModalMovimiento && (
+        <div 
+          onClick={() => setMostrarModalMovimiento(false)}
+          className="fixed top-0 left-0 w-screen min-h-screen bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md p-6 relative shadow-2xl space-y-6"
+          >
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+              <h3 className="text-xl font-bold text-white">Registrar Movimiento Extra</h3>
+              <button 
+                onClick={() => setMostrarModalMovimiento(false)}
+                className="text-zinc-400 hover:text-white font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRegistrarMovimientoSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
+                  Tipo de Movimiento
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTipoMovimiento('EGRESO')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${
+                      tipoMovimiento === 'EGRESO'
+                        ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    🔻 EGRESO / GASTO
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipoMovimiento('INGRESO')}
+                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${
+                      tipoMovimiento === 'INGRESO'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    🔺 INGRESO EXTRA
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
+                  Monto ($)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  placeholder="0.00"
+                  value={montoMovimiento}
+                  onChange={(e) => setMontoMovimiento(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
+                  Concepto / Descripción
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Pago de hielo, Limpieza, Retiro parcial..."
+                  value={conceptoMovimiento}
+                  onChange={(e) => setConceptoMovimiento(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setMostrarModalMovimiento(false)}
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={guardandoMovimiento}
+                  className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/20"
+                >
+                  {guardandoMovimiento ? 'Guardando...' : 'Guardar Movimiento'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

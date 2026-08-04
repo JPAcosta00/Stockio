@@ -26,8 +26,7 @@ export default function DashboardLayout({ children }) {
           <div className="mb-8 px-2">
             <h2 className="text-xl font-bold tracking-tight text-white">Sistema de stock y ventas</h2>
             <span className="text-xs text-zinc-500 font-medium tracking-wider uppercase block mt-1">
-              {user?.role === 'SuperAdmin' ? 'Panel Administración' : 'Panel Empresa'}
-              {/* Falta agregar acciones de superAdmin y definir bien los roles */}
+              Panel de Control
             </span>
           </div>
 

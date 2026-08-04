@@ -132,15 +132,60 @@ public class CajaService : ICajaService
        };
     }
 
+    public async Task<MovimientoCajaDto> RegistrarMovimientoAsync(Guid tenantId, RegistrarMovimientoDto dto){
+        // 1. Obtener la caja activa para el tenant
+        var cajaActiva = await _cajaRepository.GetActivaByTenantAsync(tenantId);
+        
+        if (cajaActiva == null)
+        {
+            throw new InvalidOperationException("No hay una caja abierta para registrar movimientos.");
+        }
+    
+        // 2. Validar que la caja enviada o activa coincida
+        if (dto.CajaId != Guid.Empty && cajaActiva.Id != dto.CajaId)
+        {
+            throw new InvalidOperationException("La caja especificada no corresponde a la caja activa actual.");
+        }
+    
+        if (dto.Monto <= 0)
+        {
+            throw new InvalidOperationException("El monto del movimiento debe ser mayor a cero.");
+        }
+    
+        // 3. Crear la entidad MovimientoCaja
+        var movimiento = new MovimientoCaja
+        {
+            Id = Guid.NewGuid(),
+            CajaId = cajaActiva.Id,
+            Tipo = dto.Tipo.ToUpper(), // "INGRESO" o "EGRESO"
+            Monto = dto.Monto,
+            Concepto = dto.Concepto,
+            Fecha = DateTime.UtcNow
+        };
+    
+        // 4. Guardar en BD mediante el repositorio
+        await _cajaRepository.AddMovimientoAsync(movimiento);
+    
+        // 5. Retornar el DTO mapeado
+        return new MovimientoCajaDto
+        {
+            Id = movimiento.Id,
+            Tipo = movimiento.Tipo,
+            Monto = movimiento.Monto,
+            Concepto = movimiento.Concepto,
+            Fecha = movimiento.Fecha
+        };
+    }
+    
     // --- MÉTODOS PRIVADOS AUXILIARES ---
 
     private static CajaActivaResponseDto MapearACajaActivaDto(Caja caja, decimal ventasEfectivo, decimal ventasMercadoPago, decimal ventasTarjeta){
         decimal ingresosExtra = caja.Movimientos?
-            .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase))
+            .Where(m => string.Equals(m.Tipo, "INGRESO", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto) ?? 0;
 
         decimal egresosExtra = caja.Movimientos?
-            .Where(m => string.Equals(m.Tipo, "Egreso", StringComparison.OrdinalIgnoreCase))
+            .Where(m => string.Equals(m.Tipo, "EGRESO", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto) ?? 0;
 
         decimal efectivoEsperado = caja.MontoInicial + ventasEfectivo + ingresosExtra - egresosExtra;
