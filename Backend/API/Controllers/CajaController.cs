@@ -39,7 +39,7 @@ public class CajaController : ControllerBase
     /// Abre un turno de caja con el monto inicial.
 
     [HttpPost("abrir")]
-    public async Task<ActionResult<CajaActivaResponseDto>> AbrirCaja([FromQuery] decimal montoDeInicio)
+    public async Task<ActionResult<CajaActivaResponseDto>> AbrirCaja([FromQuery] AbrirCajaDto dto)
     {
         // 1. Obtener y validar TenantId
         var tenantIdClaim = User.FindFirst("TenantId")?.Value;
@@ -57,7 +57,7 @@ public class CajaController : ControllerBase
 
         try
         {
-            var cajaAbierta = await _cajaService.AbrirCajaAsync(tenantId, usuarioId, montoDeInicio);
+            var cajaAbierta = await _cajaService.AbrirCajaAsync(tenantId, usuarioId, dto.MontoDeInicio);
             return Ok(cajaAbierta);
         }
         catch (InvalidOperationException ex)

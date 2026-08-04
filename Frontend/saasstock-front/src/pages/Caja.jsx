@@ -40,7 +40,7 @@ export default function Caja() {
     if (monto < 0) return alert("El monto inicial debe ser mayor o igual a 0");
 
     try {
-      const response = await apiClient.post(`/caja/abrir?montoDeInicio=${monto}`);
+      const response = await apiClient.post('/caja/abrir', { montoDeInicio: monto });
       setCajaActiva(response.data);
       setMontoInicialInput('');
     } catch (error) {
