@@ -63,58 +63,58 @@ public class CajaService : ICajaService
 
     public async Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, Guid usuarioId, CerrarCajaDto datosDeCierre)
     {
-       // 1. Buscar la caja por ID y TenantId con sus movimientos
+       // Buscar la caja por ID y TenantId con sus movimientos
        var caja = await _cajaRepository.GetByIdWithMovimientosAsync(datosDeCierre.CajaId, tenantId);
        if (caja == null)
        {
            throw new KeyNotFoundException("No se encontró la caja especificada.");
        }
-    
+
        if (!caja.IsOpen)
        {
            throw new InvalidOperationException("La caja ya se encuentra cerrada.");
        }
-    
+
        var fechaCierre = DateTime.UtcNow;
-    
-       // 2. Obtener el acumulado de ventas del periodo mediante el método del repositorio
+
+       // Obtener el acumulado de ventas del periodo mediante el método del repositorio
        var (ventasEfectivo, ventasMercadoPago, ventasTarjeta) = await _cajaRepository
            .GetVentasTotalesPorTurnoAsync(tenantId, caja.FechaApertura, fechaCierre);
-    
-       // 3. Calcular ingresos y egresos extra desde la colección de Movimientos
+
+       // Calcular ingresos y egresos extra desde la colección de Movimientos
        decimal ingresosExtra = caja.Movimientos?
            .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase))
            .Sum(m => m.Monto) ?? 0;
-    
+
        decimal egresosExtra = caja.Movimientos?
            .Where(m => string.Equals(m.Tipo, "Egreso", StringComparison.OrdinalIgnoreCase))
            .Sum(m => m.Monto) ?? 0;
-    
-       // 4. Calcular el efectivo esperado y las diferencias del arqueo
+
+       // Calcular el efectivo esperado y las diferencias del arqueo
        decimal efectivoEsperado = caja.MontoInicial + ventasEfectivo + ingresosExtra - egresosExtra;
        decimal totalVendido = ventasEfectivo + ventasMercadoPago + ventasTarjeta;
        decimal diferencia = datosDeCierre.EfectivoRealContado - efectivoEsperado;
-    
-       // 5. Actualizar el estado de la entidad Caja (¡AQUÍ ESTABA EL PROBLEMA!)
+
+       // Actualizar el estado de la entidad Caja
        caja.IsOpen = false;
        caja.FechaCierre = fechaCierre;
        
-       // 🔹 ASIGNAR LOS DESGLOSES Y TOTALES A LA ENTIDAD
+       // Asignar totales
        caja.VentasEfectivo = ventasEfectivo;
        caja.VentasMercadoPago = ventasMercadoPago;
        caja.VentasTarjeta = ventasTarjeta;
        caja.MontoIngresosExtra = ingresosExtra;
        caja.MontoEgresosExtra = egresosExtra;
-    
+
        caja.EfectivoRealContado = datosDeCierre.EfectivoRealContado;
        caja.EfectivoEsperado = efectivoEsperado;
        caja.Diferencia = diferencia;
        caja.Observaciones = datosDeCierre.Observaciones;
-    
+
        _cajaRepository.Update(caja);
        await _cajaRepository.SaveChangesAsync();
-    
-       // 6. Retornar el DTO con el resumen del cierre
+
+       // Retorna el DTO con el resumen de cierrre
        return new CajaHistorialDto
        {
            Id = caja.Id,
@@ -134,12 +134,7 @@ public class CajaService : ICajaService
 
     // --- MÉTODOS PRIVADOS AUXILIARES ---
 
-    private static CajaActivaResponseDto MapearACajaActivaDto(
-        Caja caja, 
-        decimal ventasEfectivo, 
-        decimal ventasMercadoPago, 
-        decimal ventasTarjeta)
-    {
+    private static CajaActivaResponseDto MapearACajaActivaDto(Caja caja, decimal ventasEfectivo, decimal ventasMercadoPago, decimal ventasTarjeta){
         decimal ingresosExtra = caja.Movimientos?
             .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto) ?? 0;

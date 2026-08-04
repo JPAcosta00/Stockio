@@ -45,37 +45,32 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
             await SaveChangesAsync();
         }
 
-        /// Consulta las ventas realizadas en la tabla de Sales durante el lapso especificado
+        /// Consulta las ventas realizadas en la tabla de Sales durante el tiempo especificado
         /// y calcula los acumulados agrupados por método de pago.
-        public async Task<(decimal Efectivo, decimal MercadoPago, decimal Tarjeta)> GetVentasTotalesPorTurnoAsync(
-            Guid tenantId, 
-            DateTime fechaInicio, 
-            DateTime? fechaFin)
-        {
-           // 1. Asegurar DateTimeKind.Utc para PostgreSQL / Npgsql
+        public async Task<(decimal Efectivo, decimal MercadoPago, decimal Tarjeta)> GetVentasTotalesPorTurnoAsync(Guid tenantId, DateTime fechaInicio, DateTime? fechaFin){
            var fechaDesde = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
            var fechaHasta = DateTime.SpecifyKind(fechaFin ?? DateTime.UtcNow, DateTimeKind.Utc);
-        
-           // 2. Traer las ventas aplicando AsNoTracking sin proyección anónima previa
+
+           // Obtiene las ventas
            var ventas = await _context.Sales
                .AsNoTracking()
                .Where(s => s.TenantId == tenantId && s.CreatedAt >= fechaDesde && s.CreatedAt <= fechaHasta)
                .ToListAsync();
-        
-           // 3. Evaluar el enum directamente en memoria tras la deserialización de EF Core
+
+           // Evalua el enum 
            decimal efectivo = ventas
                .Where(v => v.PaymentMethod == PaymentMethod.Efectivo)
                .Sum(v => v.Total);
-        
+
            decimal mercadoPago = ventas
                .Where(v => v.PaymentMethod == PaymentMethod.Transferencia)
                .Sum(v => v.Total);
-        
+
            decimal tarjeta = ventas
                .Where(v => v.PaymentMethod == PaymentMethod.TarjetaDebito || 
                            v.PaymentMethod == PaymentMethod.TarjetaCredito)
                .Sum(v => v.Total);
-        
+
            return (efectivo, mercadoPago, tarjeta);
         }
     }
