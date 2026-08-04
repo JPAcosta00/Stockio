@@ -55,6 +55,8 @@ public class CajaController : ControllerBase
             return Unauthorized(new { Message = "El identificador del usuario no es válido o no está presente en el token." });
         }
 
+        Console.WriteLine($"=== VALOR RECIBIDO EN CONTROLLER: {dto?.MontoDeInicio} ===");
+
         try
         {
             var cajaAbierta = await _cajaService.AbrirCajaAsync(tenantId, usuarioId, dto.MontoDeInicio);
