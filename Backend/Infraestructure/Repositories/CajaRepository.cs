@@ -48,37 +48,34 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
         /// Consulta las ventas realizadas en la tabla de Sales durante el lapso especificado
         /// y calcula los acumulados agrupados por método de pago.
         public async Task<(decimal Efectivo, decimal MercadoPago, decimal Tarjeta)> GetVentasTotalesPorTurnoAsync(
-            Guid tenantId, 
-            DateTime fechaInicio, 
-            DateTime? fechaFin)
-        {
-            // 1. Asegurar DateTimeKind.Utc para PostgreSQL
-            var fechaDesde = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
-            var fechaHasta = DateTime.SpecifyKind(fechaFin ?? DateTime.UtcNow, DateTimeKind.Utc);
-        
-            // 2. Consultar directamente agrupando por el Enum PaymentMethod
-            var ventas = await _context.Sales
-                .AsNoTracking()
-                .Where(s => s.TenantId == tenantId && s.CreatedAt >= fechaDesde && s.CreatedAt <= fechaHasta)
-                .Select(s => new { s.PaymentMethod, s.Total })
-                .ToListAsync();
-        
-            // 3. Sumar comparando directamente contra los valores del enum PaymentMethod
-            decimal efectivo = ventas
-                .Where(v => v.PaymentMethod == PaymentMethod.Efectivo)
-                .Sum(v => v.Total);
-        
-            // Mapeamos 'Transferencia' a la bolsa de MercadoPago/Transferencias
-            decimal mercadoPago = ventas
-                .Where(v => v.PaymentMethod == PaymentMethod.Transferencia)
-                .Sum(v => v.Total);
-        
-            // Mapeamos Débito y Crédito a la bolsa de Tarjeta
-            decimal tarjeta = ventas
-                .Where(v => v.PaymentMethod == PaymentMethod.TarjetaDebito || 
-                            v.PaymentMethod == PaymentMethod.TarjetaCredito)
-                .Sum(v => v.Total);
-        
-            return (efectivo, mercadoPago, tarjeta);
-        }
+    Guid tenantId, 
+    DateTime fechaInicio, 
+    DateTime? fechaFin)
+{
+    // 1. Asegurar DateTimeKind.Utc para PostgreSQL / Npgsql
+    var fechaDesde = DateTime.SpecifyKind(fechaInicio, DateTimeKind.Utc);
+    var fechaHasta = DateTime.SpecifyKind(fechaFin ?? DateTime.UtcNow, DateTimeKind.Utc);
+
+    // 2. Traer las ventas aplicando AsNoTracking sin proyección anónima previa
+    var ventas = await _context.Sales
+        .AsNoTracking()
+        .Where(s => s.TenantId == tenantId && s.CreatedAt >= fechaDesde && s.CreatedAt <= fechaHasta)
+        .ToListAsync();
+
+    // 3. Evaluar el enum directamente en memoria tras la deserialización de EF Core
+    decimal efectivo = ventas
+        .Where(v => v.PaymentMethod == PaymentMethod.Efectivo)
+        .Sum(v => v.Total);
+
+    decimal mercadoPago = ventas
+        .Where(v => v.PaymentMethod == PaymentMethod.Transferencia)
+        .Sum(v => v.Total);
+
+    decimal tarjeta = ventas
+        .Where(v => v.PaymentMethod == PaymentMethod.TarjetaDebito || 
+                    v.PaymentMethod == PaymentMethod.TarjetaCredito)
+        .Sum(v => v.Total);
+
+    return (efectivo, mercadoPago, tarjeta);
+}
     }
