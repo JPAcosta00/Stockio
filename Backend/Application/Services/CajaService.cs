@@ -29,7 +29,7 @@ public class CajaService : ICajaService
         return MapearACajaActivaDto(cajaActiva, efectivo, mercadoPago, tarjeta);
     }
 
-    public async Task<CajaActivaResponseDto> AbrirCajaAsync(Guid tenantId, string usuarioId, decimal montoInicial)
+    public async Task<CajaActivaResponseDto> AbrirCajaAsync(Guid tenantId, Guid usuarioId, decimal montoInicial)
     {
         // Validar que no exista una caja abierta activa para este Tenant
         var cajaExistente = await _cajaRepository.GetActivaByTenantAsync(tenantId);
@@ -48,7 +48,7 @@ public class CajaService : ICajaService
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
-            UsuarioId = Guid.Parse(usuarioId),
+            UsuarioId = usuarioId,
             IsOpen = true,
             MontoInicial = montoInicial,
             FechaApertura = DateTime.UtcNow,
@@ -61,7 +61,7 @@ public class CajaService : ICajaService
         return MapearACajaActivaDto(nuevaCaja, 0, 0, 0);
     }
 
-    public async Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, string usuarioId, CerrarCajaDto datosDeCierre)
+    public async Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, Guid usuarioId, CerrarCajaDto datosDeCierre)
     {
         // 1. Buscar la caja por ID y TenantId con sus movimientos
         var caja = await _cajaRepository.GetByIdWithMovimientosAsync(datosDeCierre.CajaId, tenantId);

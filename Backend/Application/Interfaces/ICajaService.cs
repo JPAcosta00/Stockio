@@ -5,6 +5,6 @@ namespace Application.Interfaces;
 public interface ICajaService
 {
     Task<CajaActivaResponseDto?> ObtenerCajaActivaAsync(Guid tenantId);
-    Task<CajaActivaResponseDto> AbrirCajaAsync(Guid tenantId, string usuarioId, decimal montoInicial);
-    Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, string usuarioId, CerrarCajaDto datosDeCierre);
+    Task<CajaActivaResponseDto> AbrirCajaAsync(Guid tenantId, Guid usuarioId, decimal montoInicial);
+    Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, Guid usuarioId, CerrarCajaDto datosDeCierre);
 }

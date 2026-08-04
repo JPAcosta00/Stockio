@@ -22,9 +22,11 @@ public class CajaController : ControllerBase
     [HttpGet("activa")]
     public async Task<ActionResult<CajaActivaResponseDto>> ObtenerCajaActiva()
     {
-        var tenantId = ObtenerTenantId();
-        if (tenantId == Guid.Empty) 
-            return Unauthorized(new { mensaje = "No se encontró el TenantId en las credenciales." });
+        var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+                
+        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId)){
+            return Unauthorized(new { Message = "El identificador de organización (Tenant) no es válido o no está presente." });
+        }
 
         var cajaActiva = await _cajaService.ObtenerCajaActivaAsync(tenantId);
         
@@ -39,11 +41,19 @@ public class CajaController : ControllerBase
     [HttpPost("abrir")]
     public async Task<ActionResult<CajaActivaResponseDto>> AbrirCaja([FromQuery] decimal montoDeInicio)
     {
-        var tenantId = ObtenerTenantId();
-        var usuarioId = ObtenerUsuarioId();
+        // 1. Obtener y validar TenantId
+        var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId))
+        {
+            return Unauthorized(new { Message = "El identificador de organización (Tenant) no es válido o no está presente." });
+        }
 
-        if (tenantId == Guid.Empty || string.IsNullOrEmpty(usuarioId))
-            return Unauthorized(new { mensaje = "Token inválido o credenciales incompletas." });
+        // 2. Obtener y validar UsuarioId
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid usuarioId))
+        {
+            return Unauthorized(new { Message = "El identificador del usuario no es válido o no está presente en el token." });
+        }
 
         try
         {
@@ -62,11 +72,17 @@ public class CajaController : ControllerBase
     [HttpPost("cerrar")]
     public async Task<ActionResult<CajaHistorialDto>> CerrarCaja([FromBody] CerrarCajaDto datosDeCierre)
     {
-        var tenantId = ObtenerTenantId();
-        var usuarioId = ObtenerUsuarioId();
+        // 1. Obtener y validar TenantId
+        var tenantIdClaim = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdClaim) || !Guid.TryParse(tenantIdClaim, out Guid tenantId)){
+             return Unauthorized(new { mensaje = "El identificador de organización (Tenant) no es válido o no está presente." });
+        }
 
-        if (tenantId == Guid.Empty || string.IsNullOrEmpty(usuarioId))
-            return Unauthorized(new { mensaje = "Token inválido o credenciales incompletas." });
+        // 2. Obtener y validar UsuarioId
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out Guid usuarioId)) {
+            return Unauthorized(new { mensaje = "El identificador del usuario no es válido o no está presente en el token." });
+        }
 
         try
         {
@@ -104,11 +120,4 @@ public class CajaController : ControllerBase
         return Guid.TryParse(claimValue, out var tenantId) ? tenantId : Guid.Empty;
     }
 
-    private string ObtenerUsuarioId()
-    {
-        return User.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-            ?? User.FindFirst("sub")?.Value 
-            ?? User.FindFirst("UsuarioId")?.Value 
-            ?? string.Empty;
-    }
 }
