@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { 
+  User, 
+  Building2, 
+  Mail, 
+  Lock, 
+  CheckCircle2, 
+  Loader2 
+} from 'lucide-react';
 
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
@@ -33,19 +41,19 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     e.preventDefault();
     setError('');
 
-    //  Campos obligatorios
+    // Campos obligatorios
     if (!username || !companyName || !email || !password || !confirmPassword) {
       setError('Por favor, completá todos los campos.');
       return;
     }
 
-    //  Validación del formato de email
+    // Validación del formato de email
     if (!isValidEmail(email)) {
       setError('Por favor, ingresá un correo electrónico válido (ej: usuario@dominio.com).');
       return;
     }
 
-    //  Validación del formato de la contraseña
+    // Validación del formato de la contraseña
     if (!isValidPassword(password)) {
       setError('La contraseña debe tener al menos 6 caracteres, incluir letras y al menos un número.');
       return;
@@ -70,123 +78,150 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-4xl mx-auto space-y-4 px-2">
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
       
-      {/* Encabezado compacto */}
-      <div className="text-center space-y-0.5">
-        <h2 className="text-xl md:text-2xl font-bold text-white">Creá tu cuenta en el sistema de stock y ventas</h2>
+      {/* Encabezado */}
+      <div className="text-center mb-2">
+        <h2 className="text-xl font-bold text-white tracking-tight">
+          Creá tu cuenta en Stockio
+        </h2>
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Gestioná tu stock y ventas en un solo lugar
+        </p>
       </div>
 
       {/* Mensaje de error */}
       {error && (
-        <div className="p-2 text-xs bg-red-950/50 border border-red-500/50 text-red-200 rounded-lg text-center font-medium">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center font-medium backdrop-blur-sm animate-in fade-in">
           {error}
         </div>
       )}
 
-      {/* Contenedor principal del registro */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3 pt-1">
+      {/* Contenedor de Formulario */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
         {/* COLUMNA IZQUIERDA: Datos de la cuenta */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
-            Datos de la Cuenta
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+            <span>1. Datos de la Cuenta</span>
           </h3>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
+            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
               Nombre Completo
             </label>
-            <input
-              type="text"
-              required
-              value={username}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-              placeholder="Lionel Messi"
-            />
+            <div className="relative">
+              <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                required
+                value={username}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                placeholder="Lionel Messi"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
+            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
               Nombre de tu Empresa
             </label>
-            <input
-              type="text"
-              required
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-              placeholder="Distribuidora Messi"
-            />
+            <div className="relative">
+              <Building2 className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                placeholder="Distribuidora Messi"
+              />
+            </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
+            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
               Correo Electrónico
             </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-              placeholder="correo@empresa.com"
-            />
+            <div className="relative">
+              <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                placeholder="correo@empresa.com"
+              />
+            </div>
           </div>
         </div>
 
         {/* COLUMNA DERECHA: Seguridad / Contraseñas */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-zinc-800 pb-1">
-            Seguridad
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+            <span>2. Seguridad</span>
           </h3>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
+            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
               Contraseña
             </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-              placeholder="••••••••"
-            />
-            <p className="text-[11px] text-zinc-500 mt-0.5">
-              Mínimo 6 caracteres, incluyendo letras y al menos un número.
+            <div className="relative">
+              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                placeholder="••••••••"
+              />
+            </div>
+            <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+              Mínimo 6 caracteres, combinando letras y al menos un número.
             </p>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase text-zinc-400 mb-1">
+            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
               Confirmar Contraseña
             </label>
-            <input
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-600 focus:border-emerald-500 focus:outline-none transition-colors text-sm"
-              placeholder="••••••••"
-            />
-            <p className="text-[11px] text-zinc-500 mt-0.5">
-              Repetí la contraseña ingresada arriba.
+            <div className="relative">
+              <CheckCircle2 className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                placeholder="••••••••"
+              />
+            </div>
+            <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+              Repetí exactamente la clave ingresada arriba.
             </p>
           </div>
         </div>
 
       </div>
 
-      {/* PIE DE FORMULARIO: Botón de inicio de sesión */}
-      <div className="pt-3 border-t border-zinc-800/80 space-y-2">
+      {/* PIE DE FORMULARIO */}
+      <div className="pt-3 border-t border-zinc-800/80 space-y-3 mt-2">
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors shadow-lg shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-2.5 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
         >
-          {loading ? 'Registrando...' : 'Confirmar Registro'}
+          {loading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Creando cuenta...</span>
+            </>
+          ) : (
+            'Confirmar Registro'
+          )}
         </button>
 
         <p className="text-xs text-center text-zinc-400">
@@ -194,7 +229,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
           <button
             type="button"
             onClick={onSwitchToLogin}
-            className="text-emerald-400 font-medium hover:underline focus:outline-none"
+            className="text-[#5BA535] font-semibold hover:underline focus:outline-none transition-colors"
           >
             Iniciá sesión
           </button>

@@ -33,23 +33,19 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen flex bg-zinc-950 text-zinc-100">
       
-      {/* SIDEBAR - Negro / Dark Zinc */}
+      {/* SIDEBAR - Dark Zinc */}
       <aside className="w-64 bg-zinc-900 border-r border-zinc-800/80 flex flex-col justify-between p-4 fixed h-full z-20">
         <div>
           
-          {/* Logo y Nombre de Stockio */}
-          <div className="mb-8 px-2 pt-2 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center shrink-0">
-              <Package className="w-5 h-5 text-[#5BA535]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold tracking-tight text-white leading-tight">
-                Stock<span className="text-[#5BA535]">io</span>
-              </h2>
-              <span className="text-[10px] text-zinc-500 font-medium tracking-wider uppercase block">
-                Todo tu stock, en orden
-              </span>
-            </div>
+          {/* Logo Completo de Stockio */}
+          <div className="mb-6 px-2 pt-1 flex items-center justify-center">
+            <Link to="/">
+              <img 
+                src="/logo.png" 
+                alt="Stockio Logo" 
+                className="h-16 w-auto object-contain hover:scale-105 transition-transform duration-200"
+              />
+            </Link>
           </div>
 
           {/* Menú de Navegación */}
@@ -80,7 +76,7 @@ export default function DashboardLayout({ children }) {
           
           {/* Desplegable Contextual */}
           {showProfileMenu && (
-            <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden p-1 space-y-1 z-30">
+            <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden p-1 space-y-1 z-30 animate-in fade-in slide-in-from-bottom-2">
               <Link
                 to="/perfil"
                 onClick={() => setShowProfileMenu(false)}
@@ -109,7 +105,7 @@ export default function DashboardLayout({ children }) {
             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/60 transition-colors text-left group"
           >
             <div className="flex items-center gap-3 min-w-0">
-              {/* Avatar con fondo verde bosque oscuro */}
+              {/* Avatar con fondo verde bosque */}
               <div className="w-8 h-8 rounded-lg bg-[#1C562A]/40 border border-[#377731]/40 flex items-center justify-center shrink-0 font-bold text-xs text-[#5BA535]">
                 {getInitials(user?.email)}
               </div>
@@ -135,7 +131,7 @@ export default function DashboardLayout({ children }) {
 
       </aside>
 
-      {/* CONTENEDOR PRINCIPAL - Zinc 950 */}
+      {/* CONTENEDOR PRINCIPAL */}
       <main className="flex-1 ml-64 p-8 bg-zinc-950 min-h-screen text-zinc-100">
         <div className="max-w-7xl mx-auto">
           {children}

@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import RegisterForm from '../components/auth/RegisterForm';
 import { 
-  Package, 
   Mail, 
   Lock, 
   KeyRound, 
@@ -34,14 +33,12 @@ export default function Login() {
 
   const { login } = useAuth();
 
-  // Resetear alertas al cambiar de pantalla
   const switchView = (newView) => {
     setError('');
     setSuccessMsg('');
     setView(newView);
   };
 
-  // 1. Submit para Iniciar Sesión
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -62,7 +59,6 @@ export default function Login() {
     }
   };
 
-  // 2. Submit para Solicitar Token por Email
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -81,7 +77,6 @@ export default function Login() {
     }
   };
 
-  // 3. Submit para Restablecer la Contraseña con el Token
   const handleResetPasswordSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -108,26 +103,21 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* Efecto de luz ambiental verde de fondo */}
+      {/* Luces de fondo ambientales */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-md w-full bg-zinc-900/90 border border-zinc-800/80 backdrop-blur-md rounded-2xl p-8 shadow-2xl relative z-10">
         
-        {/* LOGO / BRANDING INTERACTIVO */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 shadow-lg mb-4 group transition-transform duration-300 hover:scale-105">
-            {/* Si tenés el archivo /logo.png podés usar esta etiqueta img y comentar el Package: */}
-            {/* <img src="/logo.png" alt="Stockio Logo" className="w-9 h-9 object-contain" /> */}
-            <Package className="w-7 h-7 text-[#5BA535] group-hover:rotate-12 transition-transform duration-300" />
+        {/* BRANDING / LOGO COMPLETO */}
+        <div className="flex justify-center mb-6">
+          <div className="p-3 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 shadow-inner group transition-transform duration-300 hover:scale-105">
+            <img 
+              src="/logo.png" 
+              alt="Stockio - Todo tu stock, en orden" 
+              className="h-28 w-auto object-contain drop-shadow-md"
+            />
           </div>
-
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            Stock<span className="text-[#5BA535]">io</span>
-          </h1>
-          <p className="text-xs text-zinc-400 mt-1 font-medium tracking-wide uppercase">
-            Todo tu stock, en orden.
-          </p>
         </div>
 
         {/* Banner de Errores */}
@@ -150,7 +140,6 @@ export default function Login() {
         {view === 'login' && (
           <>
             <form onSubmit={handleLoginSubmit} className="space-y-4">
-              {/* Campo Email */}
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
                   Correo Electrónico
@@ -168,7 +157,6 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Campo Contraseña */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
@@ -202,11 +190,10 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Botón Iniciar Sesión */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? (
                   <>
@@ -235,7 +222,7 @@ export default function Login() {
         )}
 
         {/* -------------------------------------------------------------
-            VISTA 2: SOLICITAR RECUPERACIÓN (EMAIL)
+            VISTA 2: RECUPERACIÓN (EMAIL)
            ------------------------------------------------------------- */}
         {view === 'forgot' && (
           <>
@@ -294,7 +281,7 @@ export default function Login() {
         )}
 
         {/* -------------------------------------------------------------
-            VISTA 3: INGRESAR TOKEN Y NUEVA CONTRASEÑA
+            VISTA 3: NUEVA CONTRASEÑA
            ------------------------------------------------------------- */}
         {view === 'reset' && (
           <>
