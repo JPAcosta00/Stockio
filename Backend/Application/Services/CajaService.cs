@@ -135,7 +135,8 @@ public class CajaService : ICajaService
        };
     }
 
-    public async Task<MovimientoCajaDto> RegistrarMovimientoAsync(Guid tenantId, RegistrarMovimientoDto dto){
+    public async Task<MovimientoCajaDto> RegistrarMovimientoAsync(Guid tenantId, RegistrarMovimientoDto dto)
+    {
         // 1. Obtener la caja activa para el tenant
         var cajaActiva = await _cajaRepository.GetActivaByTenantAsync(tenantId);
         
@@ -156,8 +157,7 @@ public class CajaService : ICajaService
         }
     
         // 3. Crear la entidad MovimientoCaja
-        var movimiento = new MovimientoCaja
-        {
+        var movimiento = new MovimientoCaja{
             Id = Guid.NewGuid(),
             CajaId = cajaActiva.Id,
             Tipo = dto.Tipo.ToUpper(), // "INGRESO" o "EGRESO"
@@ -165,8 +165,9 @@ public class CajaService : ICajaService
             Concepto = dto.Concepto,
             Fecha = DateTime.UtcNow
         };
-        cajaActiva.Movimientos ??= new List<MovimientoCaja>();
-        cajaActiva.Movimientos.Add(movimiento);
+    
+        // 4. Registrar en el repositorio
+        await _cajaRepository.AddMovimientoAsync(movimiento);
     
         // 5. Retornar el DTO mapeado
         return new MovimientoCajaDto
@@ -177,7 +178,7 @@ public class CajaService : ICajaService
             Concepto = movimiento.Concepto,
             Fecha = movimiento.Fecha
         };
-    }   
+    }
 
     public async Task<byte[]> GenerarReporteCajaPdfAsync(Guid tenantId)
     {

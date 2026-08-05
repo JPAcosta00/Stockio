@@ -50,7 +50,6 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
         public async Task AddMovimientoAsync(MovimientoCaja movimiento)
         {
             await _context.Set<MovimientoCaja>().AddAsync(movimiento);
-            await SaveChangesAsync();
         }
 
         /// Consulta las ventas realizadas en la tabla de Sales durante el tiempo especificado
