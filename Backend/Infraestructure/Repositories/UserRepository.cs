@@ -22,4 +22,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.Id == id);
     }
+
+    public async Task<User?> GetByResetTokenAsync(string token)
+    {
+        return await _context.Users
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.ResetToken == token && u.ResetTokenExpires > DateTime.UtcNow);
+    }
 }

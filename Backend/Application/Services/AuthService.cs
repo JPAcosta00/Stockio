@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Security.Cryptography;
 using Domain.Entities;
 
 namespace Application.Services;
@@ -108,5 +109,54 @@ public class AuthService : IAuthService
         user.updateDatos(dto.Username, dto.Role, dto.IsActive, dto.Email, dto.TenantId);
 
         await _userRepository.SaveChangesAsync();
+    }
+
+    public async Task GenerateResetTokenAsync(string email){
+        // Usa GetByEmailAsync que ignora QueryFilters por si el usuario aún no tiene tenant resoluble
+        var user = await _userRepository.GetByEmailAsync(email);
+
+        if (user == null || !user.IsActive) 
+        {
+            // Retornamos sin lanzar excepción por motivos de seguridad (evitar enumeración de emails)
+            return; 
+        }
+
+        // Genera un token aleatorio seguro de 64 bytes codificado en Base64 URL-safe
+        var tokenBytes = RandomNumberGenerator.GetBytes(64);
+        var token = Convert.ToHexString(tokenBytes);
+
+        // Asigna el token y define expiración (ej. 1 hora)
+        user.SetResetToken(token, DateTime.UtcNow.AddHours(1));
+
+        await _userRepository.SaveChangesAsync();
+
+        // TODO: Enviar correo electrónico con el token o enlace
+        // Ej: https://tu-frontend.com/reset-password?token={token}
+        Console.WriteLine($"Token de recuperación para {user.Email}: {token}");
+    }
+    
+    public async Task<bool> ResetPasswordAsync(ResetPasswordDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Token) || string.IsNullOrWhiteSpace(dto.NewPassword))
+        {
+            throw new ArgumentException("El token y la nueva contraseña son obligatorios.");
+        }
+    
+        var user = await _userRepository.GetByResetTokenAsync(dto.Token);
+        
+        if (user == null)
+        {
+            // Token inexistente o expirado
+            return false;
+        }
+    
+        // Hashea la nueva contraseña con BCrypt
+        string newPasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+        
+        // Actualiza el hash y limpia el token usado
+        user.UpdatePassword(newPasswordHash);
+    
+        await _userRepository.SaveChangesAsync();
+        return true;
     }
 }

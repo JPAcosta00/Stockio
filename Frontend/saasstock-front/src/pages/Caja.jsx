@@ -11,6 +11,10 @@ export default function Caja() {
   const [efectivoRealContado, setEfectivoRealContado] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [mostrarModalCierre, setMostrarModalCierre] = useState(false);
+  
+  // Nuevos estados para confirmación y carga del cierre
+  const [confirmandoCierre, setConfirmandoCierre] = useState(false);
+  const [cerrandoCaja, setCerrandoCaja] = useState(false);
 
   // Estado para Registro de Movimientos Extras (Gastos / Retiros / Ingresos)
   const [mostrarModalMovimiento, setMostrarModalMovimiento] = useState(false);
@@ -94,10 +98,17 @@ export default function Caja() {
     }
   };
 
-  // 4. Manejo de Cierre / Arqueo 
-  const handleCerrarCajaSubmit = async (e) => {
+  // Pasa de ingresar el monto contado a la pantalla de confirmación
+  const handlePrepararCierre = (e) => {
     e.preventDefault();
-    
+    if (efectivoRealContado === '' || Number(efectivoRealContado) < 0) {
+      return alert("Ingrese un monto válido de efectivo contado.");
+    }
+    setConfirmandoCierre(true);
+  };
+
+  // 4. Manejo de Cierre / Arqueo Definitivo
+  const handleCerrarCajaSubmit = async () => {
     if (!cajaActiva) return;
 
     const datosCierre = {
@@ -107,17 +118,27 @@ export default function Caja() {
     };
 
     try {
+      setCerrandoCaja(true);
       const response = await apiClient.post('/caja/cerrar', datosCierre);
       alert(`Caja cerrada con éxito. Diferencia registrada: $${response.data.diferencia.toFixed(2)}`);
       
       // Resetear estados
       setCajaActiva(null);
       setMostrarModalCierre(false);
+      setConfirmandoCierre(false);
       setEfectivoRealContado('');
       setObservaciones('');
     } catch (error) {
       alert(error.response?.data?.mensaje || "Error al cerrar la caja");
+    } finally {
+      setCerrandoCaja(false);
     }
+  };
+
+  // Cierra y limpia el modal de cierre
+  const handleCerrarModalCierre = () => {
+    setMostrarModalCierre(false);
+    setConfirmandoCierre(false);
   };
 
   // 5. Generación de Reporte PDF
@@ -376,90 +397,158 @@ export default function Caja() {
         </div>
       )}
 
-      {/* MODAL DE ARQUEO Y CIERRE */}
+      {/* MODAL DE ARQUEO Y CIERRE DE CAJA */}
       {mostrarModalCierre && cajaActiva && (
         <div 
-          onClick={() => setMostrarModalCierre(false)}
+          onClick={handleCerrarModalCierre}
           className="fixed top-0 left-0 w-screen min-h-screen bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
             className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-6 relative shadow-2xl space-y-6"
           >
-            <h3 className="text-xl font-bold text-white border-b border-zinc-800 pb-3">Arqueo y Cierre de Caja</h3>
-
-            <div className="space-y-2 font-mono text-sm">
-              <div className="flex justify-between text-zinc-400">
-                <span>Efectivo Calculado (Esperado):</span>
-                <span className="text-white font-bold">${efectivoEsperado.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Total Mercado Pago:</span>
-                <span className="text-white font-bold">${cajaActiva.ventasMercadoPago?.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-zinc-400">
-                <span>Total Tarjetas:</span>
-                <span className="text-white font-bold">${cajaActiva.ventasTarjeta?.toFixed(2)}</span>
-              </div>
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
+              <h3 className="text-xl font-bold text-white">Arqueo y Cierre de Caja</h3>
+              <button 
+                onClick={handleCerrarModalCierre}
+                className="text-zinc-400 hover:text-white font-bold text-lg"
+              >
+                ✕
+              </button>
             </div>
 
-            <form onSubmit={handleCerrarCajaSubmit} className="space-y-4 pt-2">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
-                  Efectivo Real Contado en Cajón ($)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="Ingrese el monto físico total"
-                  value={efectivoRealContado}
-                  onChange={(e) => setEfectivoRealContado(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1">Observaciones (Opcional)</label>
-                <textarea
-                  rows={2}
-                  placeholder="Ej: Faltó cambio / Retiro de efectivo..."
-                  value={observaciones}
-                  onChange={(e) => setObservaciones(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white text-sm focus:outline-none"
-                />
-              </div>
-
-              {/* MUESTRA SOBRANTE / FALTANTE EN TIEMPO REAL */}
-              {efectivoRealContado !== '' && (
-                <div className={`p-3 rounded-lg font-mono text-sm border flex justify-between items-center ${diferenciaEfectivo === 0 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : diferenciaEfectivo > 0 ? 'bg-blue-950/40 border-blue-500/30 text-blue-400' : 'bg-rose-950/40 border-rose-500/30 text-rose-400'}`}>
-                  <span>
-                    {diferenciaEfectivo === 0 && 'Caja Cuadrada Perfecta'}
-                    {diferenciaEfectivo > 0 && 'Sobrante de Caja:'}
-                    {diferenciaEfectivo < 0 && 'Faltante de Caja:'}
-                  </span>
-                  <span className="font-bold text-base">
-                    ${Math.abs(diferenciaEfectivo).toFixed(2)}
-                  </span>
+            {/* VISTA 1: INGRESO DE DATOS */}
+            {!confirmandoCierre ? (
+              <>
+                <div className="space-y-2 font-mono text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Efectivo Calculado (Esperado):</span>
+                    <span className="text-white font-bold">${efectivoEsperado.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Total Mercado Pago:</span>
+                    <span className="text-white font-bold">${cajaActiva.ventasMercadoPago?.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Total Tarjetas:</span>
+                    <span className="text-white font-bold">${cajaActiva.ventasTarjeta?.toFixed(2)}</span>
+                  </div>
                 </div>
-              )}
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => setMostrarModalCierre(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-rose-900/20"
-                >
-                  Confirmar y Cerrar Turno
-                </button>
+                <form onSubmit={handlePrepararCierre} className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
+                      Efectivo Real Contado en Cajón ($)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      placeholder="Ingrese el monto físico total"
+                      value={efectivoRealContado}
+                      onChange={(e) => setEfectivoRealContado(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1">Observaciones (Opcional)</label>
+                    <textarea
+                      rows={2}
+                      placeholder="Ej: Faltó cambio / Retiro de efectivo..."
+                      value={observaciones}
+                      onChange={(e) => setObservaciones(e.target.value)}
+                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white text-sm focus:outline-none"
+                    />
+                  </div>
+
+                  {/* MUESTRA SOBRANTE / FALTANTE EN TIEMPO REAL */}
+                  {efectivoRealContado !== '' && (
+                    <div className={`p-3 rounded-lg font-mono text-sm border flex justify-between items-center ${diferenciaEfectivo === 0 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : diferenciaEfectivo > 0 ? 'bg-blue-950/40 border-blue-500/30 text-blue-400' : 'bg-rose-950/40 border-rose-500/30 text-rose-400'}`}>
+                      <span>
+                        {diferenciaEfectivo === 0 && 'Caja Cuadrada Perfecta'}
+                        {diferenciaEfectivo > 0 && 'Sobrante de Caja:'}
+                        {diferenciaEfectivo < 0 && 'Faltante de Caja:'}
+                      </span>
+                      <span className="font-bold text-base">
+                        ${Math.abs(diferenciaEfectivo).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={handleCerrarModalCierre}
+                      className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-rose-900/20"
+                    >
+                      Continuar al Cierre
+                    </button>
+                  </div>
+                </form>
+              </>
+            ) : (
+              /* VISTA 2: PANTALLA DE CONFIRMACIÓN */
+              <div className="space-y-5">
+                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg flex items-start gap-3">
+                  <span className="text-xl">⚠️</span>
+                  <div>
+                    <h4 className="text-amber-400 font-bold text-sm">¿Confirmar cierre de turno?</h4>
+                    <p className="text-zinc-300 text-xs mt-1">
+                      Una vez cerrada la caja no podrás registrar más ventas ni movimientos en este turno.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 space-y-2 font-mono text-sm">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Efectivo Esperado:</span>
+                    <span className="text-white">${efectivoEsperado.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Efectivo Declarado:</span>
+                    <span className="text-white">${Number(efectivoRealContado).toFixed(2)}</span>
+                  </div>
+                  <div className={`flex justify-between pt-2 border-t border-zinc-800 font-bold ${diferenciaEfectivo === 0 ? 'text-emerald-400' : diferenciaEfectivo > 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                    <span>Diferencia Final:</span>
+                    <span>{diferenciaEfectivo >= 0 ? '+' : ''}${diferenciaEfectivo.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {observaciones && (
+                  <div className="text-xs text-zinc-400 bg-zinc-800/50 p-3 rounded-lg">
+                    <span className="font-semibold text-zinc-300 block mb-1">Observaciones:</span>
+                    {observaciones}
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
+                  <button
+                    type="button"
+                    disabled={cerrandoCaja}
+                    onClick={() => setConfirmandoCierre(false)}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Volver
+                  </button>
+                  <button
+                    type="button"
+                    disabled={cerrandoCaja}
+                    onClick={handleCerrarCajaSubmit}
+                    className="bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-rose-900/20"
+                  >
+                    {cerrandoCaja ? 'Cerrando...' : 'Sí, Cerrar Caja Definitivamente'}
+                  </button>
+                </div>
               </div>
-            </form>
+            )}
+
           </div>
         </div>
       )}

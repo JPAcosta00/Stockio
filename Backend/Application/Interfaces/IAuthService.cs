@@ -11,4 +11,7 @@ public interface IAuthService
     Task<Guid> RegisterAsync(RegisterDto dto);
 
     Task UpdateUserByAdminAsync(Guid userId, UpdateUserByAdminDto dto, Guid currentUserId);
+
+    Task GenerateResetTokenAsync(string email);
+    Task<bool> ResetPasswordAsync(ResetPasswordDto dto);
 }

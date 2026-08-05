@@ -17,6 +17,9 @@ public class User : IMustHaveTenant
     public Guid TenantId { get; set; }
     public Tenant Tenant { get; set; } = null!;
 
+    public string? ResetToken { get; set; }
+    public DateTime? ResetTokenExpires { get; set; }
+
     //este metodo es para cuando el ADMIN quiera modificar todo el usuario.
     public void updateDatos(String userNombre, String rol, bool? estado, String mail, Guid tenantId)
     {
@@ -33,5 +36,18 @@ public class User : IMustHaveTenant
     {
         Username = userNombre;
         Email = unMail;
+    }
+
+    public void SetResetToken(string token, DateTime expires)
+    {
+        ResetToken = token;
+        ResetTokenExpires = expires;
+    }
+
+    public void UpdatePassword(string newPasswordHash)
+    {
+        PasswordHash = newPasswordHash;
+        ResetToken = null;
+        ResetTokenExpires = null;
     }
 }

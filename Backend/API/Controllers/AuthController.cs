@@ -77,4 +77,46 @@ public class AuthController : ControllerBase{
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto dto)
+    {
+        try
+        {
+            await _authService.GenerateResetTokenAsync(dto.Email);
+            
+            // Nota de seguridad: Se suele responder 200 OK con mensaje genérico
+            // incluso si el mail no existe para evitar enumeración de usuarios.
+            return Ok(new { message = "Si el correo está registrado, recibirás un enlace/código de recuperación." });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Error al procesar la solicitud." });
+        }
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+    {
+        try
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
+            if (!result)
+            {
+                return BadRequest(new { message = "El enlace o código de recuperación es inválido o ha expirado." });
+            }
+
+            return Ok(new { message = "Contraseña restablecida con éxito. Ya podés iniciar sesión." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { message = "Error interno al intentar cambiar la contraseña." });
+        }
+    }
 }

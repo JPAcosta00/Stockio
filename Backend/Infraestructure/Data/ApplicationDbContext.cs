@@ -63,6 +63,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(u => u.Username).IsRequired().HasMaxLength(50);
             entity.Property(u => u.Email).IsRequired().HasMaxLength(100);
             entity.Property(u => u.PasswordHash).IsRequired().HasMaxLength(255);
+            entity.Property(u => u.ResetToken).HasMaxLength(256).IsRequired(false);
+            entity.Property(u => u.ResetTokenExpires).IsRequired(false);
+
+            entity.HasIndex(u => u.ResetToken);
 
             entity.HasOne(u => u.Tenant)
                   .WithMany(t => t.Users)

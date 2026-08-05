@@ -36,28 +36,35 @@ export default function Estadisticas() {
     return () => clearTimeout(delayDebounceFn);
   }, [name, period]);
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = async (filterName, filterPeriod) => {
     try {
       setDownloadingPdf(true);
-      
-      // Petición limpia al endpoint de caja
-      const response = await apiClient.get('/caja/reporte-pdf', {
-        responseType: 'blob' 
+
+      // Petición al endpoint de estadísticas 
+      const response = await apiClient.get('/stats/download-pdf', {
+        responseType: 'blob',
+        params: {
+          name: filterName || undefined,
+          period: filterPeriod || undefined
+        }
       });
-    
+
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Reporte_Caja_${new Date().toISOString().slice(0, 10)}.pdf`);
+
+      const dateFormatted = new Date().toISOString().slice(0, 10);
+      link.setAttribute('download', `Estadisticas_${dateFormatted}.pdf`);
+
       document.body.appendChild(link);
       link.click();
-      
+
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Error al descargar el PDF de caja:", err);
-      alert("No se pudo generar el reporte de caja. Intentá nuevamente.");
+      console.error("Error al descargar el PDF de estadísticas:", err);
+      alert("No se pudo generar el reporte de estadísticas. Intentá nuevamente.");
     } finally {
       setDownloadingPdf(false);
     }
