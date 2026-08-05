@@ -69,17 +69,33 @@ public class InventoryStatsService : IInventoryStatsService
     }
 
     // Método auxiliar para determinar la fecha inicial considerando la Zona Horaria
-    private DateTime CalculateStartDate(string? period)
-    {
-        var todayUtc = DateTime.UtcNow.Date; // 00:00:00 de hoy en UTC
+    private DateTime CalculateStartDate(string? period){
+        // 1. Definir la zona horaria de Argentina (UTC-3)
+        TimeZoneInfo argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time"); 
+        // Para que funcione en cualquier sistema operativo (Windows/Linux/Docker):
+        try
+        {
+            argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
+        }
+        catch
+        {
+            // En Windows fallback
+            argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("Argentina Standard Time");
+        }
+
+        // 2. Obtener la hora actual de Argentina y extraer el inicio de hoy (00:00:00 local)
+        DateTime nowArgentina = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, argentinaZone);
+        DateTime inicioHoyArgentina = nowArgentina.Date; 
+
+        DateTime inicioHoyUtc = TimeZoneInfo.ConvertTimeToUtc(inicioHoyArgentina, argentinaZone);
 
         return period?.ToLower() switch
         {
-            "hoy" => todayUtc,
-            "semana" => todayUtc.AddDays(-(int)DateTime.UtcNow.DayOfWeek),
-            "mes" => new DateTime(todayUtc.Year, todayUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-            "anio" => new DateTime(todayUtc.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            _ => todayUtc.AddDays(-30)
+            "hoy" => inicioHoyUtc,
+            "semana" => TimeZoneInfo.ConvertTimeToUtc(inicioHoyArgentina.AddDays(-(int)inicioHoyArgentina.DayOfWeek), argentinaZone),
+            "mes" => TimeZoneInfo.ConvertTimeToUtc(new DateTime(inicioHoyArgentina.Year, inicioHoyArgentina.Month, 1), argentinaZone),
+            "anio" => TimeZoneInfo.ConvertTimeToUtc(new DateTime(inicioHoyArgentina.Year, 1, 1), argentinaZone),
+            _ => DateTime.UtcNow.AddDays(-30)
         };
     }
 
