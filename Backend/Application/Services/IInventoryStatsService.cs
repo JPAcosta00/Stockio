@@ -21,14 +21,19 @@ public class InventoryStatsService : IInventoryStatsService
 
     public async Task<DashboardDataDto> GetStatsByInventoryFiltersAsync(Guid tenantId, ProductReportFilterDto filter)
     {
-        var filteredProducts = await _productService.GetFilteredProductsAsync(filter, tenantId);
+        // 1. Obtener la fecha de inicio según el período seleccionado
+        DateTime startDate = CalculateStartDate(filter.Period);
+
+        // 2. Si hay filtro por nombre, traemos solo los IDs de productos coincidentes.
+        var productFilterNameOnly = new ProductReportFilterDto { Name = filter.Name };
+        var filteredProducts = await _productService.GetFilteredProductsAsync(productFilterNameOnly, tenantId);
         var filteredProductsList = filteredProducts.ToList();
-
-        var startDate = DateTime.UtcNow.AddDays(-30);
-        var sales = await _saleRepository.GetSalesWithDetailsAsync(tenantId, startDate);
-
         var filteredProductIds = filteredProductsList.Select(p => p.Id).ToHashSet();
 
+        // 3. Consultar ventas filtrando desde la fecha calculada (startDate)
+        var sales = await _saleRepository.GetSalesWithDetailsAsync(tenantId, startDate);
+
+        // 4. Filtrar los detalles de ventas pertenecientes a los productos encontrados
         var filteredDetails = sales
             .SelectMany(s => s.Details)
             .Where(d => filteredProductIds.Contains(d.ProductId))
@@ -60,6 +65,22 @@ public class InventoryStatsService : IInventoryStatsService
                 LowStockAlertsCount = lowStockCount
             },
             TopProducts = topProducts
+        };
+    }
+
+    // Método auxiliar para determinar la fecha inicial considerando la Zona Horaria
+    private DateTime CalculateStartDate(string? period)
+    {
+        // Usamos el inicio del día local/UTC según corresponda
+        var now = DateTime.UtcNow;
+
+        return period?.ToLower() switch
+        {
+            "hoy" => new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc),
+            "semana" => now.Date.AddDays(-(int)now.DayOfWeek),
+            "mes" => new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            "anio" => new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            _ => now.AddDays(-30) // Valor por defecto si no especifica período
         };
     }
 
