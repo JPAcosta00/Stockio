@@ -169,6 +169,7 @@ public class CajaService : ICajaService
     
         // 4. Registrar en el repositorio
         await _cajaRepository.AddMovimientoAsync(movimiento);
+        await _cajaRepository.SaveChangesAsync();
     
         // 5. Retornar el DTO mapeado
         return new MovimientoCajaDto

@@ -106,6 +106,8 @@ namespace Application.Services
         
                 // Se guarda la persistencia
                 await _saleRepository.AddAsync(nuevaVenta);
+                await _saleRepository.SaveChangesAsync();
+        
                 // 2. Registrar el movimiento llamando al servicio de Caja
                 var dtoMovimiento = new RegistrarMovimientoDto{
                     CajaId = Guid.Empty, // Se autodetecta con la activa
@@ -117,8 +119,6 @@ namespace Application.Services
 
                 await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
 
-                await _saleRepository.SaveChangesAsync();
-        
                 await _saleRepository.CommitTransactionAsync();
         
                 return nuevaVenta.Id;
