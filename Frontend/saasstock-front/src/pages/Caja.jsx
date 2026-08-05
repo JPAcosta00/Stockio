@@ -120,7 +120,6 @@ export default function Caja() {
     try {
       setCerrandoCaja(true);
       const response = await apiClient.post('/caja/cerrar', datosCierre);
-      alert(`Caja cerrada con éxito. Diferencia registrada: $${response.data.diferencia.toFixed(2)}`);
       
       // Resetear estados
       setCajaActiva(null);
