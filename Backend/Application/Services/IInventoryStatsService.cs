@@ -19,8 +19,7 @@ public class InventoryStatsService : IInventoryStatsService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
-    public async Task<DashboardDataDto> GetStatsByInventoryFiltersAsync(Guid tenantId, ProductReportFilterDto filter)
-    {
+    public async Task<DashboardDataDto> GetStatsByInventoryFiltersAsync(Guid tenantId, ProductReportFilterDto filter){
         // 1. Obtener la fecha de inicio según el período seleccionado
         DateTime startDate = CalculateStartDate(filter.Period);
 
@@ -55,6 +54,23 @@ public class InventoryStatsService : IInventoryStatsService
             .Take(4)
             .ToList();
 
+        //Para armar el grafico
+        bool isToday = string.Equals(filter.Period, "hoy", StringComparison.OrdinalIgnoreCase);
+
+        var salesTimeline = sales
+            .SelectMany(s => s.Details.Select(d => new { Sale = s, Detail = d }))
+            .Where(x => filteredProductIds.Contains(x.Detail.ProductId))
+            .GroupBy(x => isToday 
+                ? x.Sale.CreatedAt.ToString("HH:00") 
+                : x.Sale.CreatedAt.ToString("dd/MM"))
+            .Select(g => new SalesTimelineDto
+            {
+                Date = g.Key,
+                Total = g.Sum(x => x.Detail.Quantity * x.Detail.UnitPrice)
+            })
+            .OrderBy(t => t.Date)
+            .ToList();
+
         return new DashboardDataDto
         {
             Metrics = new DashboardMetricsDto
@@ -64,7 +80,8 @@ public class InventoryStatsService : IInventoryStatsService
                 ActiveProductsCount = filteredProductsList.Count,
                 LowStockAlertsCount = lowStockCount
             },
-            TopProducts = topProducts
+            TopProducts = topProducts,
+            SalesTimeline = salesTimeline 
         };
     }
 
