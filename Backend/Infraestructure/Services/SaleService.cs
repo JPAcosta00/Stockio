@@ -122,6 +122,16 @@ namespace Application.Services
         
                 return nuevaVenta.Id;
             }
+            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex){
+                await _saleRepository.RollbackTransactionAsync();
+
+                foreach (var entry in ex.Entries)
+                {
+                    Console.WriteLine($"[ERROR CONCURRENCIA] Entidad fallida: {entry.Entity.GetType().Name}, Estado: {entry.State}");
+                }
+
+                throw;
+            }
             catch (Exception)
             {
                 await _saleRepository.RollbackTransactionAsync();

@@ -165,7 +165,7 @@ public class CajaService : ICajaService
             Concepto = dto.Concepto,
             Fecha = DateTime.UtcNow
         };
-    
+        cajaActiva.Movimientos ??= new List<MovimientoCaja>();
         cajaActiva.Movimientos.Add(movimiento);
     
         // 5. Retornar el DTO mapeado
