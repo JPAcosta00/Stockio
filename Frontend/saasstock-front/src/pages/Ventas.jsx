@@ -3,32 +3,30 @@ import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
 import CobroModal from '../components/CobroModal';
 
-// HELPER: Genera una clave de LocalStorage única combinando TenantId y UserId del Token JWT
+// HELPER: Genera o recupera un ID único para la pestaña/sesión actual del navegador
 const getCartStorageKey = () => {
   try {
-    const token = localStorage.getItem('token'); // Ajustá 'token' según la clave donde guardes tu JWT
-    if (!token) return 'carrito_guest';
+    const token = localStorage.getItem('token');
+    let userId = 'guest';
 
-    // Decodifica la sección de Payload del JWT (Base64)
-    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      userId = payload.UserId || payload.userId || payload.sub || 'guest';
+    }
 
-    // Extrae el UserId y TenantId buscando los claims comunes de .NET
-    const userId =
-      payload.UserId ||
-      payload.userId ||
-      payload.sub ||
-      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
-      'anon';
+    // Usamos sessionStorage para obtener un ID único de pestaña/navegador
+    let tabSessionId = sessionStorage.getItem('pos_session_id');
+    if (!tabSessionId) {
+      tabSessionId = Math.random().toString(36).substring(2, 9);
+      sessionStorage.setItem('pos_session_id', tabSessionId);
+    }
 
-    const tenantId = payload.TenantId || payload.tenantId || 'default';
-
-    return `carrito_${tenantId}_${userId}`;
+    // Clave única por Usuario + Pestaña
+    return `carrito_${userId}_${tabSessionId}`;
   } catch (error) {
-    console.error('Error al obtener la clave del carrito desde el token:', error);
-    return 'carrito_guest';
+    return `carrito_guest_${Date.now()}`;
   }
 };
-
 export default function Ventas() {
   // Clave dinámica aislada por usuario/tenant
   const cartKey = getCartStorageKey();
