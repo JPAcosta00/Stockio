@@ -14,7 +14,7 @@ export default function Caja() {
 
   // Estado para Registro de Movimientos Extras (Gastos / Retiros / Ingresos)
   const [mostrarModalMovimiento, setMostrarModalMovimiento] = useState(false);
-  const [tipoMovimiento, setTipoMovimiento] = useState('EGRESO'); // "EGRESO" o "INGRESO"
+  const [tipoMovimiento, setTipoMovimiento] = useState('EGRESO'); 
   const [montoMovimiento, setMontoMovimiento] = useState('');
   const [conceptoMovimiento, setConceptoMovimiento] = useState('');
   const [guardandoMovimiento, setGuardandoMovimiento] = useState(false);
