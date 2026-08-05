@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 import { Search, Calendar, Loader2, DollarSign, ShoppingBag, Package, AlertTriangle, Download } from 'lucide-react';
-import SalesTimelineChart from '../components/SalesTimelineChart';
+import SalesTimelineChart from '../components/SalesTimelineChart.jsx';
 
 export default function Estadisticas() {
   const [name, setName] = useState('');
