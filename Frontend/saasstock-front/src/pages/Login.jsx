@@ -2,11 +2,22 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/apiClient';
 import RegisterForm from '../components/auth/RegisterForm';
+import { 
+  Package, 
+  Mail, 
+  Lock, 
+  KeyRound, 
+  ArrowLeft, 
+  Eye, 
+  EyeOff, 
+  Loader2 
+} from 'lucide-react';
 
 export default function Login() {
   // Estados para Login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   // Estados para Recuperación (Forgot/Reset)
   const [resetEmail, setResetEmail] = useState('');
@@ -61,7 +72,6 @@ export default function Login() {
     try {
       const response = await apiClient.post('/auth/forgot-password', { email: resetEmail });
       setSuccessMsg(response.data?.message || 'Si el correo está registrado, recibirás las instrucciones.');
-      // Pasamos a la vista donde ingresa el token
       setView('reset');
     } catch (err) {
       console.error(err);
@@ -84,7 +94,6 @@ export default function Login() {
         newPassword
       });
       alert('¡Contraseña actualizada correctamente! Ya podés iniciar sesión.');
-      // Limpiamos los campos y volvemos al login
       setToken('');
       setNewPassword('');
       switchView('login');
@@ -97,19 +106,40 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4">
-      <div className="max-w-md w-full bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
+      
+      {/* Efecto de luz ambiental verde de fondo */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/20 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-md w-full bg-zinc-900/90 border border-zinc-800/80 backdrop-blur-md rounded-2xl p-8 shadow-2xl relative z-10">
         
+        {/* LOGO / BRANDING INTERACTIVO */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 shadow-lg mb-4 group transition-transform duration-300 hover:scale-105">
+            {/* Si tenés el archivo /logo.png podés usar esta etiqueta img y comentar el Package: */}
+            {/* <img src="/logo.png" alt="Stockio Logo" className="w-9 h-9 object-contain" /> */}
+            <Package className="w-7 h-7 text-[#5BA535] group-hover:rotate-12 transition-transform duration-300" />
+          </div>
+
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            Stock<span className="text-[#5BA535]">io</span>
+          </h1>
+          <p className="text-xs text-zinc-400 mt-1 font-medium tracking-wide uppercase">
+            Todo tu stock, en orden.
+          </p>
+        </div>
+
         {/* Banner de Errores */}
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg text-center">
+          <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
             {error}
           </div>
         )}
 
         {/* Banner de Éxito */}
         {successMsg && (
-          <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-lg text-center">
+          <div className="mb-5 p-3.5 bg-[#5BA535]/10 border border-[#5BA535]/30 text-[#5BA535] text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
             {successMsg}
           </div>
         )}
@@ -119,61 +149,83 @@ export default function Login() {
            ------------------------------------------------------------- */}
         {view === 'login' && (
           <>
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-white tracking-tight">Sistema de stock y ventas</h2>
-              <p className="text-sm text-zinc-400 mt-2">Ingresá tus credenciales para acceder al sistema</p>
-            </div>
-
-            <form onSubmit={handleLoginSubmit} className="space-y-5">
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              {/* Campo Email */}
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Correo Electrónico</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-                  placeholder="nombre@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                  Correo Electrónico
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    placeholder="nombre@empresa.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
               </div>
 
+              {/* Campo Contraseña */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-sm font-medium text-zinc-300">Contraseña</label>
+                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                    Contraseña
+                  </label>
                   <button
                     type="button"
                     onClick={() => switchView('forgot')}
-                    className="text-xs text-zinc-400 hover:text-white transition-colors"
+                    className="text-xs text-[#5BA535] hover:underline font-medium transition-colors"
                   >
                     ¿Olvidaste tu contraseña?
                   </button>
                 </div>
-                <input
-                  type="password"
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
+              {/* Botón Iniciar Sesión */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-zinc-950 font-semibold text-sm rounded-lg py-2.5 mt-2 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Iniciando sesión...</span>
+                  </>
+                ) : (
+                  'Iniciar Sesión'
+                )}
               </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <p className="text-sm text-zinc-500">
+            <div className="mt-6 text-center border-t border-zinc-800/80 pt-4">
+              <p className="text-sm text-zinc-400">
                 ¿No tenés una cuenta?{' '}
                 <button
                   type="button"
                   onClick={() => switchView('register')}
-                  className="text-white hover:underline font-medium transition-all"
+                  className="text-white hover:text-[#5BA535] font-semibold transition-colors"
                 >
                   Registrá tu negocio
                 </button>
@@ -187,32 +239,44 @@ export default function Login() {
            ------------------------------------------------------------- */}
         {view === 'forgot' && (
           <>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Recuperar Contraseña</h2>
-              <p className="text-sm text-zinc-400 mt-2">
-                Ingresá tu correo electrónico para generar el código/token de recuperación.
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-white tracking-tight">Recuperar Contraseña</h2>
+              <p className="text-xs text-zinc-400 mt-1">
+                Ingresá tu correo para enviarte el código de recuperación.
               </p>
             </div>
 
-            <form onSubmit={handleForgotPasswordSubmit} className="space-y-5">
+            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Correo Electrónico</label>
-                <input
-                  type="email"
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-                  placeholder="nombre@empresa.com"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                />
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                  Correo Electrónico
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    required
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    placeholder="nombre@empresa.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-zinc-950 font-semibold text-sm rounded-lg py-2.5 mt-2 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? 'Generando código...' : 'Solicitar Recuperación'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Enviando código...</span>
+                  </>
+                ) : (
+                  'Solicitar Recuperación'
+                )}
               </button>
             </form>
 
@@ -220,9 +284,10 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => switchView('login')}
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
               >
-                ← Volver al inicio de sesión
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Volver al inicio de sesión</span>
               </button>
             </div>
           </>
@@ -233,45 +298,62 @@ export default function Login() {
            ------------------------------------------------------------- */}
         {view === 'reset' && (
           <>
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-white tracking-tight">Establecer Nueva Contraseña</h2>
-              <p className="text-sm text-zinc-400 mt-2">
-                Pegá el código/token de recuperación e ingresá tu nueva clave.
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-white tracking-tight">Nueva Contraseña</h2>
+              <p className="text-xs text-zinc-400 mt-1">
+                Ingresá el token recibido y definí tu nueva clave.
               </p>
             </div>
 
-            <form onSubmit={handleResetPasswordSubmit} className="space-y-5">
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Token / Código de Recuperación</label>
-                <input
-                  type="text"
-                  required
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-                  placeholder="Pegá el token aquí"
-                  value={token}
-                  onChange={(e) => setToken(e.target.value)}
-                />
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                  Código de Recuperación
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    required
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    placeholder="Pegá el token aquí"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-300 mb-1.5">Nueva Contraseña</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-zinc-600 transition-colors"
-                  placeholder="••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                  Nueva Contraseña
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white text-zinc-950 font-semibold text-sm rounded-lg py-2.5 mt-2 hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {loading ? 'Restableciendo...' : 'Guardar Nueva Contraseña'}
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  'Guardar Nueva Contraseña'
+                )}
               </button>
             </form>
 
@@ -279,9 +361,10 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => switchView('login')}
-                className="text-sm text-zinc-400 hover:text-white transition-colors"
+                className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
               >
-                ← Volver al inicio de sesión
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Volver al inicio de sesión</span>
               </button>
             </div>
           </>
