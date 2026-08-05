@@ -2,6 +2,12 @@ import React from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
+
+
+
+
+
+
 export default function SalesTimelineChart({ data = [] }) {
   if (!data || data.length === 0) {
     return (
