@@ -166,8 +166,7 @@ public class CajaService : ICajaService
             Fecha = DateTime.UtcNow
         };
     
-        // 4. Guardar en BD mediante el repositorio
-        await _cajaRepository.AddMovimientoAsync(movimiento);
+        cajaActiva.Movimientos.Add(movimiento);
     
         // 5. Retornar el DTO mapeado
         return new MovimientoCajaDto
@@ -178,9 +177,7 @@ public class CajaService : ICajaService
             Concepto = movimiento.Concepto,
             Fecha = movimiento.Fecha
         };
-    }
-    
-    
+    }   
 
     public async Task<byte[]> GenerarReporteCajaPdfAsync(Guid tenantId)
     {

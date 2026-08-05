@@ -11,11 +11,13 @@ namespace Application.Services
     {
         private readonly ISaleRepository _saleRepository;
         private readonly IProductRepository _productRepository;
+        private readonly ICajaService _cajaService;
 
-        public SaleService(ISaleRepository saleRepository, IProductRepository productRepository)
+        public SaleService(ISaleRepository saleRepository, IProductRepository productRepository, ICajaService cajaService)
         {
             _saleRepository = saleRepository;
             _productRepository = productRepository;
+            _cajaService = cajaService;
         }
 
         // --- 1. HISTORIAL DE VENTAS ---
@@ -37,6 +39,8 @@ namespace Application.Services
                 throw new ArgumentException("La venta debe contener artículos.");
         
             // La transacción se maneja con el repositorio
+
+            //llamar a CajaRepository para que registre la venta (el movimiento) sobre esa caja
             await _saleRepository.BeginTransactionAsync();
         
             try
@@ -102,6 +106,16 @@ namespace Application.Services
         
                 // Se guarda la persistencia
                 await _saleRepository.AddAsync(nuevaVenta);
+                // 2. Registrar el movimiento llamando al servicio de Caja
+                var dtoMovimiento = new RegistrarMovimientoDto{
+                    CajaId = Guid.Empty, // Se autodetecta con la activa
+                    Tipo = "INGRESO",
+                    Monto = nuevaVenta.Total,
+                    Concepto = $"Venta realizada ({nuevaVenta.PaymentMethod})"
+                };
+
+                await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
+
                 await _saleRepository.SaveChangesAsync();
         
                 await _saleRepository.CommitTransactionAsync();
@@ -147,6 +161,5 @@ namespace Application.Services
             };
         }
        
-        // agregar la baja de venta
     }
 }
