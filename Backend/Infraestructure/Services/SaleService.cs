@@ -38,9 +38,6 @@ namespace Application.Services
             if (dto.Items == null || !dto.Items.Any())
                 throw new ArgumentException("La venta debe contener artículos.");
         
-            // La transacción se maneja con el repositorio
-
-            //llamar a CajaRepository para que registre la venta (el movimiento) sobre esa caja
             await _saleRepository.BeginTransactionAsync();
         
             try
@@ -66,9 +63,8 @@ namespace Application.Services
                     if (producto.Stock < item.Quantity)
                         throw new Exception($"Stock insuficiente para '{producto.Name}'.");
         
-                    // Se resta al stock del producto 
                     producto.Stock -= item.Quantity;
-                    _productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
+                    _productRepository.Update(producto);
         
                     var detalle = new SaleDetail
                     {
@@ -86,56 +82,45 @@ namespace Application.Services
         
                 nuevaVenta.Total = acumuladorTotal;
         
-                // --- LÓGICA DE COBRO Y VUELTO CON ENUM ---
                 if (nuevaVenta.PaymentMethod == PaymentMethod.Efectivo)
                 {
                     if (dto.ReceivedAmount < nuevaVenta.Total)
-                    {
                         throw new InvalidOperationException($"Monto recibido insuficiente. El total es {nuevaVenta.Total:C} y se recibió {dto.ReceivedAmount:C}.");
-                    }
         
                     nuevaVenta.ReceivedAmount = dto.ReceivedAmount;
                     nuevaVenta.ChangeAmount = dto.ReceivedAmount - nuevaVenta.Total;
                 }
                 else
                 {
-                    // Transferencia, TarjetaDebito o TarjetaCredito
                     nuevaVenta.ReceivedAmount = nuevaVenta.Total;
                     nuevaVenta.ChangeAmount = 0m;
                 }
         
-                // Se guarda la persistencia
+                // 1. Guardar la venta primero
                 await _saleRepository.AddAsync(nuevaVenta);
                 await _saleRepository.SaveChangesAsync();
         
-                // 2. Registrar el movimiento llamando al servicio de Caja
-                var dtoMovimiento = new RegistrarMovimientoDto{
-                    CajaId = Guid.Empty, // Se autodetecta con la activa
+                // 2. Registrar el movimiento en la caja
+                var dtoMovimiento = new RegistrarMovimientoDto
+                {
                     Tipo = "INGRESO",
                     Monto = nuevaVenta.Total,
                     Concepto = $"Venta realizada ({nuevaVenta.PaymentMethod})", 
                     VentaId = nuevaVenta.Id
                 };
-
+        
                 await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
-
+        
+                // 3. Confirmar la transacción
                 await _saleRepository.CommitTransactionAsync();
         
                 return nuevaVenta.Id;
             }
-            catch (Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException ex){
-                await _saleRepository.RollbackTransactionAsync();
-
-                foreach (var entry in ex.Entries)
-                {
-                    Console.WriteLine($"[ERROR CONCURRENCIA] Entidad fallida: {entry.Entity.GetType().Name}, Estado: {entry.State}");
-                }
-
-                throw;
-            }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await _saleRepository.RollbackTransactionAsync();
+                // Imprimir el error exacto en la consola para saber la causa si vuelve a fallar
+                Console.WriteLine($"[ERROR CREATE SALE]: {ex.Message} | Inner: {ex.InnerException?.Message}");
                 throw;
             }
         }

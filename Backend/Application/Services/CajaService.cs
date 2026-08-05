@@ -139,46 +139,40 @@ public class CajaService : ICajaService
     {
         // 1. Obtener la caja activa para el tenant
         var cajaActiva = await _cajaRepository.GetActivaByTenantAsync(tenantId);
-        
+
         if (cajaActiva == null)
         {
             throw new InvalidOperationException("No hay una caja abierta para registrar movimientos.");
         }
-    
-        // 2. Validar que la caja enviada o activa coincida
-        if (dto.CajaId != Guid.Empty && cajaActiva.Id != dto.CajaId)
-        {
-            throw new InvalidOperationException("La caja especificada no corresponde a la caja activa actual.");
-        }
-    
+
         if (dto.Monto <= 0)
         {
             throw new InvalidOperationException("El monto del movimiento debe ser mayor a cero.");
         }
-    
-        // 3. Crear la entidad MovimientoCaja
-        var movimiento = new MovimientoCaja{
-            Id = Guid.NewGuid(),
-            CajaId = cajaActiva.Id,
-            Tipo = dto.Tipo.ToUpper(), // "INGRESO" o "EGRESO"
+
+        // 2. Crear la entidad MovimientoCaja
+        var movimiento = new MovimientoCaja
+        {
+            CajaId = cajaActiva.Id, 
+            Tipo = dto.Tipo.ToUpper(),
             Monto = dto.Monto,
             Concepto = dto.Concepto,
             Fecha = DateTime.UtcNow,
             VentaId = dto.VentaId
         };
-    
-        // 4. Registrar en el repositorio
+
+        // 3. Registrar en el repositorio
         await _cajaRepository.AddMovimientoAsync(movimiento);
+
         await _cajaRepository.SaveChangesAsync();
-    
-        // 5. Retornar el DTO mapeado
+
         return new MovimientoCajaDto
         {
             Id = movimiento.Id,
             Tipo = movimiento.Tipo,
             Monto = movimiento.Monto,
             Concepto = movimiento.Concepto,
-            Fecha = movimiento.Fecha,
+            Fecha = movimiento.Fecha
         };
     }
 
