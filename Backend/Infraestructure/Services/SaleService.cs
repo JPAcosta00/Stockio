@@ -68,7 +68,7 @@ namespace Application.Services
         
                     // Se resta al stock del producto 
                     producto.Stock -= item.Quantity;
-                    _productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
+                    //_productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
         
                     var detalle = new SaleDetail
                     {
