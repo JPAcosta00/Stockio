@@ -1,20 +1,50 @@
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
-import CobroModal from '../components/CobroModal'; // <-- IMPORTAMOS EL MODAL
+import CobroModal from '../components/CobroModal';
+
+// HELPER: Genera una clave de LocalStorage única combinando TenantId y UserId del Token JWT
+const getCartStorageKey = () => {
+  try {
+    const token = localStorage.getItem('token'); // Ajustá 'token' según la clave donde guardes tu JWT
+    if (!token) return 'carrito_guest';
+
+    // Decodifica la sección de Payload del JWT (Base64)
+    const payload = JSON.parse(atob(token.split('.')[1]));
+
+    // Extrae el UserId y TenantId buscando los claims comunes de .NET
+    const userId =
+      payload.UserId ||
+      payload.userId ||
+      payload.sub ||
+      payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
+      'anon';
+
+    const tenantId = payload.TenantId || payload.tenantId || 'default';
+
+    return `carrito_${tenantId}_${userId}`;
+  } catch (error) {
+    console.error('Error al obtener la clave del carrito desde el token:', error);
+    return 'carrito_guest';
+  }
+};
 
 export default function Ventas() {
-  // Estados de datos 
+  // Clave dinámica aislada por usuario/tenant
+  const cartKey = getCartStorageKey();
+
+  // Estados de datos
   const [carrito, setCarrito] = useState(() => {
-    const carritoGuardado = localStorage.getItem('carrito_mostrador');
+    const carritoGuardado = localStorage.getItem(cartKey);
     return carritoGuardado ? JSON.parse(carritoGuardado) : [];
   });
+
   const [historialVentas, setHistorialVentas] = useState([]);
-  
+
   // Modal de detalle
   const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
 
-  // NUEVO: Estado del modal de cobro/calculadora
+  // Estado del modal de cobro/calculadora
   const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
 
   // Estados de UI
@@ -41,10 +71,11 @@ export default function Ventas() {
     obtenerHistorialVentas();
   }, []);
 
+  // Guarda en LocalStorage utilizando la clave aislada por usuario
   useEffect(() => {
-    localStorage.setItem('carrito_mostrador', JSON.stringify(carrito));
+    localStorage.setItem(cartKey, JSON.stringify(carrito));
     if (barcodeRef.current) barcodeRef.current.focus();
-  }, [carrito]);
+  }, [carrito, cartKey]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -70,7 +101,7 @@ export default function Ventas() {
         const res = await apiClient.get('/products', { params: { search: query } });
         const listaProductos = res.data || [];
 
-        const filtrados = listaProductos.filter(prod => {
+        const filtrados = listaProductos.filter((prod) => {
           const nombreCoincide = prod.name?.toLowerCase().includes(query);
           const codigoCoincide = prod.barcode?.toLowerCase().includes(query);
           return nombreCoincide || codigoCoincide;
@@ -79,7 +110,7 @@ export default function Ventas() {
         setSugerencias(filtrados);
         setMostrarDropdown(true);
       } catch (err) {
-        console.error("Error al buscar sugerencias:", err);
+        console.error('Error al buscar sugerencias:', err);
       } finally {
         setBuscandoSugerencias(false);
       }
@@ -94,7 +125,7 @@ export default function Ventas() {
       const response = await apiClient.get('/sales');
       setHistorialVentas(response.data);
     } catch (error) {
-      console.error("Error al cargar historial de ventas:", error);
+      console.error('Error al cargar historial de ventas:', error);
     } finally {
       setLoadingHistorial(false);
     }
@@ -106,15 +137,15 @@ export default function Ventas() {
       const response = await apiClient.get(`/sales/${venta.id}`);
       setVentaSeleccionada(response.data);
     } catch (error) {
-      console.error("Error al obtener el detalle de la venta:", error);
-      alert("No se pudo cargar el detalle de esta venta.");
+      console.error('Error al obtener el detalle de la venta:', error);
+      alert('No se pudo cargar el detalle de esta venta.');
     } finally {
       setLoadingDetalle(false);
     }
   };
 
   const limpiarMostrador = () => {
-    if (window.confirm("¿Estás seguro de que querés vaciar todo el mostrador actual?")) {
+    if (window.confirm('¿Estás seguro de que querés vaciar todo el mostrador actual?')) {
       setCarrito([]);
     }
   };
@@ -127,25 +158,30 @@ export default function Ventas() {
       return;
     }
 
-    const existeEnCarrito = carrito.find(item => item.productId === prod.id);
-    
+    const existeEnCarrito = carrito.find((item) => item.productId === prod.id);
+
     if (existeEnCarrito) {
       if (existeEnCarrito.quantity + 1 > prod.stock) {
         alert(`No podés agregar más unidades de "${prod.name}". Stock máximo: ${prod.stock} un.`);
         return;
       }
-      setCarrito(carrito.map(item =>
-        item.productId === prod.id ? { ...item, quantity: item.quantity + 1 } : item
-      ));
+      setCarrito(
+        carrito.map((item) =>
+          item.productId === prod.id ? { ...item, quantity: item.quantity + 1 } : item
+        )
+      );
     } else {
-      setCarrito([...carrito, {
-        productId: prod.id,
-        name: prod.name,
-        barcode: prod.barcode,
-        quantity: 1,
-        unitPrice: prod.price,
-        maxStock: prod.stock 
-      }]);
+      setCarrito([
+        ...carrito,
+        {
+          productId: prod.id,
+          name: prod.name,
+          barcode: prod.barcode,
+          quantity: 1,
+          unitPrice: prod.price,
+          maxStock: prod.stock,
+        },
+      ]);
     }
 
     setBarcodeInput('');
@@ -163,8 +199,8 @@ export default function Ventas() {
       const response = await apiClient.get(`/products/barcode/${codigoLimpio}`);
       agregarProductoAlCarrito(response.data);
     } catch (error) {
-      console.error("Error al buscar por código:", error);
-      alert(error.response?.data?.message || "El producto no existe o hubo un error en el servidor.");
+      console.error('Error al buscar por código:', error);
+      alert(error.response?.data?.message || 'El producto no existe o hubo un error en el servidor.');
     } finally {
       setBuscandoProducto(false);
       if (barcodeRef.current) barcodeRef.current.focus();
@@ -172,7 +208,7 @@ export default function Ventas() {
   };
 
   const modificarCantidad = (productId, nuevaCantidad) => {
-    const item = carrito.find(i => i.productId === productId);
+    const item = carrito.find((i) => i.productId === productId);
     if (!item) return;
 
     if (nuevaCantidad > item.maxStock) {
@@ -185,16 +221,16 @@ export default function Ventas() {
       return;
     }
 
-    setCarrito(carrito.map(i =>
-      i.productId === productId ? { ...i, quantity: nuevaCantidad } : i
-    ));
+    setCarrito(
+      carrito.map((i) => (i.productId === productId ? { ...i, quantity: nuevaCantidad } : i))
+    );
   };
 
   const quitarDelCarrito = (id) => {
-    setCarrito(carrito.filter(item => item.productId !== id));
+    setCarrito(carrito.filter((item) => item.productId !== id));
   };
 
-  const totalVenta = carrito.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
+  const totalVenta = carrito.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
 
   const confirmarVenta = async (datosCobro) => {
     if (carrito.length === 0) return;
@@ -202,65 +238,68 @@ export default function Ventas() {
     try {
       setEnviando(true);
       const paymentMethodMap = {
-        'EFECTIVO': 1,         // Efectivo
-        'TRANSFERENCIA': 2,    // Transferencia
-        'DEBITO': 3,           // TarjetaDebito
-        'CREDITO': 4           // TarjetaCredito
+        EFECTIVO: 1,
+        TRANSFERENCIA: 2,
+        DEBITO: 3,
+        CREDITO: 4,
       };
 
       const payload = {
-        items: carrito.map(item => ({
+        items: carrito.map((item) => ({
           productId: item.productId,
           quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice)
+          unitPrice: Number(item.unitPrice),
         })),
-        // Mapea al número correspondiente (1 por defecto si no lo encuentra)
         paymentMethod: paymentMethodMap[datosCobro?.medioPago] || 1,
         receivedAmount: Number(datosCobro?.montoRecibido || totalVenta),
-        changeAmount: Number(datosCobro?.vuelto || 0)
+        changeAmount: Number(datosCobro?.vuelto || 0),
       };
 
       await apiClient.post('/sales', payload);
-      alert("¡Venta registrada con éxito!");
+      alert('¡Venta registrada con éxito!');
       setCarrito([]);
-      setMostrarModalCobro(false); // Cerramos el modal tras guardar
+      setMostrarModalCobro(false);
       await obtenerHistorialVentas();
     } catch (error) {
-      console.error("Error al registrar venta:", error);
-      alert(error.response?.data?.message || "Error al guardar la venta.");
-      const mensajeBackend = error.response?.data?.message || JSON.stringify(error.response?.data) || "Error al guardar la venta.";
-      alert("Error del servidor: " + mensajeBackend);
+      console.error('Error al registrar venta:', error);
+      const mensajeBackend =
+        error.response?.data?.message ||
+        JSON.stringify(error.response?.data) ||
+        'Error al guardar la venta.';
+      alert('Error del servidor: ' + mensajeBackend);
     } finally {
       setEnviando(false);
       if (barcodeRef.current) barcodeRef.current.focus();
     }
   };
 
-  const historialFiltrado = historialVentas.filter(v => {
+  const historialFiltrado = historialVentas.filter((v) => {
     const fechaVenta = new Date(v.createdAt);
     const ahora = new Date();
 
     if (filtroTiempo === 'hoy') {
-      const esHoy = fechaVenta.getDate() === ahora.getDate() &&
-                    fechaVenta.getMonth() === ahora.getMonth() &&
-                    fechaVenta.getFullYear() === ahora.getFullYear();
+      const esHoy =
+        fechaVenta.getDate() === ahora.getDate() &&
+        fechaVenta.getMonth() === ahora.getMonth() &&
+        fechaVenta.getFullYear() === ahora.getFullYear();
       if (!esHoy) return false;
     } else if (filtroTiempo === 'semana') {
       const hace7Dias = new Date();
       hace7Dias.setDate(ahora.getDate() - 7);
       if (fechaVenta < hace7Dias) return false;
     } else if (filtroTiempo === 'mes') {
-      const esMismoMes = fechaVenta.getMonth() === ahora.getMonth() &&
-                         fechaVenta.getFullYear() === ahora.getFullYear();
+      const esMismoMes =
+        fechaVenta.getMonth() === ahora.getMonth() &&
+        fechaVenta.getFullYear() === ahora.getFullYear();
       if (!esMismoMes) return false;
-    } 
+    }
 
     const q = busquedaHistorial.trim().toLowerCase();
     if (!q) return true;
-    
+
     const coincideId = v.id?.toString().includes(q);
-    const coincideBarcodeItem = v.items?.some(item => 
-      item.barcode?.toLowerCase().includes(q) || item.product?.barcode?.toLowerCase().includes(q)
+    const coincideBarcodeItem = v.items?.some(
+      (item) => item.barcode?.toLowerCase().includes(q) || item.product?.barcode?.toLowerCase().includes(q)
     );
 
     return coincideId || coincideBarcodeItem;
@@ -276,11 +315,10 @@ export default function Ventas() {
 
       {/* BLOQUE SUPERIOR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
         {/* INGRESO MANUAL / ESCANER CON AUTOCOMPLETE */}
         <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-xl h-fit space-y-3 relative" ref={dropdownRef}>
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Ingreso de Artículo</h2>
-          
+
           <form onSubmit={handleBarcodeSubmit} className="space-y-3">
             <div className="relative">
               <label className="block text-xs text-zinc-400 font-medium mb-1">
@@ -349,9 +387,9 @@ export default function Ventas() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Mostrador Actual</h2>
               {carrito.length > 0 && (
-                <button 
-                  type="button" 
-                  onClick={limpiarMostrador} 
+                <button
+                  type="button"
+                  onClick={limpiarMostrador}
                   className="text-xs bg-red-950/40 border border-red-800/50 hover:bg-red-900/60 text-red-300 font-medium py-1 px-3 rounded-lg flex items-center gap-1.5 transition-all duration-200"
                 >
                   🗑️ Vaciar
@@ -361,7 +399,7 @@ export default function Ventas() {
 
             {carrito.length === 0 ? (
               <div className="text-center py-12 text-zinc-600 text-xs">
-                Mostrador vacío. 
+                Mostrador vacío.
               </div>
             ) : (
               <div className="overflow-x-auto max-h-60 overflow-y-auto">
@@ -416,7 +454,6 @@ export default function Ventas() {
               </span>
             </div>
 
-            {/* CAMBIO AQUÍ: Ahora abre el modal de cobro */}
             <button
               onClick={() => setMostrarModalCobro(true)}
               disabled={carrito.length === 0 || enviando}
@@ -432,7 +469,7 @@ export default function Ventas() {
       <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
           <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
-          
+
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-lg">
               {[
@@ -440,7 +477,7 @@ export default function Ventas() {
                 { id: 'hoy', label: 'Hoy' },
                 { id: 'semana', label: 'Últ. Semana' },
                 { id: 'mes', label: 'Mes' },
-              ].map(item => (
+              ].map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setFiltroTiempo(item.id)}
@@ -465,7 +502,6 @@ export default function Ventas() {
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
               />
             </div>
-
           </div>
         </div>
 
@@ -473,8 +509,8 @@ export default function Ventas() {
           <p className="text-center py-6 text-zinc-500 text-xs">Cargando historial...</p>
         ) : historialFiltrado.length === 0 ? (
           <div className="text-center py-8 text-zinc-600 text-xs">
-            {busquedaHistorial || filtroTiempo !== 'todos' 
-              ? 'No se encontraron ventas para los filtros seleccionados.' 
+            {busquedaHistorial || filtroTiempo !== 'todos'
+              ? 'No se encontraron ventas para los filtros seleccionados.'
               : 'No se registran transacciones previas.'}
           </div>
         ) : (
@@ -490,8 +526,8 @@ export default function Ventas() {
               </thead>
               <tbody className="divide-y divide-zinc-800/50">
                 {historialFiltrado.map((v) => (
-                  <tr 
-                    key={v.id} 
+                  <tr
+                    key={v.id}
                     onClick={() => abrirDetalleVenta(v)}
                     className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
                   >
@@ -499,7 +535,14 @@ export default function Ventas() {
                       #{v.id}
                     </td>
                     <td className="py-3 text-zinc-300">
-                      {new Date(v.createdAt).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} hs.
+                      {new Date(v.createdAt).toLocaleString('es-AR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      hs.
                     </td>
                     <td className="py-3 text-right font-mono text-zinc-100 font-bold text-sm">
                       ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
@@ -516,10 +559,10 @@ export default function Ventas() {
       </div>
 
       {/* MODAL DE DETALLE DE VENTA */}
-      <VentaDetalleModal 
-        venta={ventaSeleccionada} 
+      <VentaDetalleModal
+        venta={ventaSeleccionada}
         loading={loadingDetalle}
-        onClose={() => setVentaSeleccionada(null)} 
+        onClose={() => setVentaSeleccionada(null)}
       />
 
       {/* MODAL DE COBRO Y CALCULADORA DE VUELTO */}
