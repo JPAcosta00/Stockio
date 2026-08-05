@@ -48,6 +48,12 @@ export default function DashboardLayout({ children }) {
             </Link>
           </div>
 
+
+
+
+
+          
+
           {/* Menú de Navegación */}
           <nav className="space-y-1">
             {navigationLinks.map((item) => {
