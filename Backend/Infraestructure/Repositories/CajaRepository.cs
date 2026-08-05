@@ -28,6 +28,14 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
                 .FirstOrDefaultAsync(c => c.Id == cajaId && c.TenantId == tenantId);
         }
 
+        ///Para el reporte 
+        public async Task<Caja?> GetCajaActivaWithMovimientosAsync(Guid tenantId)
+        {
+           return await _dbSet
+               .Include(c => c.Movimientos) // Carga la relación con los movimientos
+               .FirstOrDefaultAsync(c => c.TenantId == tenantId && c.IsOpen);
+        }
+
         /// Obtiene el historial de cajas cerradas ordenadas por fecha reciente.
         public async Task<IEnumerable<Caja>> GetHistorialByTenantAsync(Guid tenantId, int take = 30)
         {

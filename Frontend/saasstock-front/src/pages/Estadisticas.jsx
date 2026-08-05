@@ -36,33 +36,28 @@ export default function Estadisticas() {
     return () => clearTimeout(delayDebounceFn);
   }, [name, period]);
 
-  // Función para descargar el PDF directamente en la PC
   const handleDownloadPdf = async () => {
     try {
       setDownloadingPdf(true);
-      const response = await apiClient.get('/stats/download-pdf', {
-        params: {
-          name: name || undefined,
-          period: period || undefined
-        },
+      
+      // Petición limpia al endpoint de caja
+      const response = await apiClient.get('/caja/reporte-pdf', {
         responseType: 'blob' 
       });
-
-      // Crear URL temporal y disparar descarga en el navegador
+    
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `Estadisticas_${new Date().toISOString().slice(0, 10)}.pdf`);
+      link.setAttribute('download', `Reporte_Caja_${new Date().toISOString().slice(0, 10)}.pdf`);
       document.body.appendChild(link);
       link.click();
       
-      // Limpieza del DOM
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Error al descargar el PDF:", err);
-      alert("No se pudo generar el reporte en PDF. Intentá nuevamente.");
+      console.error("Error al descargar el PDF de caja:", err);
+      alert("No se pudo generar el reporte de caja. Intentá nuevamente.");
     } finally {
       setDownloadingPdf(false);
     }

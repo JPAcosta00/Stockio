@@ -2,6 +2,9 @@ using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace Application.Services;
 
@@ -175,6 +178,141 @@ public class CajaService : ICajaService
             Concepto = movimiento.Concepto,
             Fecha = movimiento.Fecha
         };
+    }
+    
+    
+
+    public async Task<byte[]> GenerarReporteCajaPdfAsync(Guid tenantId)
+    {
+        QuestPDF.Settings.License = LicenseType.Community;
+    
+        // 1. Obtener la caja activa/última y sus movimientos desde tu DB
+        var cajaActual = await _cajaRepository.GetCajaActivaWithMovimientosAsync(tenantId);
+    
+        // Cálculos de totales utilizando MovimientoCajaDto (Tipo como string)
+        decimal ingresos = cajaActual?.Movimientos?
+            .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase) || 
+                        string.Equals(m.Tipo, "INGRESO", StringComparison.OrdinalIgnoreCase))
+            .Sum(m => m.Monto) ?? 0m;
+
+        decimal egresos = cajaActual?.Movimientos?
+            .Where(m => string.Equals(m.Tipo, "Egreso", StringComparison.OrdinalIgnoreCase) || 
+                        string.Equals(m.Tipo, "EGRESO", StringComparison.OrdinalIgnoreCase))
+            .Sum(m => m.Monto) ?? 0m;
+
+        decimal saldoInicial = cajaActual?.MontoInicial ?? 0m;
+        decimal saldoFinal = saldoInicial + ingresos - egresos;
+    
+        // 2. Generar el documento PDF
+        var pdfBytes = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(2, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10));
+    
+                // Encabezado
+                page.Header().Row(row =>
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text("REPORTE DE CAJA DIARIA").FontSize(18).Bold().FontColor("#10b981");
+                        col.Item().Text($"Fecha de impresión: {DateTime.Now:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
+                });
+    
+                // Contenido Principal
+                page.Content().PaddingVertical(1, Unit.Centimetre).Column(col =>
+                {
+                    col.Spacing(15);
+    
+                    // Tarjetas / Cuadro Resumen de Totales
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                        });
+    
+                        table.Cell().Background("#f4f4f5").Padding(8).Column(c => {
+                            c.Item().Text("Saldo Inicial").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"$ {saldoInicial:N2}").Bold();
+                        });
+                        table.Cell().Background("#f4f4f5").Padding(8).Column(c => {
+                            c.Item().Text("Ingresos").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"$ {ingresos:N2}").Bold().FontColor(Colors.Green.Medium);
+                        });
+                        table.Cell().Background("#f4f4f5").Padding(8).Column(c => {
+                            c.Item().Text("Egresos").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"$ {egresos:N2}").Bold().FontColor(Colors.Red.Medium);
+                        });
+                        table.Cell().Background("#e4e4e7").Padding(8).Column(c => {
+                            c.Item().Text("Saldo Final").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"$ {saldoFinal:N2}").Bold();
+                        });
+                    });
+    
+                    col.Item().Text("Detalle de Movimientos").FontSize(12).Bold();
+    
+                    // Tabla Detallada de Movimientos
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(60);  // Hora
+                            columns.RelativeColumn(3);  // Concepto / Descripción
+                            columns.RelativeColumn(1);  // Tipo
+                            columns.RelativeColumn(1);  // Monto
+                        });
+    
+                        // Cabecera
+                        table.Header(header =>
+                        {
+                            header.Cell().Background("#18181b").Padding(5).Text("Hora").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#18181b").Padding(5).Text("Concepto").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#18181b").Padding(5).Text("Tipo").Bold().FontColor(Colors.White);
+                            header.Cell().Background("#18181b").Padding(5).AlignRight().Text("Monto").Bold().FontColor(Colors.White);
+                        });
+    
+                        // Filas Dinámicas desde la DB
+                        if (cajaActual?.Movimientos != null && cajaActual.Movimientos.Any())
+                        {
+                            foreach (var item in cajaActual.Movimientos)
+                            {
+                                // Comparación segura como cadena de texto
+                                bool esIngreso = string.Equals(item.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase) || 
+                                                 string.Equals(item.Tipo, "INGRESO", StringComparison.OrdinalIgnoreCase);
+                        
+                                table.Cell().BorderBottom(1).BorderColor("#e4e4e7").Padding(5).Text(item.Fecha.ToString("HH:mm"));
+                                table.Cell().BorderBottom(1).BorderColor("#e4e4e7").Padding(5).Text(item.Concepto ?? "-");
+                                table.Cell().BorderBottom(1).BorderColor("#e4e4e7").Padding(5).Text(item.Tipo); // Ya es string, no necesita .ToString()
+                                table.Cell().BorderBottom(1).BorderColor("#e4e4e7").Padding(5).AlignRight()
+                                    .Text($"$ {item.Monto:N2}")
+                                    .FontColor(esIngreso ? Colors.Green.Medium : Colors.Red.Medium);
+                            }
+                        }
+                        else
+                        {
+                            table.Cell().ColumnSpan(4).Padding(15).AlignCenter().Text("No se registraron movimientos en esta caja.");
+                        }
+                    });
+                });
+    
+                // Pie de página
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Página ");
+                    x.CurrentPageNumber();
+                });
+            });
+        }).GeneratePdf();
+    
+        return pdfBytes;
     }
     
     // --- MÉTODOS PRIVADOS AUXILIARES ---

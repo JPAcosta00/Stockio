@@ -102,12 +102,15 @@ public class CajaController : ControllerBase
     }
 
     [HttpGet("reporte-pdf")]
-    public async Task<ActionResult<string>> GenerarReporteCaja([FromQuery] string algunDato)
+    public async Task<IActionResult> GenerarReporteCaja()
     {
-        var tenantClaim = ObtenerTenantId();
-
-        // Pendiente para más adelante
-        return Ok("Reporte pendiente de implementación.");
+        var tenantId = ObtenerTenantId();
+    
+        byte[] pdfBuffer = await _cajaService.GenerarReporteCajaPdfAsync(tenantId);
+    
+        string nombreArchivo = $"Reporte_Caja_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+    
+        return File(pdfBuffer, "application/pdf", nombreArchivo);
     }
 
     [HttpPost("movimientos")]
