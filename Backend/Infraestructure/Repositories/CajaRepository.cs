@@ -49,7 +49,8 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
         /// Registra un ingreso o egreso extra en la tabla MovimientosCaja.
         public async Task AddMovimientoAsync(MovimientoCaja movimiento)
         {
-            await _context.Set<MovimientoCaja>().AddAsync(movimiento);
+            _context.Entry(movimiento).State = EntityState.Added;
+            //await _context.Set<MovimientoCaja>().AddAsync(movimiento);
         }
 
         /// Consulta las ventas realizadas en la tabla de Sales durante el tiempo especificado
