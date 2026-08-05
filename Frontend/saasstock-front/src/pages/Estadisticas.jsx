@@ -91,7 +91,7 @@ export default function Estadisticas() {
           ) : (
             <>
               <Download className="w-4 h-4" />
-              <span>Descargar Reporte PDF</span>
+              <span>Descargar Reporte Mensual en PDF</span>
             </>
           )}
         </button>
@@ -117,11 +117,11 @@ export default function Estadisticas() {
             onChange={(e) => setPeriod(e.target.value)}
             className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none cursor-pointer"
           >
-            <option value="">Cualquier fecha de actualización</option>
-            <option value="hoy">Actualizados Hoy</option>
-            <option value="semana">Actualizados esta Semana</option>
-            <option value="mes">Actualizados este Mes</option>
-            <option value="anio">Actualizados este Año</option>
+            <option value="">Todas las fechas</option>
+            <option value="hoy">Ventas de Hoy</option>
+            <option value="semana">Ventas de esta Semana</option>
+            <option value="mes">Ventas de este Mes</option>
+            <option value="anio">Ventas de este Año</option>
           </select>
         </div>
       </div>
