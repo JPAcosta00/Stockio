@@ -5,12 +5,10 @@ namespace Application.Interfaces;
 
 public interface IProductService
 {
+    Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(string query, Guid tenantId);
     Task<IEnumerable<ProductResponseDto>> GetProductsByTenantAsync(Guid tenantId);
     Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId);
-    Task<ProductResponseDto?> GetProductByBarcodeAsync(string barcode, Guid tenantId);
-    Task<ProductResponseDto> CreateProductAsync(ProductCreateDto dto);
-    Task<bool> DeleteProductAsync(Guid id);
+    Task<ProductResponseDto> CreateProductAsync(ProductCreateDto dto, Guid tenantId);
+    Task<bool> DeleteProductAsync(Guid id, Guid tenantId);
     Task UpdateProductAsync(Guid productId, UpdateProductDto dto);
 }
-
-//contratos para obtener productos y crear

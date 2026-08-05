@@ -52,18 +52,25 @@ public class ProductsController : ControllerBase
         return Ok(productos);
     }
 
-    // GET: api/products/barcode/{barcode}
-    // Busca un producto específico por código de barras dentro del Tenant
-    [HttpGet("barcode/{barcode}")]
+    [HttpGet("search")]
     [Authorize]
-    public async Task<IActionResult> GetByBarcode(string barcode){
-        var product = await _productRepository.GetByBarcodeAsync(barcode);
-        
-        if (product == null){
-            return NotFound($"No se encontró ningún producto con el código: {barcode}");
+    public async Task<IActionResult> SearchProducts([FromQuery] string query)
+    {
+        var tenantClaim = User.FindFirst("TenantId")?.Value;
+
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
         }
 
-        return Ok(product);
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest("El término de búsqueda no puede estar vacío.");
+        }
+
+        var products = await _productService.SearchProductsAsync(query, tenantId);
+
+        return Ok(products);
     }
 
     // POST: api/products
@@ -71,23 +78,39 @@ public class ProductsController : ControllerBase
     [HttpPost]
     [Authorize]
     public async Task<IActionResult> Create([FromBody] ProductCreateDto dto){
-        var result = await _productService.CreateProductAsync(dto);
+
+        var tenantClaim = User.FindFirst("TenantId")?.Value;
+
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
+        }
+
+        var result = await _productService.CreateProductAsync(dto, tenantId);
     
         return CreatedAtAction(nameof(GetAll), new { id = result.Id }, result);
     }
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id}")]
     [Authorize]
-    public async Task<IActionResult> Delete(Guid id){
-        var deleted = await _productService.DeleteProductAsync(id);
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var tenantClaim = User.FindFirst("TenantId")?.Value;
     
-        if (!deleted){
-            return NotFound("El producto no existe o no pertenece a tu comercio.");
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
         }
-
-        return NoContent(); // Devuelve 204 exitoso sin contenido
+    
+        var success = await _productService.DeleteProductAsync(id, tenantId);
+    
+        if (!success)
+        {
+            return NotFound("El producto no existe o no tenés permisos para eliminarlo.");
+        }
+    
+        return NoContent();
     }
-
     //importar productos desde un archivo excel 
     [HttpPost("import")]
     [Authorize] 

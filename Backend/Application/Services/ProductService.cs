@@ -10,17 +10,18 @@ public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
     private readonly IValidator<Product> _validator;
-    public ProductService(IProductRepository productRepository, IValidator<Product> validator){
+
+    public ProductService(IProductRepository productRepository, IValidator<Product> validator)
+    {
         _productRepository = productRepository;
         _validator = validator;
     }
 
-    public async Task<IEnumerable<ProductResponseDto>> GetProductsByTenantAsync(Guid tenantId)
+    // Búsqueda unificada por código de barras o nombre filtrada por tenantId
+    public async Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(string query, Guid tenantId)
     {
-        // Se buscan todos los productos del tenant
-        var products = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
-        
-        //se mapea los productos al DTO
+        var products = await _productRepository.SearchByBarcodeOrNameAsync(query, tenantId);
+
         return products.Select(p => new ProductResponseDto
         {
             Id = p.Id,
@@ -33,11 +34,12 @@ public class ProductService : IProductService
             IsActive = p.IsActive
         });
     }
-    public async Task<ProductResponseDto?> GetProductByBarcodeAsync(string barcode, Guid tenantId){
-        var p = await _productRepository.GetByBarcodeAsync(barcode);
-        if (p == null) return null;
 
-        return new ProductResponseDto
+    public async Task<IEnumerable<ProductResponseDto>> GetProductsByTenantAsync(Guid tenantId)
+    {
+        var products = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
+
+        return products.Select(p => new ProductResponseDto
         {
             Id = p.Id,
             Barcode = p.Barcode,
@@ -47,34 +49,37 @@ public class ProductService : IProductService
             Stock = p.Stock,
             MinimumStock = p.MinimumStock,
             IsActive = p.IsActive
-        };
+        });
     }
-    public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId){
-        //busca todos los productos del usuario actual
+
+    public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId)
+    {
         var rawProducts = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
 
         if (rawProducts == null) return Enumerable.Empty<Product>();
 
-        //filtra los productos del usuario actual que ESTEN ACTIVOS
         var products = rawProducts.Where(p => p.IsActive && p.TenantId == tenantId);
 
-        // filtro de Nombre 
-        if (!string.IsNullOrWhiteSpace(filter.Name)){
-            products = products.Where(p => p.Name != null && 
-                                       p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+        // Filtro de Nombre
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+        {
+            products = products.Where(p => p.Name != null &&
+                                           p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
-        // Filtro por Stock Crítico 
+        // Filtro por Stock Crítico
         if (filter.IsCriticalStock.GetValueOrDefault())
         {
             products = products.Where(p => p.Stock <= p.MinimumStock);
         }
 
-        // filtro de Período
-        if (!string.IsNullOrWhiteSpace(filter.Period)){
+        // Filtro de Período
+        if (!string.IsNullOrWhiteSpace(filter.Period))
+        {
             var fechaLimite = DateTime.UtcNow;
 
-            switch (filter.Period.ToLower()){
+            switch (filter.Period.ToLower())
+            {
                 case "hoy":
                     fechaLimite = DateTime.Today;
                     products = products.Where(p => p.UpdatedAt >= fechaLimite);
@@ -96,15 +101,17 @@ public class ProductService : IProductService
 
         return products.ToList();
     }
-    public async Task<ProductResponseDto> CreateProductAsync(ProductCreateDto dto){
-        //valida que el codigo de barras no exista
-        var existenProductos = await _productRepository.GetAllAsync(p => p.Barcode == dto.Barcode);
+
+    public async Task<ProductResponseDto> CreateProductAsync(ProductCreateDto dto, Guid tenantId)
+    {
+        // Valida que el código de barras no exista dentro del mismo Tenant
+        var existenProductos = await _productRepository.GetAllAsync(p => p.Barcode == dto.Barcode && p.TenantId == tenantId && p.IsActive);
 
         if (existenProductos.Any())
         {
             var failures = new List<FluentValidation.Results.ValidationFailure>
             {
-                new FluentValidation.Results.ValidationFailure("Barcode", "El código de barras ya se encuentra registrado.")
+                new FluentValidation.Results.ValidationFailure("Barcode", "El código de barras ya se encuentra registrado en tu inventario.")
             };
 
             throw new ValidationException(failures);
@@ -112,15 +119,19 @@ public class ProductService : IProductService
 
         var newProduct = new Product
         {
+            TenantId = tenantId, // Asigna el tenant logueado
             Barcode = dto.Barcode,
             Name = dto.Name,
             Description = dto.Description,
             Price = dto.Price,
             Stock = dto.Stock,
             MinimumStock = dto.MinimumStock,
+            IsActive = true
         };
+
         var validationResult = await _validator.ValidateAsync(newProduct);
-        if (!validationResult.IsValid) {
+        if (!validationResult.IsValid)
+        {
             throw new ValidationException(validationResult.Errors);
         }
 
@@ -139,20 +150,26 @@ public class ProductService : IProductService
             IsActive = newProduct.IsActive
         };
     }
-    public async Task<bool> DeleteProductAsync(Guid id){
-        // El repositorio lo busca (EF Core lo filtra por Tenant automáticamente)
-         var product = await _productRepository.GetByIdAsync(id); 
+
+    public async Task<bool> DeleteProductAsync(Guid id, Guid tenantId)
+    {
+        var product = await _productRepository.GetByIdAsync(id);
     
-        if (product == null) return false;
-
-        // Baja lógica: no se borra, se desactiva
+        // Validamos que exista Y que pertenezca al tenant del usuario actual
+        if (product == null || product.TenantId != tenantId)
+        {
+            return false; // O podés lanzar una KeyNotFoundException
+        }
+    
+        // Baja lógica
         product.IsActive = false;
-
+    
         await _productRepository.SaveChangesAsync();
         return true;
     }
-    public async Task UpdateProductAsync(Guid productId, UpdateProductDto dto){
-        //se busca el producto y se modifica 
+
+    public async Task UpdateProductAsync(Guid productId, UpdateProductDto dto)
+    {
         var product = await _productRepository.GetByIdAsync(productId);
         if (product == null)
             throw new KeyNotFoundException("El producto especificado no existe o no tenés permisos para verlo.");
