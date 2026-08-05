@@ -40,12 +40,15 @@ export default function Estadisticas() {
     try {
       setDownloadingPdf(true);
 
-      // Petición al endpoint de estadísticas 
+      // Sanitizar para asegurar que sean cadenas de texto y no objetos
+      const cleanName = typeof filterName === 'string' ? filterName : undefined;
+      const cleanPeriod = typeof filterPeriod === 'string' ? filterPeriod : undefined;
+
       const response = await apiClient.get('/stats/download-pdf', {
         responseType: 'blob',
         params: {
-          name: filterName || undefined,
-          period: filterPeriod || undefined
+          name: cleanName,
+          period: cleanPeriod
         }
       });
 
@@ -82,7 +85,7 @@ export default function Estadisticas() {
 
         {/* Botón Descargar PDF */}
         <button
-          onClick={handleDownloadPdf}
+          onClick={() => handleDownloadPdf(filterNameState, filterPeriodState)}
           disabled={downloadingPdf || loading}
           className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-lg shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
         >
