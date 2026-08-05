@@ -37,9 +37,7 @@ public class StatsController : ControllerBase
         return Ok(stats);
     }
 
-    /// <summary>
-    /// Descarga directa del PDF de estadísticas desde la PC
-    /// </summary>
+
     [HttpGet("download-pdf")]
     public async Task<IActionResult> DownloadStatsPdf([FromQuery] string? name, [FromQuery] string? period)
     {

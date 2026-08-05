@@ -71,16 +71,15 @@ public class InventoryStatsService : IInventoryStatsService
     // Método auxiliar para determinar la fecha inicial considerando la Zona Horaria
     private DateTime CalculateStartDate(string? period)
     {
-        // Usamos el inicio del día local/UTC según corresponda
-        var now = DateTime.UtcNow;
+        var todayUtc = DateTime.UtcNow.Date; // 00:00:00 de hoy en UTC
 
         return period?.ToLower() switch
         {
-            "hoy" => new DateTime(now.Year, now.Month, now.Day, 0, 0, 0, DateTimeKind.Utc),
-            "semana" => now.Date.AddDays(-(int)now.DayOfWeek),
-            "mes" => new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-            "anio" => new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
-            _ => now.AddDays(-30) // Valor por defecto si no especifica período
+            "hoy" => todayUtc,
+            "semana" => todayUtc.AddDays(-(int)DateTime.UtcNow.DayOfWeek),
+            "mes" => new DateTime(todayUtc.Year, todayUtc.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+            "anio" => new DateTime(todayUtc.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            _ => todayUtc.AddDays(-30)
         };
     }
 

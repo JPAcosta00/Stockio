@@ -26,10 +26,12 @@ namespace Infrastructure.Repositories
         }
 
         public async Task<IEnumerable<Sale>> GetSalesWithDetailsAsync(Guid tenantId, DateTime startDate){
+            var utcStartDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+
             return await _context.Sales
                 .Include(s => s.Details)
                     .ThenInclude(d => d.Product) 
-                .Where(s => s.TenantId == tenantId && s.CreatedAt >= startDate)
+                .Where(s => s.TenantId == tenantId && s.CreatedAt >= utcStartDate)
                 .ToListAsync();
         }
 
