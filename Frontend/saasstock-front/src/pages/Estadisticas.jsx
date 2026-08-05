@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 import { Search, Calendar, Loader2, DollarSign, ShoppingBag, Package, AlertTriangle, Download } from 'lucide-react';
-import SalesTimelineChart from '../SalesTimelineChart';
+import SalesTimelineChart from './SalesTimelineChart';
 
 export default function Estadisticas() {
   const [name, setName] = useState('');
@@ -167,7 +167,7 @@ export default function Estadisticas() {
               subtitle="Por debajo del mínimo"
             />
           </div>
-          
+
           {/* 2. Gráfico de Línea de Tiempo (Entre KPIs y Productos) */}
           <SalesTimelineChart data={data.salesTimeline} />
 
