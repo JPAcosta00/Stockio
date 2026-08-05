@@ -3,11 +3,6 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { TrendingUp } from 'lucide-react';
 
 
-
-
-
-
-
 export default function SalesTimelineChart({ data = [] }) {
   if (!data || data.length === 0) {
     return (
