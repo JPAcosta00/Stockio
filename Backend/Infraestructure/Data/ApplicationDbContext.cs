@@ -107,19 +107,37 @@ public class ApplicationDbContext : DbContext
         });
 
         // MovimientoCaja (Estandarizado nombre de tabla en minúscula)
-        modelBuilder.Entity<MovimientoCaja>(entity =>
-        {
+        modelBuilder.Entity<MovimientoCaja>(entity =>{
             entity.ToTable("movimientos_caja");
             entity.HasKey(m => m.Id);
+
+            // Mapeo explícito de propiedades GUID a char(36)
+            entity.Property(m => m.Id)
+                  .HasColumnType("char(36)");
+
+            entity.Property(m => m.CajaId)
+                  .HasColumnType("char(36)");
+
+            entity.Property(m => m.VentaId)
+                  .HasColumnType("char(36)")
+                  .IsRequired(false);
 
             entity.Property(m => m.Monto).HasPrecision(18, 2);
             entity.Property(m => m.Tipo).HasMaxLength(10);
             entity.Property(m => m.Concepto).HasMaxLength(250);
 
+            // Relación con Caja
             entity.HasOne(m => m.Caja)
                   .WithMany(c => c.Movimientos)
                   .HasForeignKey(m => m.CajaId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Relación opcional con Sale
+            entity.HasOne<Sale>()
+                  .WithMany()
+                  .HasForeignKey(m => m.VentaId)
+                  .IsRequired(false)
+                  .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Sale
