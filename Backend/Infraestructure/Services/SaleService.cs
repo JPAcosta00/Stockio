@@ -68,7 +68,7 @@ namespace Application.Services
         
                     // Se resta al stock del producto 
                     producto.Stock -= item.Quantity;
-                    //_productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
+                    _productRepository.Update(producto); // Manda a actualizar por el método del repo genérico
         
                     var detalle = new SaleDetail
                     {
@@ -111,10 +111,11 @@ namespace Application.Services
                     CajaId = Guid.Empty, // Se autodetecta con la activa
                     Tipo = "INGRESO",
                     Monto = nuevaVenta.Total,
-                    Concepto = $"Venta realizada ({nuevaVenta.PaymentMethod})"
+                    Concepto = $"Venta realizada ({nuevaVenta.PaymentMethod})", 
+                    VentaId = nuevaVenta.Id
                 };
 
-                await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
+                //await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
 
                 await _saleRepository.SaveChangesAsync();
         

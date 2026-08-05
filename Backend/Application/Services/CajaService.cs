@@ -163,7 +163,8 @@ public class CajaService : ICajaService
             Tipo = dto.Tipo.ToUpper(), // "INGRESO" o "EGRESO"
             Monto = dto.Monto,
             Concepto = dto.Concepto,
-            Fecha = DateTime.UtcNow
+            Fecha = DateTime.UtcNow,
+            VentaId = dto.VentaId
         };
     
         // 4. Registrar en el repositorio
@@ -176,7 +177,7 @@ public class CajaService : ICajaService
             Tipo = movimiento.Tipo,
             Monto = movimiento.Monto,
             Concepto = movimiento.Concepto,
-            Fecha = movimiento.Fecha
+            Fecha = movimiento.Fecha,
         };
     }
 
@@ -315,15 +316,19 @@ public class CajaService : ICajaService
     
     // --- MÉTODOS PRIVADOS AUXILIARES ---
 
-    private static CajaActivaResponseDto MapearACajaActivaDto(Caja caja, decimal ventasEfectivo, decimal ventasMercadoPago, decimal ventasTarjeta){
+    private static CajaActivaResponseDto MapearACajaActivaDto(Caja caja, decimal ventasEfectivo, decimal ventasMercadoPago, decimal ventasTarjeta)
+    {
+        // Solo sumamos ingresos extra MANUALES (que no provienen de una venta)
         decimal ingresosExtra = caja.Movimientos?
-            .Where(m => string.Equals(m.Tipo, "INGRESO", StringComparison.OrdinalIgnoreCase))
+            .Where(m => m.VentaId == null && string.Equals(m.Tipo, "INGRESO", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto) ?? 0;
 
+        // Solo sumamos egresos extra MANUALES
         decimal egresosExtra = caja.Movimientos?
-            .Where(m => string.Equals(m.Tipo, "EGRESO", StringComparison.OrdinalIgnoreCase))
+            .Where(m => m.VentaId == null && string.Equals(m.Tipo, "EGRESO", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto) ?? 0;
 
+        // El efectivo esperado suma únicamente el efectivo real de ventas + los ingresos manuales de caja
         decimal efectivoEsperado = caja.MontoInicial + ventasEfectivo + ingresosExtra - egresosExtra;
 
         return new CajaActivaResponseDto

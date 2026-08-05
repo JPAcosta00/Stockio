@@ -4,4 +4,5 @@ public class RegistrarMovimientoDto
         public string Tipo { get; set; } = "INGRESO"; // "INGRESO" o "EGRESO"
         public decimal Monto { get; set; }
         public string Concepto { get; set; } = string.Empty;
+        public Guid? VentaId { get; set; }
     }

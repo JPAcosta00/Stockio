@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infraestructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260803220618_AgregarTablasCajaYMovimientos")]
-    partial class AgregarTablasCajaYMovimientos
+    [Migration("20260805184049_AddVentaIdToMovimientoCaja")]
+    partial class AddVentaIdToMovimientoCaja
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -286,6 +286,9 @@ namespace Infraestructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("varchar(10)");
+
+                    b.Property<int?>("VentaId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
