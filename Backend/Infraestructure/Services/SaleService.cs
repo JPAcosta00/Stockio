@@ -115,7 +115,7 @@ namespace Application.Services
                     VentaId = nuevaVenta.Id
                 };
 
-                //await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
+                await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
 
                 await _saleRepository.SaveChangesAsync();
         
