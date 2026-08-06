@@ -33,18 +33,40 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen flex bg-zinc-950 text-zinc-100">
       
-      {/* SIDEBAR - Dark Zinc */}
-      <aside className="w-64 bg-zinc-900 border-r border-zinc-800/80 flex flex-col justify-between p-4 fixed h-full z-20">
+      {/* SIDEBAR - Dark Zinc sin tonos azules */}
+      <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20">
         <div>
           
-          {/* Logo Completo de Stockio */}
-          <div className="mb-6 px-2 pt-1 flex items-center justify-center">
-            <Link to="/">
-              <img 
-                src="/logo.png" 
-                alt="Stockio Logo" 
-                className="h-16 w-auto object-contain hover:scale-105 transition-transform duration-200"
-              />
+          {/* Header / Brand de Stockio con Logo Imagen Integrado */}
+          <div className="mb-8 px-1 pt-1">
+            <Link 
+              to="/" 
+              className="group flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 border border-transparent hover:border-zinc-800"
+            >
+              <div className="relative shrink-0">
+                <div className="absolute -inset-1 rounded-xl bg-[#5BA535] opacity-20 blur-md group-hover:opacity-50 transition-opacity" />
+                <div className="relative bg-zinc-100 p-1.5 rounded-xl border border-zinc-300 flex items-center justify-center shadow-md">
+                  <img 
+                    src="/logo.png" 
+                    alt="Stockio Logo" 
+                    className="h-8 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-0.5">
+                  <span className="text-lg font-extrabold tracking-tight text-white">
+                    Stock
+                  </span>
+                  <span className="text-lg font-extrabold tracking-tight text-[#5BA535]">
+                    io
+                  </span>
+                </div>
+                <span className="text-[9px] font-bold text-zinc-400 tracking-wider uppercase truncate">
+                  Todo tu stock, en orden
+                </span>
+              </div>
             </Link>
           </div>
 
@@ -59,8 +81,8 @@ export default function DashboardLayout({ children }) {
                   to={item.href}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-zinc-800/90 text-white font-semibold border-l-2 border-[#5BA535] shadow-sm'
-                      : 'text-zinc-400 hover:bg-zinc-800/40 hover:text-zinc-200'
+                      ? 'bg-zinc-800 text-white font-semibold border-l-2 border-[#5BA535] shadow-sm'
+                      : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
                   }`}
                 >
                   <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[#5BA535]' : 'text-zinc-500'}`} />
@@ -72,7 +94,7 @@ export default function DashboardLayout({ children }) {
         </div>
 
         {/* PIE DE SIDEBAR / OPCIÓN DE PERFIL */}
-        <div className="relative border-t border-zinc-800/80 pt-3">
+        <div className="relative border-t border-zinc-800 pt-3">
           
           {/* Desplegable Contextual */}
           {showProfileMenu && (
@@ -91,7 +113,7 @@ export default function DashboardLayout({ children }) {
                   setShowProfileMenu(false);
                   logout();
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-950/30 rounded-lg transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-950/30 rounded-lg transition-colors text-left cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Cerrar Sesión</span>
@@ -102,11 +124,11 @@ export default function DashboardLayout({ children }) {
           {/* Botón Tarjeta de Usuario */}
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/60 transition-colors text-left group"
+            className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/60 transition-colors text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              {/* Avatar con fondo verde bosque */}
-              <div className="w-8 h-8 rounded-lg bg-[#1C562A]/40 border border-[#377731]/40 flex items-center justify-center shrink-0 font-bold text-xs text-[#5BA535]">
+              {/* Avatar con verde bosque oscuro */}
+              <div className="w-8 h-8 rounded-lg bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0 font-bold text-xs text-[#5BA535]">
                 {getInitials(user?.email)}
               </div>
 

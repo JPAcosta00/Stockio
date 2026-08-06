@@ -9,7 +9,8 @@ import {
   ArrowLeft, 
   Eye, 
   EyeOff, 
-  Loader2 
+  Loader2,
+  ArrowRight
 } from 'lucide-react';
 
 export default function Login() {
@@ -103,22 +104,27 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* Luces de fondo ambientales */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Luces de fondo ambientales exclusivamente en tonos verde/negro */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/25 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-md w-full bg-zinc-900/90 border border-zinc-800/80 backdrop-blur-md rounded-2xl p-8 shadow-2xl relative z-10">
+      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl`}>
         
-        {/* BRANDING / LOGO COMPLETO */}
-        <div className="flex justify-center mb-6">
-          <div className="p-3 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 shadow-inner group transition-transform duration-300 hover:scale-105">
-            <img 
-              src="/logo.png" 
-              alt="Stockio - Todo tu stock, en orden" 
-              className="h-28 w-auto object-contain drop-shadow-md"
-            />
+        {/* BRANDING / LOGO EN CONTENEDOR CONTRASTADO */}
+        {view !== 'register' && (
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative group mb-3">
+              <div className="absolute -inset-1 rounded-2xl bg-[#5BA535] opacity-20 blur-lg group-hover:opacity-40 transition-opacity" />
+              <div className="relative bg-zinc-100 p-3 rounded-2xl border border-zinc-300 shadow-md flex items-center justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="Stockio - Todo tu stock, en orden" 
+                  className="h-16 w-auto object-contain drop-shadow-md"
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Banner de Errores */}
         {error && (
@@ -134,9 +140,7 @@ export default function Login() {
           </div>
         )}
 
-        {/* -------------------------------------------------------------
-            VISTA 1: INICIO DE SESIÓN
-           ------------------------------------------------------------- */}
+        {/* VISTA 1: INICIO DE SESIÓN */}
         {view === 'login' && (
           <>
             <form onSubmit={handleLoginSubmit} className="space-y-4">
@@ -149,7 +153,7 @@ export default function Login() {
                   <input
                     type="email"
                     required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="nombre@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -175,7 +179,7 @@ export default function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -193,7 +197,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -201,18 +205,21 @@ export default function Login() {
                     <span>Iniciando sesión...</span>
                   </>
                 ) : (
-                  'Iniciar Sesión'
+                  <>
+                    <span>Iniciar Sesión</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
                 )}
               </button>
             </form>
 
-            <div className="mt-6 text-center border-t border-zinc-800/80 pt-4">
+            <div className="mt-6 text-center border-t border-zinc-800 pt-4">
               <p className="text-sm text-zinc-400">
                 ¿No tenés una cuenta?{' '}
                 <button
                   type="button"
                   onClick={() => switchView('register')}
-                  className="text-white hover:text-[#5BA535] font-semibold transition-colors"
+                  className="text-[#5BA535] hover:underline font-semibold transition-colors"
                 >
                   Registrá tu negocio
                 </button>
@@ -221,9 +228,7 @@ export default function Login() {
           </>
         )}
 
-        {/* -------------------------------------------------------------
-            VISTA 2: RECUPERACIÓN (EMAIL)
-           ------------------------------------------------------------- */}
+        {/* VISTA 2: RECUPERACIÓN (EMAIL) */}
         {view === 'forgot' && (
           <>
             <div className="text-center mb-6">
@@ -243,7 +248,7 @@ export default function Login() {
                   <input
                     type="email"
                     required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="nombre@empresa.com"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
@@ -254,7 +259,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -280,9 +285,7 @@ export default function Login() {
           </>
         )}
 
-        {/* -------------------------------------------------------------
-            VISTA 3: NUEVA CONTRASEÑA
-           ------------------------------------------------------------- */}
+        {/* VISTA 3: NUEVA CONTRASEÑA */}
         {view === 'reset' && (
           <>
             <div className="text-center mb-6">
@@ -302,7 +305,7 @@ export default function Login() {
                   <input
                     type="text"
                     required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="Pegá el token aquí"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
@@ -320,7 +323,7 @@ export default function Login() {
                     type="password"
                     required
                     minLength={6}
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -331,7 +334,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -357,9 +360,7 @@ export default function Login() {
           </>
         )}
 
-        {/* -------------------------------------------------------------
-            VISTA 4: REGISTRO DE USUARIOS
-           ------------------------------------------------------------- */}
+        {/* VISTA 4: REGISTRO DE USUARIOS */}
         {view === 'register' && (
           <RegisterForm
             onSwitchToLogin={() => switchView('login')}
