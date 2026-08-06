@@ -14,22 +14,18 @@ import {
 } from 'lucide-react';
 
 export default function Login() {
-  // Estados para Login
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Estados para Recuperación (Forgot/Reset)
   const [resetEmail, setResetEmail] = useState('');
   const [token, setToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
-  // Estados UI y Feedback
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Control de vistas: 'login' | 'register' | 'forgot' | 'reset'
   const [view, setView] = useState('login');
 
   const { login } = useAuth();
@@ -104,22 +100,25 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* Luces de fondo ambientales exclusivamente en tonos verde/negro */}
+      {/* Luces de fondo ambientales */}
       <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/25 rounded-full blur-3xl pointer-events-none" />
 
       <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl`}>
         
-        {/* BRANDING / LOGO EN CONTENEDOR CONTRASTADO */}
+        {/* LOGO DINÁMICO RE-DISEÑADO */}
         {view !== 'register' && (
           <div className="flex flex-col items-center mb-6">
-            <div className="relative group mb-3">
-              <div className="absolute -inset-1 rounded-2xl bg-[#5BA535] opacity-20 blur-lg group-hover:opacity-40 transition-opacity" />
-              <div className="relative bg-zinc-100 p-3 rounded-2xl border border-zinc-300 shadow-md flex items-center justify-center">
+            <div className="relative group cursor-pointer my-2">
+              {/* Aura / Resplandor Neón de fondo con animación de pulso */}
+              <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#5BA535] to-[#1C562A] opacity-30 blur-xl group-hover:opacity-75 group-hover:scale-110 transition-all duration-500 animate-pulse" />
+              
+              {/* Contenedor del Logo integrado */}
+              <div className="relative flex items-center justify-center px-4 py-2 rounded-2xl bg-zinc-950/60 border border-zinc-800/80 shadow-inner backdrop-blur-md group-hover:border-[#5BA535]/50 transition-all duration-300 transform group-hover:-translate-y-1">
                 <img 
                   src="/logo.png" 
-                  alt="Stockio - Todo tu stock, en orden" 
-                  className="h-16 w-auto object-contain drop-shadow-md"
+                  alt="Stockio Logo" 
+                  className="h-16 w-auto object-contain mix-blend-lighten filter drop-shadow-[0_0_12px_rgba(91,165,53,0.4)] group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             </div>

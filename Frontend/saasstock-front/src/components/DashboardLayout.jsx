@@ -33,23 +33,24 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen flex bg-zinc-950 text-zinc-100">
       
-      {/* SIDEBAR - Dark Zinc sin tonos azules */}
+      {/* SIDEBAR */}
       <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20">
         <div>
           
-          {/* Header / Brand de Stockio con Logo Imagen Integrado */}
+          {/* Header con Logo Integrado Fluidamente */}
           <div className="mb-8 px-1 pt-1">
             <Link 
               to="/" 
-              className="group flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-800/60 transition-all duration-300 border border-transparent hover:border-zinc-800"
+              className="group flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-800/40 transition-all duration-300"
             >
               <div className="relative shrink-0">
-                <div className="absolute -inset-1 rounded-xl bg-[#5BA535] opacity-20 blur-md group-hover:opacity-50 transition-opacity" />
-                <div className="relative bg-zinc-100 p-1.5 rounded-xl border border-zinc-300 flex items-center justify-center shadow-md">
+                {/* Aura verde neón flotante */}
+                <div className="absolute -inset-1 rounded-xl bg-[#5BA535] opacity-25 blur-md group-hover:opacity-75 transition-all duration-300" />
+                <div className="relative bg-zinc-950/80 p-1.5 rounded-xl border border-zinc-800/80 flex items-center justify-center">
                   <img 
                     src="/logo.png" 
                     alt="Stockio Logo" 
-                    className="h-8 w-auto object-contain"
+                    className="h-8 w-auto object-contain mix-blend-lighten filter drop-shadow-[0_0_6px_rgba(91,165,53,0.3)] group-hover:scale-105 transition-transform"
                   />
                 </div>
               </div>
@@ -96,7 +97,6 @@ export default function DashboardLayout({ children }) {
         {/* PIE DE SIDEBAR / OPCIÓN DE PERFIL */}
         <div className="relative border-t border-zinc-800 pt-3">
           
-          {/* Desplegable Contextual */}
           {showProfileMenu && (
             <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden p-1 space-y-1 z-30 animate-in fade-in slide-in-from-bottom-2">
               <Link
@@ -121,18 +121,15 @@ export default function DashboardLayout({ children }) {
             </div>
           )}
 
-          {/* Botón Tarjeta de Usuario */}
           <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/60 transition-colors text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              {/* Avatar con verde bosque oscuro */}
               <div className="w-8 h-8 rounded-lg bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0 font-bold text-xs text-[#5BA535]">
                 {getInitials(user?.email)}
               </div>
 
-              {/* Email y Rol */}
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-zinc-200 truncate group-hover:text-white">
                   {user?.email || 'usuario@stockio.com'}

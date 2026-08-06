@@ -12,16 +12,13 @@ import {
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
   
-  // Estados para datos personales 
   const [username, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   
-  // Estados para contraseñas
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // Feedback y carga
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -74,19 +71,20 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4">
       
-      {/* BRANDING INTEGRADO Y ENCABEZADO */}
+      {/* BRANDING INTEGRADO REDISEÑADO */}
       <div className="flex flex-col items-center text-center mb-4">
-        <div className="relative group mb-3">
-          <div className="absolute -inset-1 rounded-2xl bg-[#5BA535] opacity-20 blur-lg group-hover:opacity-40 transition-opacity" />
-          <div className="relative bg-zinc-100 p-2.5 rounded-2xl border border-zinc-300 shadow-md flex items-center justify-center">
+        <div className="relative group cursor-pointer my-1">
+          <div className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#5BA535] to-[#1C562A] opacity-30 blur-lg group-hover:opacity-60 transition-all duration-300 animate-pulse" />
+          <div className="relative flex items-center justify-center px-3 py-1.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 backdrop-blur-md">
             <img 
               src="/logo.png" 
               alt="Stockio Logo" 
-              className="h-12 w-auto object-contain"
+              className="h-10 w-auto object-contain mix-blend-lighten filter drop-shadow-[0_0_8px_rgba(91,165,53,0.3)]"
             />
           </div>
         </div>
-        <h2 className="text-xl font-bold text-white tracking-tight">
+        
+        <h2 className="text-xl font-bold text-white tracking-tight mt-2">
           Creá tu cuenta de empresa
         </h2>
         <p className="text-xs text-zinc-400 mt-1">
