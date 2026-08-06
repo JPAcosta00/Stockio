@@ -47,7 +47,7 @@ export default function DashboardLayout({ children }) {
               <div className="absolute inset-0 bg-[#5BA535]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
               
               <img 
-                src="/Stockio_logo_luminoso_blanco.png" 
+                src="logo-icon.png" 
                 alt="Stockio - Todo tu stock, en orden" 
                 className="w-full h-auto max-h-16 object-contain filter drop-shadow-[0_0_12px_rgba(91,165,53,0.25)] group-hover:scale-105 transition-transform duration-300"
               />
