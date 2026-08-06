@@ -37,21 +37,20 @@ export default function DashboardLayout({ children }) {
       <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20">
         <div>
           
-          {/* LOGO NATIVO SIN RECTÁNGULOS NI FONDOS BLANCOS */}
-          <div className="mb-6 px-1 pt-1">
-            <Link 
-              to="/" 
-              className="group flex items-center justify-center p-2 rounded-xl transition-all duration-300 relative"
-            >
-              {/* Brillo ambiental sutil al posar el cursor */}
-              <div className="absolute inset-0 bg-[#5BA535]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-              
-              <img 
-                src="logo-icon.png" 
-                alt="Stockio - Todo tu stock, en orden" 
-                className="w-full h-auto max-h-16 object-contain filter drop-shadow-[0_0_12px_rgba(91,165,53,0.25)] group-hover:scale-105 transition-transform duration-300"
-              />
-            </Link>
+          {/* Brand/Logo de Stockio */}
+          <div className="mb-8 px-2 pt-2 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5BA535] to-[#1C562A] flex items-center justify-center text-white font-bold shadow-md shrink-0">
+              {/* Icono isotipo simplificado */}
+              <Package className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-extrabold tracking-tight text-white leading-tight">
+                Stock<span className="text-[#5BA535]">io</span>
+              </h2>
+              <span className="text-[10px] text-slate-300 font-semibold tracking-wider uppercase block">
+                Todo tu stock, en orden.
+              </span>
+            </div>
           </div>
 
           {/* Menú de Navegación */}
