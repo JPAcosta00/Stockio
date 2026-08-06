@@ -98,35 +98,44 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-white p-4 md:p-8 relative overflow-hidden text-zinc-900">
+    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4 md:p-8 relative overflow-hidden text-zinc-100 selection:bg-[#5BA535] selection:text-white">
       
+      {/* EFECTOS DE LUZ AMBIENTAL DE FONDO (Glows difuminados) */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#5BA535]/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#1C562A]/10 rounded-full blur-[140px] pointer-events-none" />
+
       {/* CONTENEDOR PRINCIPAL LADO A LADO */}
       <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16 relative z-10">
         
-        {/* PANEL IZQUIERDO: LOGO COMPLETO SOBRE FONDO BLANCO */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6">
-          <div className="relative w-full flex items-center justify-center">
+        {/* PANEL IZQUIERDO: LOGO CON INTEGRACIÓN FLUIDA */}
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6 relative">
+          
+          {/* Contenedor con brillo sutil de fondo para fundir los blancos de la imagen */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#5BA535]/5 via-transparent to-transparent rounded-3xl blur-2xl pointer-events-none" />
+          
+          <div className="relative w-full flex items-center justify-center p-8 rounded-3xl border border-white/5 bg-zinc-900/40 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,0.5)]">
             <img 
               src="/logo.png" 
               alt="Stockio Logo" 
-              className="w-full max-w-[420px] md:max-w-[560px] h-auto object-contain filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.08)]"
+              className="w-full max-w-[360px] md:max-w-[480px] h-auto object-contain mix-blend-luminosity hover:mix-blend-normal transition-all duration-700 opacity-90 hover:opacity-100 drop-shadow-[0_15px_30px_rgba(0,0,0,0.5)]"
             />
           </div>
+          <p className="text-xs text-zinc-500 mt-6 tracking-widest uppercase font-medium">Plataforma de Gestión Inteligente</p>
         </div>
 
-        {/* PANEL DERECHO: FORMULARIO */}
-        <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-10 shadow-2xl text-zinc-100 transition-all duration-300`}>
+        {/* PANEL DERECHO: FORMULARIO GLASSMORPHISM */}
+        <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900/80 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl p-6 md:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-zinc-100 transition-all duration-500`}>
           
           {/* Banner de Errores */}
           {error && (
-            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
+            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-md animate-in fade-in">
               {error}
             </div>
           )}
 
           {/* Banner de Éxito */}
           {successMsg && (
-            <div className="mb-5 p-3.5 bg-[#5BA535]/10 border border-[#5BA535]/30 text-[#5BA535] text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
+            <div className="mb-5 p-3.5 bg-[#5BA535]/10 border border-[#5BA535]/30 text-[#5BA535] text-xs font-medium rounded-xl text-center backdrop-blur-md animate-in fade-in">
               {successMsg}
             </div>
           )}
@@ -149,7 +158,7 @@ export default function Login() {
                     <input
                       type="email"
                       required
-                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-950/70 border border-zinc-800/80 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600 shadow-inner"
                       placeholder="nombre@empresa.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -175,7 +184,7 @@ export default function Login() {
                     <input
                       type={showPassword ? 'text' : 'password'}
                       required
-                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-950/70 border border-zinc-800/80 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600 shadow-inner"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -193,7 +202,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full bg-[#5BA535] hover:bg-[#6ec245] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-[0_4px_20px_rgba(91,165,53,0.3)] hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -209,7 +218,7 @@ export default function Login() {
                 </button>
               </form>
 
-              <div className="mt-6 text-center border-t border-zinc-800 pt-4">
+              <div className="mt-6 text-center border-t border-zinc-800/60 pt-4">
                 <p className="text-sm text-zinc-400">
                   ¿No tenés una cuenta?{' '}
                   <button
@@ -244,7 +253,7 @@ export default function Login() {
                     <input
                       type="email"
                       required
-                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-950/70 border border-zinc-800/80 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600 shadow-inner"
                       placeholder="nombre@empresa.com"
                       value={resetEmail}
                       onChange={(e) => setResetEmail(e.target.value)}
@@ -255,7 +264,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full bg-[#5BA535] hover:bg-[#6ec245] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-[0_4px_20px_rgba(91,165,53,0.3)] hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -301,7 +310,7 @@ export default function Login() {
                     <input
                       type="text"
                       required
-                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-950/70 border border-zinc-800/80 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600 shadow-inner"
                       placeholder="Pegá el token aquí"
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
@@ -319,7 +328,7 @@ export default function Login() {
                       type="password"
                       required
                       minLength={6}
-                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      className="w-full bg-zinc-950/70 border border-zinc-800/80 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600 shadow-inner"
                       placeholder="••••••••"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
@@ -330,7 +339,7 @@ export default function Login() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full bg-[#5BA535] hover:bg-[#6ec245] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-[0_4px_20px_rgba(91,165,53,0.3)] hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {loading ? (
                     <>
