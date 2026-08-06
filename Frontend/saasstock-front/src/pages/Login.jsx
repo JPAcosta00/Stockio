@@ -108,14 +108,24 @@ export default function Login() {
       <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
         
         {/* PANEL IZQUIERDO: LOGO STOCKIO */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6">
-          <div className="relative">
-            <div className="absolute -inset-4 bg-[#5BA535]/20 blur-3xl rounded-full" />
-            <img 
-              src="/logo-icon.png" 
-              alt="Stockio Logo" 
-              className="w-full max-w-[320px] md:max-w-[420px] h-auto object-contain filter drop-shadow-[0_0_35px_rgba(91,165,53,0.3)] relative z-10"
-            />
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6 my-auto">
+          <div className="relative flex items-center justify-center">
+
+            {/* 1. Capa de Luz Neón Extra Intensa (Resplandor Verde Vivo) */}
+            <div className="absolute -inset-10 bg-[#5BA535]/35 blur-3xl rounded-full pointer-events-none animate-pulse" />
+
+            {/* 2. Segundo halo de luz más concentrado detrás de la imagen */}
+            <div className="absolute w-72 h-72 md:w-96 md:h-96 bg-[#5BA535]/20 blur-2xl rounded-full pointer-events-none" />
+
+            {/* 3. Contenedor con animación de flotación suave */}
+            <div className="relative z-10 animate-[bounce_6s_infinite_ease-in-out]">
+              <img 
+                src="/logo-icon.png" 
+                alt="Stockio Logo" 
+                className="w-full max-w-[380px] md:max-w-[500px] lg:max-w-[560px] h-auto object-contain filter drop-shadow-[0_0_40px_rgba(91,165,53,0.65)] drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] hover:scale-105 transition-transform duration-500 ease-out cursor-pointer"
+              />
+            </div>
+
           </div>
         </div>
 
