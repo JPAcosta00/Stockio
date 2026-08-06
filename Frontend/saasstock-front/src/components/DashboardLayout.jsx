@@ -37,37 +37,20 @@ export default function DashboardLayout({ children }) {
       <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20">
         <div>
           
-          {/* Header con Logo Integrado Fluidamente */}
-          <div className="mb-8 px-1 pt-1">
+          {/* LOGO NATIVO SIN RECTÁNGULOS NI FONDOS BLANCOS */}
+          <div className="mb-6 px-1 pt-1">
             <Link 
               to="/" 
-              className="group flex items-center gap-3 p-2 rounded-2xl hover:bg-zinc-800/40 transition-all duration-300"
+              className="group flex items-center justify-center p-2 rounded-xl transition-all duration-300 relative"
             >
-              <div className="relative shrink-0">
-                {/* Aura verde neón flotante */}
-                <div className="absolute -inset-1 rounded-xl bg-[#5BA535] opacity-25 blur-md group-hover:opacity-75 transition-all duration-300" />
-                <div className="relative bg-zinc-950/80 p-1.5 rounded-xl border border-zinc-800/80 flex items-center justify-center">
-                  <img 
-                    src="/logo.png" 
-                    alt="Stockio Logo" 
-                    className="h-8 w-auto object-contain mix-blend-lighten filter drop-shadow-[0_0_6px_rgba(91,165,53,0.3)] group-hover:scale-105 transition-transform"
-                  />
-                </div>
-              </div>
-            
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-0.5">
-                  <span className="text-lg font-extrabold tracking-tight text-white">
-                    Stock
-                  </span>
-                  <span className="text-lg font-extrabold tracking-tight text-[#5BA535]">
-                    io
-                  </span>
-                </div>
-                <span className="text-[9px] font-bold text-zinc-400 tracking-wider uppercase truncate">
-                  Todo tu stock, en orden
-                </span>
-              </div>
+              {/* Brillo ambiental sutil al posar el cursor */}
+              <div className="absolute inset-0 bg-[#5BA535]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
+              
+              <img 
+                src="/Stockio_logo_luminoso_blanco.png" 
+                alt="Stockio - Todo tu stock, en orden" 
+                className="w-full h-auto max-h-16 object-contain filter drop-shadow-[0_0_12px_rgba(91,165,53,0.25)] group-hover:scale-105 transition-transform duration-300"
+              />
             </Link>
           </div>
 

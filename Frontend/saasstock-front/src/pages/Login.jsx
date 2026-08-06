@@ -100,31 +100,25 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* Luces de fondo ambientales */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/25 rounded-full blur-3xl pointer-events-none" />
+      {/* 1. LUCES DE FONDO Y AURA NEÓN */}
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#5BA535]/15 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#1C562A]/25 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl`}>
+      {/* 2. LOGO AMBIENTAL DE FONDO (MARCA DE AGUA CON ANIMACIÓN) */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-20 md:opacity-25">
+        <div className="relative transform scale-125 md:scale-150 animate-pulse transition-all duration-1000">
+          <div className="absolute -inset-10 bg-[#5BA535]/20 blur-3xl rounded-full" />
+          <img 
+            src="/Stockio_logo_luminoso_blanco.png" 
+            alt="" 
+            className="w-[450px] md:w-[650px] max-w-none object-contain filter drop-shadow-[0_0_50px_rgba(91,165,53,0.3)]"
+          />
+        </div>
+      </div>
+
+      {/* 3. TARJETA PRINCIPAL DEL FORMULARIO */}
+      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/85 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl`}>
         
-        {/* LOGO DINÁMICO RE-DISEÑADO */}
-        {view !== 'register' && (
-          <div className="flex flex-col items-center mb-6">
-            <div className="relative group cursor-pointer my-2">
-              {/* Aura / Resplandor Neón de fondo con animación de pulso */}
-              <div className="absolute -inset-3 rounded-full bg-gradient-to-r from-[#5BA535] to-[#1C562A] opacity-30 blur-xl group-hover:opacity-75 group-hover:scale-110 transition-all duration-500 animate-pulse" />
-              
-              {/* Contenedor del Logo integrado */}
-              <div className="relative flex items-center justify-center px-4 py-2 rounded-2xl bg-zinc-950/60 border border-zinc-800/80 shadow-inner backdrop-blur-md group-hover:border-[#5BA535]/50 transition-all duration-300 transform group-hover:-translate-y-1">
-                <img 
-                  src="/logo.png" 
-                  alt="Stockio Logo" 
-                  className="h-16 w-auto object-contain mix-blend-lighten filter drop-shadow-[0_0_12px_rgba(91,165,53,0.4)] group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Banner de Errores */}
         {error && (
           <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
@@ -142,6 +136,11 @@ export default function Login() {
         {/* VISTA 1: INICIO DE SESIÓN */}
         {view === 'login' && (
           <>
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-bold text-white tracking-tight">Iniciar Sesión</h1>
+              <p className="text-xs text-zinc-400 mt-1">Ingresá a tu cuenta para gestionar tu inventario</p>
+            </div>
+
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
@@ -152,7 +151,7 @@ export default function Login() {
                   <input
                     type="email"
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="nombre@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -178,7 +177,7 @@ export default function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -212,7 +211,7 @@ export default function Login() {
               </button>
             </form>
 
-            <div className="mt-6 text-center border-t border-zinc-800 pt-4">
+            <div className="mt-6 text-center border-t border-zinc-800/80 pt-4">
               <p className="text-sm text-zinc-400">
                 ¿No tenés una cuenta?{' '}
                 <button
@@ -247,7 +246,7 @@ export default function Login() {
                   <input
                     type="email"
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="nombre@empresa.com"
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
@@ -304,7 +303,7 @@ export default function Login() {
                   <input
                     type="text"
                     required
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="Pegá el token aquí"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
@@ -322,7 +321,7 @@ export default function Login() {
                     type="password"
                     required
                     minLength={6}
-                    className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                     placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
