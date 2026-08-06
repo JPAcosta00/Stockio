@@ -100,277 +100,288 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* 1. LUCES AMBIENTALES DE FONDO */}
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#5BA535]/20 rounded-full blur-[130px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#1C562A]/30 rounded-full blur-[130px] pointer-events-none" />
+      {/* Luces de fondo ambientales */}
+      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/25 rounded-full blur-3xl pointer-events-none" />
 
-      {/* 2. NOMBRE DE LA APP / DISEÑO TIPOGRÁFICO EN EL FONDO */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
-        <div className="relative transform scale-110 md:scale-125 animate-pulse transition-all duration-1000 opacity-15 hover:opacity-25">
-          {/* Resplandor neón concentrado detrás del nombre */}
-          <div className="absolute -inset-12 bg-gradient-to-r from-[#5BA535]/30 to-[#1C562A]/30 blur-3xl rounded-full" />
-          
-          <img 
-            src="/Stockio_logo_luminoso_blanco.png" 
-            alt="Stockio background" 
-            className="w-[600px] md:w-[850px] max-w-none object-contain filter drop-shadow-[0_0_60px_rgba(91,165,53,0.4)]"
-          />
-        </div>
-      </div>
-
-      {/* 3. TARJETA DEL FORMULARIO (LOGIN / REGISTRO) */}
-      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/80 border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-2xl`}>
+      {/* CONTENEDOR PRINCIPAL: Estructura de dos columnas (Izquierda: Brand, Derecha: Form) */}
+      <div className={`w-full max-w-7xl mx-auto ${view === 'register' ? 'md:max-w-7xl' : 'md:max-w-5xl'} grid md:grid-cols-[1.5fr,1fr] gap-x-12 gap-y-12 transition-all duration-500 relative z-10 p-6 md:p-12`}>
         
-        {/* Banner de Errores */}
-        {error && (
-          <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
-            {error}
+        {/* COLUMNA IZQUIERDA: STOCKIO GRANDEMENTE ESTÁTICO */}
+        <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-zinc-800 rounded-3xl group">
+          <div className="relative group/logo">
+            {/* Brillo ambiental sutil integrado al isotipo */}
+            <div className="absolute -inset-4 rounded-full bg-[#5BA535]/25 blur-2xl opacity-100 group-hover:opacity-100 transition-opacity" />
+            <img 
+              src="/Stockio_logo_luminoso_blanco.png" 
+              alt="Stockio - Todo tu stock, en orden" 
+              className="w-auto h-[180px] md:h-[280px] object-contain drop-shadow-[0_0_25px_rgba(91,165,53,0.35)] relative z-10"
+            />
           </div>
-        )}
-
-        {/* Banner de Éxito */}
-        {successMsg && (
-          <div className="mb-5 p-3.5 bg-[#5BA535]/10 border border-[#5BA535]/30 text-[#5BA535] text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
-            {successMsg}
+          <div className="relative z-10 flex flex-col mt-3">
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-none">
+              Stock<span className="text-[#5BA535]">io</span>
+            </h1>
+            <p className="text-sm md:text-base font-medium text-zinc-400 tracking-wider uppercase mt-2">
+              Todo tu stock, en orden.
+            </p>
           </div>
-        )}
+        </div>
 
-        {/* VISTA 1: INICIO DE SESIÓN */}
-        {view === 'login' && (
-          <>
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-white tracking-tight">Iniciar Sesión</h1>
-              <p className="text-xs text-zinc-400 mt-1">Ingresá a tu cuenta para gestionar tu inventario</p>
+        {/* COLUMNA DERECHA: FORMULARIO ORIGINAL */}
+        <div className={`transition-all duration-300 md:self-center bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md`}>
+          
+          {/* Banner de Errores */}
+          {error && (
+            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-centerbackdrop-blur-sm animate-in fade-in">
+              {error}
             </div>
+          )}
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
-                  Correo Electrónico
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
-                    placeholder="nombre@empresa.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
+          {/* Banner de Éxito */}
+          {successMsg && (
+            <div className="mb-5 p-3.5 bg-[#5BA535]/10 border border-[#5BA535]/30 text-[#5BA535] text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
+              {successMsg}
+            </div>
+          )}
+
+          {/* VISTA 1: INICIO DE SESIÓN */}
+          {view === 'login' && (
+            <>
+              <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold text-white tracking-tight">Iniciar Sesión</h1>
+                <p className="text-xs text-zinc-400 mt-1">Ingresá a tu cuenta para gestionar tu inventario</p>
               </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
-                    Contraseña
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                    Correo Electrónico
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => switchView('forgot')}
-                    className="text-xs text-[#5BA535] hover:underline font-medium transition-colors"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      placeholder="nombre@empresa.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                      Contraseña
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => switchView('forgot')}
+                      className="text-xs text-[#5BA535] hover:underline font-medium transition-colors"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-10 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                   />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Iniciando sesión...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Iniciar Sesión</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center border-t border-zinc-800 pt-4">
+                <p className="text-sm text-zinc-400">
+                  ¿No tenés una cuenta?{' '}
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    onClick={() => switchView('register')}
+                    className="text-[#5BA535] hover:underline font-semibold transition-colors"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    Registrá tu negocio
                   </button>
-                </div>
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* VISTA 2: RECUPERACIÓN */}
+          {view === 'forgot' && (
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-white tracking-tight">Recuperar Contraseña</h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Ingresá tu correo para enviarte el código de recuperación.
+                </p>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Iniciando sesión...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Iniciar Sesión</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                    Correo Electrónico
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      placeholder="nombre@empresa.com"
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
 
-            <div className="mt-6 text-center border-t border-zinc-800/80 pt-4">
-              <p className="text-sm text-zinc-400">
-                ¿No tenés una cuenta?{' '}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Enviando código...</span>
+                    </>
+                  ) : (
+                    'Solicitar Recuperación'
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
                 <button
                   type="button"
-                  onClick={() => switchView('register')}
-                  className="text-[#5BA535] hover:underline font-semibold transition-colors"
+                  onClick={() => switchView('login')}
+                  className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
                 >
-                  Registrá tu negocio
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Volver al inicio de sesión</span>
                 </button>
-              </p>
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
 
-        {/* VISTA 2: RECUPERACIÓN */}
-        {view === 'forgot' && (
-          <>
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white tracking-tight">Recuperar Contraseña</h2>
-              <p className="text-xs text-zinc-400 mt-1">
-                Ingresá tu correo para enviarte el código de recuperación.
-              </p>
-            </div>
-
-            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
-                  Correo Electrónico
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
-                    placeholder="nombre@empresa.com"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                  />
-                </div>
+          {/* VISTA 3: NUEVA CONTRASEÑA */}
+          {view === 'reset' && (
+            <>
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-white tracking-tight">Nueva Contraseña</h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Ingresá el token recibido y definí tu nueva clave.
+                </p>
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Enviando código...</span>
-                  </>
-                ) : (
-                  'Solicitar Recuperación'
-                )}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => switchView('login')}
-                className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Volver al inicio de sesión</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* VISTA 3: NUEVA CONTRASEÑA */}
-        {view === 'reset' && (
-          <>
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white tracking-tight">Nueva Contraseña</h2>
-              <p className="text-xs text-zinc-400 mt-1">
-                Ingresá el token recibido y definí tu nueva clave.
-              </p>
-            </div>
-
-            <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
-                  Código de Recuperación
-                </label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
-                    placeholder="Pegá el token aquí"
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                  />
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                    Código de Recuperación
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      required
+                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      placeholder="Pegá el token aquí"
+                      value={token}
+                      onChange={(e) => setToken(e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
-                  Nueva Contraseña
-                </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5 uppercase tracking-wider">
+                    Nueva Contraseña
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
                 </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    'Guardar Nueva Contraseña'
+                  )}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => switchView('login')}
+                  className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Volver al inicio de sesión</span>
+                </button>
               </div>
+            </>
+          )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#5BA535] hover:bg-[#1C562A] text-white font-semibold text-sm rounded-xl py-3 mt-2 shadow-lg shadow-[#5BA535]/20 hover:shadow-none transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Guardando...</span>
-                  </>
-                ) : (
-                  'Guardar Nueva Contraseña'
-                )}
-              </button>
-            </form>
+          {/* VISTA 4: REGISTRO DE USUARIOS */}
+          {view === 'register' && (
+            <RegisterForm
+              onSwitchToLogin={() => switchView('login')}
+              onSuccess={() => {
+                alert('¡Cuenta creada con éxito! Ya podés iniciar sesión.');
+                switchView('login');
+              }}
+            />
+          )}
 
-            <div className="mt-6 text-center">
-              <button
-                type="button"
-                onClick={() => switchView('login')}
-                className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Volver al inicio de sesión</span>
-              </button>
-            </div>
-          </>
-        )}
-
-        {/* VISTA 4: REGISTRO */}
-        {view === 'register' && (
-          <RegisterForm
-            onSwitchToLogin={() => switchView('login')}
-            onSuccess={() => {
-              alert('¡Cuenta creada con éxito! Ya podés iniciar sesión.');
-              switchView('login');
-            }}
-          />
-        )}
-
+        </div>
       </div>
     </div>
   );

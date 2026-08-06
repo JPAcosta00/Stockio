@@ -12,21 +12,26 @@ import {
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
   
+  // Estados para datos personales 
   const [username, setName] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   
+  // Estados para contraseñas (Columna Derecha)
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
+  // Feedback y carga
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Validación de formato de email
   const isValidEmail = (emailStr) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(emailStr);
   };
 
+  // Validación de contraseña (mínimo 6 caracteres, letras y al menos un número)
   const isValidPassword = (pass) => {
     const passRegex = /^(?=.*[A-Za-z])(?=.*\d).{6,}$/;
     return passRegex.test(pass);
@@ -36,21 +41,25 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     e.preventDefault();
     setError('');
 
+    // Campos obligatorios
     if (!username || !companyName || !email || !password || !confirmPassword) {
       setError('Por favor, completá todos los campos.');
       return;
     }
 
+    // Validación del formato de email
     if (!isValidEmail(email)) {
-      setError('Por favor, ingresá un correo electrónico válido.');
+      setError('Por favor, ingresá un correo electrónico válido (ej: usuario@dominio.com).');
       return;
     }
 
+    // Validación del formato de la contraseña
     if (!isValidPassword(password)) {
       setError('La contraseña debe tener al menos 6 caracteres, incluir letras y al menos un número.');
       return;
     }
 
+    // Coincidencia de contraseñas
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
       return;
@@ -61,7 +70,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     const result = await register(username, email, password, companyName);
     
     if (result.success) {
-      onSuccess();
+      onSuccess(); // Aviso de que se registró con éxito
     } else {
       setError(result.error || 'Ocurrió un error al registrar la cuenta.');
     }
@@ -71,30 +80,30 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-4">
       
-      {/* ENCABEZADO DIRECTO SIN LOGO DE CAJA */}
-      <div className="text-center mb-4">
-        <h2 className="text-2xl font-bold text-white tracking-tight">
-          Creá tu cuenta de empresa
+      {/* Encabezado */}
+      <div className="text-center mb-2">
+        <h2 className="text-xl font-bold text-white tracking-tight">
+          Creá tu cuenta en Stockio
         </h2>
-        <p className="text-xs text-zinc-400 mt-1">
-          Gestioná tu inventario y ventas en minutos
+        <p className="text-xs text-zinc-400 mt-0.5">
+          Gestioná tu stock y ventas en un solo lugar
         </p>
       </div>
 
-      {/* MENSAJE DE ERROR */}
+      {/* Mensaje de error */}
       {error && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center font-medium backdrop-blur-sm animate-in fade-in">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center font-mediumbackdrop-blur-sm animate-in fade-in">
           {error}
         </div>
       )}
 
-      {/* CONTENEDOR GRID DOS COLUMNAS */}
+      {/* Contenedor de Formulario */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        {/* COLUMNA 1: DATOS DE CUENTA */}
+        {/* COLUMNA IZQUIERDA: Datos de la cuenta */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800 pb-1.5">
-            1. Datos de la Cuenta
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+            <span>1. Datos de la Cuenta</span>
           </h3>
 
           <div>
@@ -108,7 +117,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
                 required
                 value={username}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                 placeholder="Lionel Messi"
               />
             </div>
@@ -125,7 +134,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                 placeholder="Distribuidora Messi"
               />
             </div>
@@ -142,17 +151,17 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                 placeholder="correo@empresa.com"
               />
             </div>
           </div>
         </div>
 
-        {/* COLUMNA 2: SEGURIDAD */}
+        {/* COLUMNA DERECHA: Seguridad / Contraseñas */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800 pb-1.5">
-            2. Seguridad
+          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+            <span>2. Seguridad</span>
           </h3>
 
           <div>
@@ -166,12 +175,12 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                 placeholder="••••••••"
               />
             </div>
             <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
-              Mínimo 6 caracteres, letras y al menos un número.
+              Mínimo 6 caracteres, combinando letras y al menos un número.
             </p>
           </div>
 
@@ -186,17 +195,20 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
                 placeholder="••••••••"
               />
             </div>
+            <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+              Repetí exactamente la clave ingresada arriba.
+            </p>
           </div>
         </div>
 
       </div>
 
-      {/* PIE Y BOTÓN */}
-      <div className="pt-3 border-t border-zinc-800 space-y-3 mt-2">
+      {/* PIE DE FORMULARIO */}
+      <div className="pt-3 border-t border-zinc-800/80 space-y-3 mt-2">
         <button
           type="submit"
           disabled={loading}
