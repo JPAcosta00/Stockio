@@ -107,7 +107,7 @@ export default function Login() {
         <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6">
           <div className="relative w-full flex items-center justify-center">
             <img 
-              src="/stockio-bg-logo.png" 
+              src="/logo.png" 
               alt="Stockio Logo" 
               className="w-full max-w-[420px] md:max-w-[560px] h-auto object-contain filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.08)]"
             />
