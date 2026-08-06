@@ -108,17 +108,16 @@ export default function Login() {
       {/* CONTENEDOR CENTRAL DEL MODAL */}
       <div className={`w-full ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800/80 rounded-3xl p-6 md:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.7)] relative z-10 transition-all duration-300`}>
         
-        {/* LOGO EN LA PARTE SUPERIOR DEL MODAL */}
-        <div className="flex flex-col items-center justify-center mb-6">
-          <div className="relative mb-2">
-            <div className="absolute -inset-3 bg-[#5BA535]/20 blur-xl rounded-full pointer-events-none" />
+        {/* LOGO FLOTANTE SUPERIOR (Más grande sin ensanchar el modal) */}
+        <div className="flex flex-col items-center justify-center relative -mt-16 md:-mt-20 mb-6">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-[#5BA535]/25 blur-2xl rounded-full pointer-events-none" />
             <img 
               src="/icono.png" 
               alt="Stockio Logo" 
-              className="w-44 md:w-52 h-auto object-contain relative z-10 filter drop-shadow-[0_0_15px_rgba(91,165,53,0.3)]"
+              className="w-36 md:w-44 h-auto object-contain relative z-10 filter drop-shadow-[0_10px_20px_rgba(91,165,53,0.4)]"
             />
           </div>
-          <div className="w-12 h-1 bg-[#5BA535]/50 rounded-full mt-1" />
         </div>
 
         {/* Banner de Errores */}
@@ -140,7 +139,6 @@ export default function Login() {
           <>
             <div className="text-center mb-6">
               <h1 className="text-xl font-bold text-white tracking-tight">Iniciar Sesión</h1>
-              <p className="text-xs text-zinc-400 mt-1">Ingresá a tu cuenta para gestionar tu inventario</p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
