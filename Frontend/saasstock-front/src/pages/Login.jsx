@@ -98,42 +98,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
+    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4 md:p-8 relative overflow-hidden text-zinc-100">
       
-      {/* Luces de fondo ambientales */}
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#1C562A]/25 rounded-full blur-3xl pointer-events-none" />
+      {/* LUCES DE FONDO AMBIENTALES */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#1C562A]/20 rounded-full blur-3xl pointer-events-none" />
 
-      {/* CONTENEDOR PRINCIPAL: Estructura de dos columnas (Izquierda: Brand, Derecha: Form) */}
-      <div className={`w-full max-w-7xl mx-auto ${view === 'register' ? 'md:max-w-7xl' : 'md:max-w-5xl'} grid md:grid-cols-[1.5fr,1fr] gap-x-12 gap-y-12 transition-all duration-500 relative z-10 p-6 md:p-12`}>
+      {/* CONTENEDOR PRINCIPAL LADO A LADO */}
+      <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
         
-        {/* COLUMNA IZQUIERDA: STOCKIO GRANDEMENTE ESTÁTICO */}
-        <div className="flex flex-col items-center justify-center text-center p-8 border border-dashed border-zinc-800 rounded-3xl group">
-          <div className="relative group/logo">
-            {/* Brillo ambiental sutil integrado al isotipo */}
-            <div className="absolute -inset-4 rounded-full bg-[#5BA535]/25 blur-2xl opacity-100 group-hover:opacity-100 transition-opacity" />
+        {/* PANEL IZQUIERDO: LOGO STOCKIO */}
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6">
+          <div className="relative">
+            <div className="absolute -inset-4 bg-[#5BA535]/20 blur-3xl rounded-full" />
             <img 
               src="/Stockio_logo_luminoso_blanco.png" 
-              alt="Stockio - Todo tu stock, en orden" 
-              className="w-auto h-[180px] md:h-[280px] object-contain drop-shadow-[0_0_25px_rgba(91,165,53,0.35)] relative z-10"
+              alt="Stockio Logo" 
+              className="w-full max-w-[320px] md:max-w-[420px] h-auto object-contain filter drop-shadow-[0_0_35px_rgba(91,165,53,0.3)] relative z-10"
             />
-          </div>
-          <div className="relative z-10 flex flex-col mt-3">
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-none">
-              Stock<span className="text-[#5BA535]">io</span>
-            </h1>
-            <p className="text-sm md:text-base font-medium text-zinc-400 tracking-wider uppercase mt-2">
-              Todo tu stock, en orden.
-            </p>
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: FORMULARIO ORIGINAL */}
-        <div className={`transition-all duration-300 md:self-center bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md`}>
+        {/* PANEL DERECHO: FORMULARIO */}
+        <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300`}>
           
           {/* Banner de Errores */}
           {error && (
-            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-centerbackdrop-blur-sm animate-in fade-in">
+            <div className="mb-5 p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-sm animate-in fade-in">
               {error}
             </div>
           )}
@@ -193,7 +184,7 @@ export default function Login() {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                  />
+                    />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -382,6 +373,7 @@ export default function Login() {
           )}
 
         </div>
+
       </div>
     </div>
   );
