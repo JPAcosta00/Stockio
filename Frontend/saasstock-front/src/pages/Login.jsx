@@ -100,24 +100,26 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 px-4 relative overflow-hidden text-zinc-100">
       
-      {/* 1. LUCES DE FONDO Y AURA NEÓN */}
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#5BA535]/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#1C562A]/25 rounded-full blur-[120px] pointer-events-none" />
+      {/* 1. LUCES AMBIENTALES DE FONDO */}
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#5BA535]/20 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-[500px] h-[500px] bg-[#1C562A]/30 rounded-full blur-[130px] pointer-events-none" />
 
-      {/* 2. LOGO AMBIENTAL DE FONDO (MARCA DE AGUA CON ANIMACIÓN) */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none opacity-20 md:opacity-25">
-        <div className="relative transform scale-125 md:scale-150 animate-pulse transition-all duration-1000">
-          <div className="absolute -inset-10 bg-[#5BA535]/20 blur-3xl rounded-full" />
+      {/* 2. NOMBRE DE LA APP / DISEÑO TIPOGRÁFICO EN EL FONDO */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden select-none z-0">
+        <div className="relative transform scale-110 md:scale-125 animate-pulse transition-all duration-1000 opacity-15 hover:opacity-25">
+          {/* Resplandor neón concentrado detrás del nombre */}
+          <div className="absolute -inset-12 bg-gradient-to-r from-[#5BA535]/30 to-[#1C562A]/30 blur-3xl rounded-full" />
+          
           <img 
             src="/Stockio_logo_luminoso_blanco.png" 
-            alt="" 
-            className="w-[450px] md:w-[650px] max-w-none object-contain filter drop-shadow-[0_0_50px_rgba(91,165,53,0.3)]"
+            alt="Stockio background" 
+            className="w-[600px] md:w-[850px] max-w-none object-contain filter drop-shadow-[0_0_60px_rgba(91,165,53,0.4)]"
           />
         </div>
       </div>
 
-      {/* 3. TARJETA PRINCIPAL DEL FORMULARIO */}
-      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/85 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl`}>
+      {/* 3. TARJETA DEL FORMULARIO (LOGIN / REGISTRO) */}
+      <div className={`w-full transition-all duration-300 relative z-10 ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-zinc-900/80 border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-2xl`}>
         
         {/* Banner de Errores */}
         {error && (
@@ -226,7 +228,7 @@ export default function Login() {
           </>
         )}
 
-        {/* VISTA 2: RECUPERACIÓN (EMAIL) */}
+        {/* VISTA 2: RECUPERACIÓN */}
         {view === 'forgot' && (
           <>
             <div className="text-center mb-6">
@@ -358,7 +360,7 @@ export default function Login() {
           </>
         )}
 
-        {/* VISTA 4: REGISTRO DE USUARIOS */}
+        {/* VISTA 4: REGISTRO */}
         {view === 'register' && (
           <RegisterForm
             onSwitchToLogin={() => switchView('login')}
