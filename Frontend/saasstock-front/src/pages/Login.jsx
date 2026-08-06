@@ -108,26 +108,27 @@ export default function Login() {
       <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
         
        {/* PANEL IZQUIERDO: LOGO STOCKIO */}
-        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6 my-auto">
-          <div className="relative flex items-center justify-center">
-            
-            {/* 1. Halo de Luz Blanco difuminado de fondo */}
-            <div className="absolute -inset-10 bg-white/15 blur-3xl rounded-full pointer-events-none" />
-            
-            {/* 2. Brillo central concentrado detrás de la imagen */}
-            <div className="absolute w-72 h-72 md:w-96 md:h-96 bg-white/10 blur-2xl rounded-full pointer-events-none" />
-
-            {/* 3. Logo más grande con resplandor blanco puro y efecto hover */}
-            <div className="relative z-10">
-              <img 
-                src="/logo-icon.png" 
-                alt="Stockio Logo" 
-                className="w-full max-w-[380px] md:max-w-[500px] lg:max-w-[560px] h-auto object-contain filter drop-shadow-[0_0_35px_rgba(255,255,255,0.7)] drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] hover:scale-105 transition-transform duration-500 ease-out cursor-pointer"
-              />
-            </div>
-
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-4 my-auto">
+        <div className="relative flex items-center justify-center">
+          
+          {/* 1. Halo Neón Blanco Ultra Brillante de Gran Alcance */}
+          <div className="absolute -inset-16 bg-white/25 blur-3xl rounded-full pointer-events-none" />
+          
+          {/* 2. Núcleo de Luz Blanco Concentrado */}
+          <div className="absolute w-80 h-80 md:w-[450px] md:h-[450px] bg-white/20 blur-2xl rounded-full pointer-events-none" />
+        
+          {/* 3. Logo Maximizado con Múltiples Capas de Brillo Radiante */}
+          <div className="relative z-10">
+            <img 
+              src="/logo-icon.png" 
+              alt="Stockio Logo" 
+              className="w-full max-w-[420px] md:max-w-[580px] lg:max-w-[650px] h-auto object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_45px_rgba(255,255,255,0.8)] drop-shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-105 transition-transform duration-500 ease-out cursor-pointer"
+            />
           </div>
         </div>
+      </div>
+
+
         {/* PANEL DERECHO: FORMULARIO */}
         <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300`}>
           
