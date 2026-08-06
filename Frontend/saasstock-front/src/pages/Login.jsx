@@ -112,7 +112,7 @@ export default function Login() {
           <div className="relative">
             <div className="absolute -inset-4 bg-[#5BA535]/20 blur-3xl rounded-full" />
             <img 
-              src="/Stockio_logo_luminoso_blanco.png" 
+              src="/logo-icon.png" 
               alt="Stockio Logo" 
               className="w-full max-w-[320px] md:max-w-[420px] h-auto object-contain filter drop-shadow-[0_0_35px_rgba(91,165,53,0.3)] relative z-10"
             />
