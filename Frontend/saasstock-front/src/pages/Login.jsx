@@ -115,7 +115,7 @@ export default function Login() {
             <img 
               src="/icono.png" 
               alt="Stockio Logo" 
-              className="w-36 md:w-44 h-auto object-contain relative z-10 filter drop-shadow-[0_10px_20px_rgba(91,165,53,0.4)]"
+              className="w-76 md:w-44 h-auto object-contain relative z-10 filter drop-shadow-[0_10px_20px_rgba(91,165,53,0.4)]"
             />
           </div>
         </div>
