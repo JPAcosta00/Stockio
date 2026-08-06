@@ -98,39 +98,24 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-zinc-950 p-4 md:p-8 relative overflow-hidden text-zinc-100">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white p-4 md:p-8 relative overflow-hidden text-zinc-900">
       
-      {/* LUCES DE FONDO AMBIENTALES */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#5BA535]/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#1C562A]/20 rounded-full blur-3xl pointer-events-none" />
-
       {/* CONTENEDOR PRINCIPAL LADO A LADO */}
-      <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-12 relative z-10">
+      <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-8 md:gap-16 relative z-10">
         
-       {/* PANEL IZQUIERDO: LOGO STOCKIO */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-4 my-auto">
-        <div className="relative flex items-center justify-center">
-          
-          {/* 1. Halo Neón Blanco Ultra Brillante de Gran Alcance */}
-          <div className="absolute -inset-16 bg-white/25 blur-3xl rounded-full pointer-events-none" />
-          
-          {/* 2. Núcleo de Luz Blanco Concentrado */}
-          <div className="absolute w-80 h-80 md:w-[450px] md:h-[450px] bg-white/20 blur-2xl rounded-full pointer-events-none" />
-        
-          {/* 3. Logo Maximizado con Múltiples Capas de Brillo Radiante */}
-          <div className="relative z-10">
+        {/* PANEL IZQUIERDO: LOGO COMPLETO SOBRE FONDO BLANCO */}
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center text-center p-6">
+          <div className="relative w-full flex items-center justify-center">
             <img 
-              src="/logo-icon.png" 
+              src="/stockio-bg-logo.png" 
               alt="Stockio Logo" 
-              className="w-full max-w-[420px] md:max-w-[580px] lg:max-w-[650px] h-auto object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,1)] drop-shadow-[0_0_45px_rgba(255,255,255,0.8)] drop-shadow-[0_0_80px_rgba(255,255,255,0.4)] hover:scale-105 transition-transform duration-500 ease-out cursor-pointer"
+              className="w-full max-w-[420px] md:max-w-[560px] h-auto object-contain filter drop-shadow-[0_10px_25px_rgba(0,0,0,0.08)]"
             />
           </div>
         </div>
-      </div>
-
 
         {/* PANEL DERECHO: FORMULARIO */}
-        <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900/90 border border-zinc-800/80 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-xl transition-all duration-300`}>
+        <div className={`w-full ${view === 'register' ? 'md:w-3/5 max-w-2xl' : 'md:w-1/2 max-w-md'} bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-10 shadow-2xl text-zinc-100 transition-all duration-300`}>
           
           {/* Banner de Errores */}
           {error && (
