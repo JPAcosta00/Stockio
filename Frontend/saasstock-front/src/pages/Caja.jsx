@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
+import { Loader2, PlusCircle, MinusCircle, FileText, DollarSign, TrendingUp, CreditCard, Banknote, X, AlertCircle } from 'lucide-react';
 
 export default function Caja() {
   // Estado general de la caja
-  const [cajaActiva, setCajaActiva] = useState(null); 
+  const [cajaActiva, setCajaActiva] = useState(null);
   const [loading, setLoading] = useState(true);
   const [montoInicialInput, setMontoInicialInput] = useState('');
 
@@ -11,14 +12,14 @@ export default function Caja() {
   const [efectivoRealContado, setEfectivoRealContado] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [mostrarModalCierre, setMostrarModalCierre] = useState(false);
-  
+
   // Nuevos estados para confirmación y carga del cierre
   const [confirmandoCierre, setConfirmandoCierre] = useState(false);
   const [cerrandoCaja, setCerrandoCaja] = useState(false);
 
   // Estado para Registro de Movimientos Extras (Gastos / Retiros / Ingresos)
   const [mostrarModalMovimiento, setMostrarModalMovimiento] = useState(false);
-  const [tipoMovimiento, setTipoMovimiento] = useState('EGRESO'); 
+  const [tipoMovimiento, setTipoMovimiento] = useState('EGRESO');
   const [montoMovimiento, setMontoMovimiento] = useState('');
   const [conceptoMovimiento, setConceptoMovimiento] = useState('');
   const [guardandoMovimiento, setGuardandoMovimiento] = useState(false);
@@ -73,7 +74,7 @@ export default function Caja() {
 
     try {
       setGuardandoMovimiento(true);
-      
+
       const payload = {
         cajaId: cajaActiva.id,
         tipo: tipoMovimiento,
@@ -119,8 +120,8 @@ export default function Caja() {
 
     try {
       setCerrandoCaja(true);
-      const response = await apiClient.post('/caja/cerrar', datosCierre);
-      
+      await apiClient.post('/caja/cerrar', datosCierre);
+
       // Resetear estados
       setCajaActiva(null);
       setMostrarModalCierre(false);
@@ -157,7 +158,12 @@ export default function Caja() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-zinc-400 font-mono">Cargando estado de la caja...</div>;
+    return (
+      <div className="flex h-96 items-center justify-center text-zinc-500 gap-3 bg-zinc-900 rounded-2xl border border-zinc-800">
+        <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+        <span className="text-sm font-medium">Cargando estado de la caja...</span>
+      </div>
+    );
   }
 
   const cajaAbierta = !!cajaActiva;
@@ -167,128 +173,113 @@ export default function Caja() {
   const diferenciaEfectivo = (Number(efectivoRealContado) || 0) - efectivoEsperado;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6 text-zinc-100">
-      
+    <div className="p-6 max-w-7xl mx-auto space-y-8 text-zinc-100">
+
       {/* CABECERA */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900 p-6 rounded-xl border border-zinc-800">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestión de Caja</h1>
-          <p className="text-sm text-zinc-400">Apertura, control de movimientos y arqueo de turno</p>
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">Gestión de Caja</h1>
+          <p className="text-xs text-zinc-400 mt-1">Apertura, control de movimientos y arqueo de turno</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cajaAbierta ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
-            {cajaAbierta ? '● CAJA ABIERTA' : '○ CAJA CERRADA'}
+          <span className={`px-4 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center gap-2 ${cajaAbierta ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}`}>
+            {cajaAbierta ? <div className='w-2 h-2 rounded-full bg-emerald-500 animate-pulse'></div> : <div className='w-2 h-2 rounded-full bg-rose-500'></div>}
+            {cajaAbierta ? 'CAJA ABIERTA' : 'CAJA CERRADA'}
           </span>
 
-          <button 
+          <button
             onClick={handleGenerarReportePDF}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 px-5 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer"
           >
-            📄 Generar Reporte PDF
+            <FileText className="w-4 h-4" />
+            Generar Reporte PDF
           </button>
         </div>
       </div>
 
       {/* FORMULARIO APERTURA */}
       {!cajaAbierta ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 max-w-md mx-auto text-center shadow-xl">
-          <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-xl">
-            💵
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-10 max-w-lg mx-auto text-center shadow-xl">
+          <div className="w-16 h-16 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20">
+            <Banknote className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Abrir Turno de Caja</h2>
-          <p className="text-sm text-zinc-400 mb-6">Ingresa el monto de cambio inicial guardado en el cajón.</p>
-          
-          <form onSubmit={handleAbrirCaja} className="space-y-4">
+          <h2 className="text-2xl font-bold text-white mb-2 tracking-tight">Abrir Turno de Caja</h2>
+          <p className="text-sm text-zinc-400 mb-8 max-w-sm mx-auto">Ingresa el monto de dinero inicial (fondo de cambio) disponible en caja para comenzar.</p>
+
+          <form onSubmit={handleAbrirCaja} className="space-y-6">
             <div className="text-left">
-              <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1">Monto Inicial ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                required
-                placeholder="0.00"
-                value={montoInicialInput}
-                onChange={(e) => setMontoInicialInput(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
-              />
+              <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2 tracking-wider">Monto Inicial de Fondo ($)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-4 top-3.5 w-5 h-5 text-zinc-500" />
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  placeholder="0.00"
+                  value={montoInicialInput}
+                  onChange={(e) => setMontoInicialInput(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-4 pl-12 text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono text-xl placeholder:text-zinc-600"
+                />
+              </div>
             </div>
             <button
               type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 rounded-lg transition-colors shadow-lg shadow-emerald-900/20"
+              className="w-full bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-emerald-900/30 text-lg cursor-pointer"
             >
-              Iniciar Turno / Abrir Caja
+              Abrir Caja e Iniciar Turno
             </button>
           </form>
         </div>
       ) : (
 
         /* PANEL DE CAJA ABIERTA */
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-              <span className="text-xs font-semibold text-zinc-400 uppercase">Fondo Inicial</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.montoInicial?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-            </div>
-
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-              <span className="text-xs font-semibold text-emerald-400 uppercase">Ventas Efectivo</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasEfectivo?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-            </div>
-
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-              <span className="text-xs font-semibold text-sky-400 uppercase">Mercado Pago</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasMercadoPago?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-            </div>
-
-            <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl">
-              <span className="text-xs font-semibold text-purple-400 uppercase">Tarjetas</span>
-              <p className="text-xl font-bold text-white font-mono mt-1">${cajaActiva.ventasTarjeta?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-            </div>
+        <div className="space-y-8">
+          {/* Grid de Totales */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard title="Fondo Inicial" value={cajaActiva.montoInicial} icon={Banknote} color="text-zinc-300" />
+            <StatCard title="Ventas Efectivo" value={cajaActiva.ventasEfectivo} icon={TrendingUp} color="text-emerald-400" />
+            <StatCard title="Mercado Pago" value={cajaActiva.ventasMercadoPago} icon={CreditCard} color="text-sky-400" />
+            <StatCard title="Tarjetas" value={cajaActiva.ventasTarjeta} icon={CreditCard} color="text-purple-400" />
           </div>
 
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-              <h3 className="text-lg font-bold text-white">Resumen de Efectivo en Cajón</h3>
-              
-              {/* BOTÓN PARA REGISTRAR MOVIMIENTO (GASTO O INGRESO EXTRA) */}
+          {/* Panel Central de Arqueo */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-sm">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b border-zinc-800 pb-6">
+              <h3 className="text-xl font-bold text-white tracking-tight">Arqueo de Efectivo en Cajón</h3>
+
               <button
                 onClick={() => setMostrarModalMovimiento(true)}
-                className="bg-amber-600/20 text-amber-400 border border-amber-500/30 hover:bg-amber-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                className="bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
               >
-                💸 Registrar Gasto / Movimiento Extra
+                <MinusCircle className="w-4 h-4" />
+                Registrar Gasto / Retiro / Ingreso Extra
               </button>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm font-mono bg-zinc-950 p-4 rounded-lg border border-zinc-800/80 mb-6">
-              <div>
-                <span className="text-zinc-500 block text-xs">MONTO INICIAL</span>
-                <span className="text-white font-bold">${cajaActiva.montoInicial?.toFixed(2)}</span>
-              </div>
-              <div>
-                <span className="text-emerald-500 block text-xs">(+) VENTAS EFECTIVO</span>
-                <span className="text-white font-bold">+${cajaActiva.ventasEfectivo?.toFixed(2)}</span>
-              </div>
-              <div>
-                <span className="text-emerald-500 block text-xs">(+) INGRESOS EXTRA</span>
-                <span className="text-white font-bold">+${cajaActiva.montoIngresosExtra?.toFixed(2)}</span>
-              </div>
-              <div>
-                <span className="text-rose-500 block text-xs">(-) EGRESOS EXTRA</span>
-                <span className="text-white font-bold">-${cajaActiva.montoEgresosExtra?.toFixed(2)}</span>
-              </div>
+
+            {/* Detalle de calculo */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-mono bg-zinc-950 p-6 rounded-xl border border-zinc-800 mb-8">
+              <MiniStat label="Monto Inicial" value={cajaActiva.montoInicial} color="text-zinc-400" />
+              <MiniStat label="Ventas Efectivo" value={cajaActiva.ventasEfectivo} color="text-emerald-400" />
+              <MiniStat label="Ingresos Extra" value={cajaActiva.ventasIngresosExtra} color="text-emerald-400" />
+              <MiniStat label="Egresos/Gastos" value={cajaActiva.ventasEgresosExtra} color="text-rose-400" negative />
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-emerald-950/30 border border-emerald-500/20 p-4 rounded-xl">
+            {/* Total Esperado y Botón Cierre */}
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-zinc-800/50 border border-zinc-700 p-6 rounded-2xl">
               <div>
-                <span className="text-xs font-semibold text-emerald-400 uppercase">Efectivo Esperado a la Salida</span>
-                <p className="text-2xl font-bold text-emerald-300 font-mono">${cajaActiva.efectivoEsperado?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Efectivo Esperado en Cajón</span>
+                <p className="text-4xl font-extrabold text-emerald-300 font-mono tracking-tight mt-1">
+                  ${cajaActiva.efectivoEsperado?.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
               </div>
 
               <button
                 onClick={() => setMostrarModalCierre(true)}
-                className="mt-4 sm:mt-0 bg-rose-600 hover:bg-rose-500 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors"
+                className="mt-6 sm:mt-0 bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg shadow-red-900/40 text-lg flex items-center gap-2 cursor-pointer"
               >
-                Hacer Arqueo y Cerrar Caja
+                <Loader2 className="w-5 h-5" />
+                Realizar Arqueo y Cerrar Caja
               </button>
             </div>
           </div>
@@ -297,59 +288,39 @@ export default function Caja() {
 
       {/* MODAL PARA REGISTRAR MOVIMIENTO EXTRA (INGRESO / EGRESO) */}
       {mostrarModalMovimiento && (
-        <div 
+        <div
           onClick={() => setMostrarModalMovimiento(false)}
-          className="fixed top-0 left-0 w-screen min-h-screen bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-md p-6 relative shadow-2xl space-y-6"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-8 relative shadow-2xl space-y-6"
           >
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-xl font-bold text-white">Registrar Movimiento Extra</h3>
-              <button 
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
+              <h3 className="text-lg font-bold text-white">Registrar Movimiento Extra</h3>
+              <button
                 onClick={() => setMostrarModalMovimiento(false)}
-                className="text-zinc-400 hover:text-white font-bold text-lg"
+                className="text-zinc-400 hover:text-white cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleRegistrarMovimientoSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
-                  Tipo de Movimiento
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTipoMovimiento('EGRESO')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${
-                      tipoMovimiento === 'EGRESO'
-                        ? 'bg-rose-500/20 border-rose-500 text-rose-300'
-                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    🔻 EGRESO / GASTO
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTipoMovimiento('INGRESO')}
-                    className={`py-2 px-3 rounded-lg text-xs font-bold border transition-colors ${
-                      tipoMovimiento === 'INGRESO'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
-                        : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    🔺 INGRESO EXTRA
-                  </button>
-                </div>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2">Tipo de Movimiento</label>
+                <select
+                  value={tipoMovimiento}
+                  onChange={(e) => setTipoMovimiento(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="EGRESO">Egreso / Gasto (Resta efectivo)</option>
+                  <option value="INGRESO">Ingreso Extra (Suma efectivo)</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
-                  Monto ($)
-                </label>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2">Monto ($)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -357,38 +328,37 @@ export default function Caja() {
                   placeholder="0.00"
                   value={montoMovimiento}
                   onChange={(e) => setMontoMovimiento(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white font-mono focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
-                  Concepto / Descripción
-                </label>
+                <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2">Concepto / Motivo</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej: Pago de hielo, Limpieza, Retiro parcial..."
+                  placeholder="Ej. Compra de rollos de papel, pago de flete..."
                   value={conceptoMovimiento}
                   onChange={(e) => setConceptoMovimiento(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
-              <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
+              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setMostrarModalMovimiento(false)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={guardandoMovimiento}
-                  className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-emerald-900/20"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {guardandoMovimiento ? 'Guardando...' : 'Guardar Movimiento'}
+                  {guardandoMovimiento && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Guardar Movimiento
                 </button>
               </div>
             </form>
@@ -396,162 +366,157 @@ export default function Caja() {
         </div>
       )}
 
-      {/* MODAL DE ARQUEO Y CIERRE DE CAJA */}
-      {mostrarModalCierre && cajaActiva && (
-        <div 
+      {/* MODAL DE CIERRE Y ARQUEO DE CAJA */}
+      {mostrarModalCierre && (
+        <div
           onClick={handleCerrarModalCierre}
-          className="fixed top-0 left-0 w-screen min-h-screen bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg p-6 relative shadow-2xl space-y-6"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg p-8 relative shadow-2xl space-y-6"
           >
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-              <h3 className="text-xl font-bold text-white">Arqueo y Cierre de Caja</h3>
-              <button 
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-4">
+              <h3 className="text-lg font-bold text-white">
+                {!confirmandoCierre ? 'Arqueo de Caja - Conteo de Efectivo' : 'Confirmación de Cierre'}
+              </h3>
+              <button
                 onClick={handleCerrarModalCierre}
-                className="text-zinc-400 hover:text-white font-bold text-lg"
+                className="text-zinc-400 hover:text-white cursor-pointer"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* VISTA 1: INGRESO DE DATOS */}
             {!confirmandoCierre ? (
-              <>
-                <div className="space-y-2 font-mono text-sm">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Efectivo Calculado (Esperado):</span>
-                    <span className="text-white font-bold">${efectivoEsperado.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Total Mercado Pago:</span>
-                    <span className="text-white font-bold">${cajaActiva.ventasMercadoPago?.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Total Tarjetas:</span>
-                    <span className="text-white font-bold">${cajaActiva.ventasTarjeta?.toFixed(2)}</span>
-                  </div>
+              <form onSubmit={handlePrepararCierre} className="space-y-4">
+                <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800 space-y-1">
+                  <span className="text-xs text-zinc-400">Efectivo Esperado en Sistema:</span>
+                  <p className="text-2xl font-mono font-bold text-emerald-400">
+                    ${efectivoEsperado.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                  </p>
                 </div>
 
-                <form onSubmit={handlePrepararCierre} className="space-y-4 pt-2">
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 uppercase mb-1">
-                      Efectivo Real Contado en Cajón ($)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      placeholder="Ingrese el monto físico total"
-                      value={efectivoRealContado}
-                      onChange={(e) => setEfectivoRealContado(e.target.value)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-white focus:outline-none focus:border-emerald-500 font-mono text-lg"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1">Observaciones (Opcional)</label>
-                    <textarea
-                      rows={2}
-                      placeholder="Ej: Faltó cambio / Retiro de efectivo..."
-                      value={observaciones}
-                      onChange={(e) => setObservaciones(e.target.value)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded-lg p-2 text-white text-sm focus:outline-none"
-                    />
-                  </div>
-
-                  {/* MUESTRA SOBRANTE / FALTANTE EN TIEMPO REAL */}
-                  {efectivoRealContado !== '' && (
-                    <div className={`p-3 rounded-lg font-mono text-sm border flex justify-between items-center ${diferenciaEfectivo === 0 ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400' : diferenciaEfectivo > 0 ? 'bg-blue-950/40 border-blue-500/30 text-blue-400' : 'bg-rose-950/40 border-rose-500/30 text-rose-400'}`}>
-                      <span>
-                        {diferenciaEfectivo === 0 && 'Caja Cuadrada Perfecta'}
-                        {diferenciaEfectivo > 0 && 'Sobrante de Caja:'}
-                        {diferenciaEfectivo < 0 && 'Faltante de Caja:'}
-                      </span>
-                      <span className="font-bold text-base">
-                        ${Math.abs(diferenciaEfectivo).toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
-                    <button
-                      type="button"
-                      onClick={handleCerrarModalCierre}
-                      className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-rose-900/20"
-                    >
-                      Continuar al Cierre
-                    </button>
-                  </div>
-                </form>
-              </>
-            ) : (
-              /* VISTA 2: PANTALLA DE CONFIRMACIÓN */
-              <div className="space-y-5">
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-lg flex items-start gap-3">
-                  <span className="text-xl">⚠️</span>
-                  <div>
-                    <h4 className="text-amber-400 font-bold text-sm">¿Confirmar cierre de turno?</h4>
-                    <p className="text-zinc-300 text-xs mt-1">
-                      Una vez cerrada la caja no podrás registrar más ventas ni movimientos en este turno.
-                    </p>
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2">
+                    Efectivo Real Contado en Caja ($)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    value={efectivoRealContado}
+                    onChange={(e) => setEfectivoRealContado(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white font-mono text-lg focus:outline-none focus:border-emerald-500"
+                  />
                 </div>
 
-                <div className="bg-zinc-950 p-4 rounded-lg border border-zinc-800 space-y-2 font-mono text-sm">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Efectivo Esperado:</span>
-                    <span className="text-white">${efectivoEsperado.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Efectivo Declarado:</span>
-                    <span className="text-white">${Number(efectivoRealContado).toFixed(2)}</span>
-                  </div>
-                  <div className={`flex justify-between pt-2 border-t border-zinc-800 font-bold ${diferenciaEfectivo === 0 ? 'text-emerald-400' : diferenciaEfectivo > 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                    <span>Diferencia Final:</span>
-                    <span>{diferenciaEfectivo >= 0 ? '+' : ''}${diferenciaEfectivo.toFixed(2)}</span>
-                  </div>
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-400 uppercase mb-2">
+                    Observaciones / Motivo de diferencia (Opcional)
+                  </label>
+                  <textarea
+                    rows="2"
+                    placeholder="Ej. Faltante por cambio no dado..."
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500 text-sm"
+                  ></textarea>
                 </div>
 
-                {observaciones && (
-                  <div className="text-xs text-zinc-400 bg-zinc-800/50 p-3 rounded-lg">
-                    <span className="font-semibold text-zinc-300 block mb-1">Observaciones:</span>
-                    {observaciones}
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3 pt-4 border-t border-zinc-800">
+                <div className="flex justify-end gap-3 pt-4">
                   <button
                     type="button"
-                    disabled={cerrandoCaja}
-                    onClick={() => setConfirmandoCierre(false)}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                    onClick={handleCerrarModalCierre}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer"
                   >
-                    Volver
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm cursor-pointer"
+                  >
+                    Continuar al Resumen
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-6">
+                <div className="space-y-3 bg-zinc-950 p-4 rounded-xl border border-zinc-800 text-sm font-mono">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Efectivo Esperado:</span>
+                    <span>${efectivoEsperado.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Efectivo Contado:</span>
+                    <span>${Number(efectivoRealContado).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className={`flex justify-between font-bold pt-2 border-t border-zinc-800 ${diferenciaEfectivo < 0 ? 'text-rose-400' : diferenciaEfectivo > 0 ? 'text-emerald-400' : 'text-zinc-300'}`}>
+                    <span>Diferencia:</span>
+                    <span>${diferenciaEfectivo.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+
+                <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-300 leading-relaxed">
+                    Estás a punto de cerrar el turno de caja definitivamente. Esta acción registrará el arqueo y no se podrán agregar más ventas a este turno.
+                  </p>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoCierre(false)}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer"
+                  >
+                    Atrás
                   </button>
                   <button
                     type="button"
                     disabled={cerrandoCaja}
                     onClick={handleCerrarCajaSubmit}
-                    className="bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800 text-white px-5 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-rose-900/20"
+                    className="bg-rose-600 hover:bg-rose-500 text-white font-semibold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    {cerrandoCaja ? 'Cerrando...' : 'Sí, Cerrar Caja Definitivamente'}
+                    {cerrandoCaja && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Confirmar y Cerrar Caja
                   </button>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
+// Componentes auxiliares limpios para estadísticas
+function StatCard({ title, value, icon: Icon, color }) {
+  return (
+    <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm flex items-center justify-between">
+      <div>
+        <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">{title}</span>
+        <p className={`text-2xl font-extrabold font-mono mt-1 ${color}`}>
+          ${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+      </div>
+      <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center border border-zinc-700">
+        <Icon className={`w-6 h-6 ${color}`} />
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, color, negative }) {
+  const formattedValue = (value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 });
+  return (
+    <div>
+      <span className="block text-xs text-zinc-500 uppercase">{label}</span>
+      <span className={`text-base font-bold ${color}`}>
+        {negative && value > 0 ? `- $${formattedValue}` : `$${formattedValue}`}
+      </span>
     </div>
   );
 }
