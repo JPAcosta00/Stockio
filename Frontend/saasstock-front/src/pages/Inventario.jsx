@@ -33,6 +33,8 @@ export default function Inventario() {
   const [paginaActual, setPaginaActual] = useState(1);
   const productosPorPagina = 15;
 
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
+
   // Estados del Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('view');
@@ -101,16 +103,21 @@ export default function Inventario() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`¿Estás seguro de que querés eliminar el producto "${name}"?`)) {
-      try {
-        await apiClient.delete(`/products/${id}`);
-        showAlert(`Producto "${name}" eliminado con éxito`, "success");
-        cargarInventario();
-      } catch (error) {
-        console.error("Error al eliminar:", error);
-        showAlert("No se pudo eliminar el producto", "error");
-      }
+  const handleDelete = (id, name) => {
+    setProductoAEliminar({ id, name });
+  };
+  
+  const confirmarEliminacion = async () => {
+    if (!productoAEliminar) return;
+    try {
+      await apiClient.delete(`/products/${productoAEliminar.id}`);
+      showAlert(`Producto "${productoAEliminar.name}" eliminado con éxito`, "success");
+      cargarInventario();
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      showAlert("No se pudo eliminar el producto", "error");
+    } finally {
+      setProductoAEliminar(null);
     }
   };
 
