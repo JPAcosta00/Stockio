@@ -1,30 +1,32 @@
 import { useState, useEffect } from 'react';
 import { exportarAExcel, exportarAPDF, importarArchivoExcel } from '../utils/excelPdfUtils';
-import { useAlert } from '../context/AlertContext'; // Importado
 import apiClient from '../api/apiClient';
 import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
-import { 
-  Package, 
-  Search, 
-  FileSpreadsheet, 
-  FileText, 
-  Upload, 
-  Loader2, 
-  Plus 
+import { useAlert } from '../context/AlertContext'; // <-- Importamos tu hook de alertas
+import {
+  Package,
+  Search,
+  FileSpreadsheet,
+  FileText,
+  Upload,
+  AlertTriangle,
+  Loader2,
+  Plus
 } from 'lucide-react';
 
 export default function Inventario() {
-  const { showAlert, showConfirm } = useAlert(); // Hook para alertas y confirmaciones
+  const { showAlert } = useAlert(); // <-- Inicializamos la función showAlert
+
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Estados de los inputs de filtro 
+ 
+  // Estados de los inputs de filtro
   const [filtroNombre, setFiltroNombre] = useState('');
-  const [filtroPeriodo, setFiltroPeriodo] = useState(''); 
+  const [filtroPeriodo, setFiltroPeriodo] = useState('');
 
   const [filtrosActivos, setFiltrosActivos] = useState({ Name: '', Period: '' });
-  
+ 
   const [cargandoImportacion, setCargandoImportacion] = useState(false);
 
   // para limitar la cantidad de productos
@@ -46,6 +48,7 @@ export default function Inventario() {
       setProductos(response.data);
     } catch (error) {
       console.error("Error al cargar el inventario:", error);
+      showAlert("Error al cargar el inventario.", "error");
     } finally {
       setLoading(false);
     }
@@ -63,7 +66,7 @@ export default function Inventario() {
       setPaginaActual(1);
 
       const esStockCritico = filtroPeriodo === 'critico';
-      
+     
       const nuevosFiltros = {
         Name: filtroNombre.trim(),
         Period: esStockCritico ? '' : filtroPeriodo,
@@ -98,19 +101,17 @@ export default function Inventario() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id, name) => {
-    showConfirm(
-      `¿Estás seguro de que querés eliminar el producto "${name}"?`,
-      async () => {
-        try {
-          await apiClient.delete(`/products/${id}`);
-          showAlert("Producto eliminado con éxito", "success");
-          cargarInventario();
-        } catch (error) {
-          showAlert("No se pudo eliminar el producto", "error");
-        }
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`¿Estás seguro de que querés eliminar el producto "${name}"?`)) {
+      try {
+        await apiClient.delete(`/products/${id}`);
+        showAlert(`Producto "${name}" eliminado con éxito`, "success");
+        cargarInventario();
+      } catch (error) {
+        console.error("Error al eliminar:", error);
+        showAlert("No se pudo eliminar el producto", "error");
       }
-    );
+    }
   };
 
   const handleSaveSubmit = async (e) => {
@@ -118,14 +119,15 @@ export default function Inventario() {
     try {
       if (modalMode === 'create') {
         await apiClient.post('/products', formData);
-        showAlert("Producto creado con éxito", "success");
+        showAlert("Producto creado correctamente", "success");
       } else if (modalMode === 'edit') {
         await apiClient.put(`/products/${formData.id}`, formData);
-        showAlert("Producto actualizado con éxito", "success");
+        showAlert("Producto actualizado correctamente", "success");
       }
       setIsModalOpen(false);
       cargarInventario();
     } catch (error) {
+      console.error("Error al guardar:", error);
       showAlert("Hubo un error al procesar la solicitud.", "error");
     }
   };
@@ -139,22 +141,23 @@ export default function Inventario() {
       showAlert(resultado.message || "Archivo importado con éxito", "success");
       cargarInventario();
     } catch (error) {
+      console.error("Error al importar:", error);
       showAlert(error.response?.data || "Error inesperado al subir.", "error");
     } finally {
       setCargandoImportacion(false);
-      e.target.value = ''; 
+      e.target.value = '';
     }
   };
 
-  // Cálculo de índices para paginación
+  // Cálculo de los índices
   const ultimoIndice = paginaActual * productosPorPagina;
   const primerIndice = ultimoIndice - productosPorPagina;
   const productosPaginados = productos.slice(primerIndice, ultimoIndice);
   const totalPaginas = Math.ceil(productos.length / productosPorPagina);
 
   return (
-    <div className="space-y-6 px-2 sm:px-0">
-      
+    <div className="space-y-6">
+     
       {/* ENCABEZADO */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
@@ -166,10 +169,10 @@ export default function Inventario() {
             <p className="text-xs text-zinc-400 mt-0.5">Gestión integral del catálogo de mercadería.</p>
           </div>
         </div>
-        
-        <button 
-          onClick={handleOpenCreate} 
-          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center justify-center gap-2 self-stretch sm:self-auto cursor-pointer"
+       
+        <button
+          onClick={handleOpenCreate}
+          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Producto</span>
@@ -179,32 +182,32 @@ export default function Inventario() {
       {/* SECCIÓN DE FILTROS Y BÚSQUEDA */}
       <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row items-end gap-4">
-          
+         
           <div className="flex-1 w-full">
             <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Buscar por Nombre</label>
             <div className="relative">
               <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input 
-                type="text" 
-                placeholder="Ej: Amortiguador..." 
-                value={filtroNombre} 
-                onChange={(e) => setFiltroNombre(e.target.value)} 
+              <input
+                type="text"
+                placeholder="Ej: Amortiguador..."
+                value={filtroNombre}
+                onChange={(e) => setFiltroNombre(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       handleBuscar();
                     }
                 }}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors" 
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors"
               />
             </div>
           </div>
-          
+         
           <div className="w-full md:w-56">
             <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Filtrar Período</label>
-            <select 
-              value={filtroPeriodo} 
-              onChange={(e) => setFiltroPeriodo(e.target.value)} 
-              className="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] cursor-pointer transition-colors" 
+            <select
+              value={filtroPeriodo}
+              onChange={(e) => setFiltroPeriodo(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] cursor-pointer transition-colors"
             >
               <option value="">Todos los registros</option>
               <option value="critico">⚠️ Stock Crítico</option>
@@ -215,7 +218,7 @@ export default function Inventario() {
             </select>
           </div>
 
-          <button 
+          <button
             onClick={handleBuscar}
             className="w-full md:w-auto bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-6 py-2.5 rounded-xl text-xs transition-colors border border-zinc-700 cursor-pointer shadow-sm"
           >
@@ -226,26 +229,26 @@ export default function Inventario() {
         {/* ACCIONES EXPORT / IMPORT & RESET */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
           <div className="flex flex-wrap items-center gap-2">
-            
+           
             <label className={`cursor-pointer bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}>
               <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
               <span>{cargandoImportacion ? 'Procesando...' : 'Importar Excel'}</span>
               <input type="file" accept=".xlsx, .xls" onChange={manejarImportacion} className="hidden" disabled={cargandoImportacion} />
             </label>
-            
+           
             <button onClick={() => exportarAExcel({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
               <FileSpreadsheet className="w-3.5 h-3.5 text-[#5BA535]" />
-              <span>Exportar Excel</span>
+              <span>Exportar Excel (Vista)</span>
             </button>
-            
+           
             <button onClick={() => exportarAPDF({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
               <FileText className="w-3.5 h-3.5 text-red-400" />
-              <span>Exportar PDF</span>
+              <span>Exportar PDF (Vista)</span>
             </button>
           </div>
 
           {(filtroNombre || filtroPeriodo) && (
-            <button 
+            <button
               onClick={() => {
                 setFiltroNombre('');
                 setFiltroPeriodo('');
@@ -267,15 +270,13 @@ export default function Inventario() {
         </div>
       ) : (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
-          </div>
+          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
         </div>
       )}
 
       {/* MODAL MODULAR */}
       <ProductModal isOpen={isModalOpen} mode={modalMode} formData={formData} setFormData={setFormData} onClose={() => setIsModalOpen(false)} onSubmit={handleSaveSubmit} />
-      
+     
       {/* CONTROLES DE PAGINACIÓN */}
       {totalPaginas > 1 && (
         <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 px-4 py-3 sm:px-6 rounded-2xl shadow-sm">
@@ -295,7 +296,7 @@ export default function Inventario() {
               Siguiente
             </button>
           </div>
-    
+   
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
               <p className="text-xs text-zinc-400">
@@ -306,7 +307,7 @@ export default function Inventario() {
                 de <span className="font-semibold text-zinc-200">{productos.length}</span> productos
               </p>
             </div>
-      
+     
             <div>
               <nav className="isolate inline-flex -space-x-px rounded-xl shadow-sm overflow-hidden border border-zinc-800" aria-label="Pagination">
                 <button
@@ -349,6 +350,7 @@ export default function Inventario() {
           </div>
         </div>
       )}
+     
     </div>
   );
 }
