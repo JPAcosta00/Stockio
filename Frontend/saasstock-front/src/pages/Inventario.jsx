@@ -106,7 +106,7 @@ export default function Inventario() {
   const handleDelete = (id, name) => {
     setProductoAEliminar({ id, name });
   };
-  
+
   const confirmarEliminacion = async () => {
     if (!productoAEliminar) return;
     try {
@@ -253,6 +253,32 @@ export default function Inventario() {
               <span>Exportar PDF (Vista)</span>
             </button>
           </div>
+
+          {/* SECCIÓN MODAL DE CONFIRMACIÓN (NUEVO) */}
+          {productoAEliminar && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+                <h3 className="text-sm font-bold text-white">Confirmar eliminación</h3>
+                <p className="text-xs text-zinc-400">
+                  ¿Estás seguro de que querés eliminar el producto <span className="text-zinc-200 font-semibold">"{productoAEliminar.name}"</span>?
+                </p>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    onClick={() => setProductoAEliminar(null)}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmarEliminacion}
+                    className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Sí, eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {(filtroNombre || filtroPeriodo) && (
             <button
