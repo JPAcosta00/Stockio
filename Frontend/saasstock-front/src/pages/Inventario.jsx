@@ -3,6 +3,16 @@ import { exportarAExcel, exportarAPDF, importarArchivoExcel } from '../utils/exc
 import apiClient from '../api/apiClient';
 import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
+import { 
+  Package, 
+  Search, 
+  FileSpreadsheet, 
+  FileText, 
+  Upload, 
+  AlertTriangle, 
+  Loader2, 
+  Plus 
+} from 'lucide-react';
 
 export default function Inventario() {
   const [productos, setProductos] = useState([]);
@@ -145,98 +155,123 @@ export default function Inventario() {
 
   return (
     <div className="space-y-6">
+      
       {/* ENCABEZADO */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Control de Stock</h1>
-          <p className="text-zinc-400 mt-2">Gestión integral del catálogo de mercadería.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
+            <Package className="w-6 h-6 text-[#5BA535]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Control de Stock</h1>
+            <p className="text-xs text-zinc-400 mt-0.5">Gestión integral del catálogo de mercadería.</p>
+          </div>
         </div>
-        <button onClick={handleOpenCreate} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg font-medium text-sm shadow-lg transition-colors">
-          + Nuevo Producto
+        
+        <button 
+          onClick={handleOpenCreate} 
+          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Nuevo Producto</span>
         </button>
       </div>
 
       {/* SECCIÓN DE FILTROS Y BÚSQUEDA */}
-      <div className="flex flex-col md:flex-row items-end gap-4 bg-zinc-900/40 p-5 rounded-xl border border-zinc-800/60">
-        <div className="flex-1 w-full">
-          <label className="block text-xs text-zinc-400 mb-1 font-medium">Buscar por Nombre</label>
-          <input 
-            type="text" 
-            placeholder="Ej: Amortiguador..." 
-            value={filtroNombre} 
-            onChange={(e) => setFiltroNombre(e.target.value)} 
-            onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleBuscar();
-                }
-            }}
-            className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder-zinc-600" 
-          />
-        </div>
-        
-        <div className="w-full md:w-48">
-          <label className="block text-xs text-zinc-400 mb-1 font-medium">Filtrar Período</label>
-          <select 
-            value={filtroPeriodo} 
-            onChange={(e) => setFiltroPeriodo(e.target.value)} 
-            className="w-full p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-sm text-white focus:outline-none focus:border-emerald-500 cursor-pointer" 
-          >
-            <option value="">Todos los registros</option>
-            <option value="critico">⚠️ Stock Crítico</option>
-            <option value="hoy">Hoy</option>
-            <option value="semana">Esta Semana</option>
-            <option value="mes">Este Mes</option>
-            <option value="anio">Este Año</option>
-          </select>
-        </div>
-
-        {/* BOTÓN BUSCAR */}
-        <button 
-          onClick={handleBuscar}
-          className="w-full md:w-auto bg-zinc-100 hover:bg-white text-zinc-950 font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors shadow-md"
-        >
-           Buscar
-        </button>
-      </div>
-
-      {/* ACCIONES EXPORT / IMPORT (Exporta los productos de todo el inventario) */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <label className={`cursor-pointer bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}>
-            {cargandoImportacion ? '⏳ Procesando...' : '📊 Importar Excel'}
-            <input type="file" accept=".xlsx, .xls" onChange={manejarImportacion} className="hidden" disabled={cargandoImportacion} />
-          </label>
+      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row items-end gap-4">
           
-          {/* exporta lo que se ve en la grilla */}
-          <button onClick={() => exportarAExcel({})} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-            🟢 Exportar Excel (Vista)
-          </button>
+          <div className="flex-1 w-full">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Buscar por Nombre</label>
+            <div className="relative">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input 
+                type="text" 
+                placeholder="Ej: Amortiguador..." 
+                value={filtroNombre} 
+                onChange={(e) => setFiltroNombre(e.target.value)} 
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleBuscar();
+                    }
+                }}
+                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors" 
+              />
+            </div>
+          </div>
           
-          <button onClick={() => exportarAPDF({})} className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-4 py-2 rounded-lg text-sm font-semibold transition-colors">
-            🛑 Exportar PDF (Vista)
-          </button>
-        </div>
+          <div className="w-full md:w-56">
+            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Filtrar Período</label>
+            <select 
+              value={filtroPeriodo} 
+              onChange={(e) => setFiltroPeriodo(e.target.value)} 
+              className="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] cursor-pointer transition-colors" 
+            >
+              <option value="">Todos los registros</option>
+              <option value="critico">⚠️ Stock Crítico</option>
+              <option value="hoy">Hoy</option>
+              <option value="semana">Esta Semana</option>
+              <option value="mes">Este Mes</option>
+              <option value="anio">Este Año</option>
+            </select>
+          </div>
 
-        {/* Botón rápido para restablecer la vista */}
-        {(filtroNombre || filtroPeriodo) && (
+          {/* BOTÓN BUSCAR */}
           <button 
-            onClick={() => {
-              setFiltroNombre('');
-              setFiltroPeriodo('');
-              cargarInventario();
-            }}
-            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            onClick={handleBuscar}
+            className="w-full md:w-auto bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-6 py-2.5 rounded-xl text-xs transition-colors border border-zinc-700 cursor-pointer shadow-sm"
           >
-            Limpiar filtros ×
+            Buscar
           </button>
-        )}
+        </div>
+
+        {/* ACCIONES EXPORT / IMPORT & RESET */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
+          <div className="flex flex-wrap items-center gap-2">
+            
+            <label className={`cursor-pointer bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}>
+              <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
+              <span>{cargandoImportacion ? 'Procesando...' : 'Importar Excel'}</span>
+              <input type="file" accept=".xlsx, .xls" onChange={manejarImportacion} className="hidden" disabled={cargandoImportacion} />
+            </label>
+            
+            <button onClick={() => exportarAExcel({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-[#5BA535]" />
+              <span>Exportar Excel (Vista)</span>
+            </button>
+            
+            <button onClick={() => exportarAPDF({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
+              <FileText className="w-3.5 h-3.5 text-red-400" />
+              <span>Exportar PDF (Vista)</span>
+            </button>
+          </div>
+
+          {/* Botón rápido para restablecer la vista */}
+          {(filtroNombre || filtroPeriodo) && (
+            <button 
+              onClick={() => {
+                setFiltroNombre('');
+                setFiltroPeriodo('');
+                cargarInventario();
+              }}
+              className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer font-medium"
+            >
+              Limpiar filtros ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* TABLA MODULAR */}
       {loading ? (
-        <p className="text-zinc-400 font-medium py-10 text-center">Procesando consulta...</p>
+        <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+          <Loader2 className="w-8 h-8 animate-spin text-[#5BA535] mb-3" />
+          <p className="text-xs font-medium text-zinc-400">Procesando consulta...</p>
+        </div>
       ) : (
-        <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
+          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
+        </div>
       )}
 
       {/* MODAL MODULAR */}
@@ -244,27 +279,27 @@ export default function Inventario() {
       
       {/* CONTROLES DE PAGINACIÓN */}
       {totalPaginas > 1 && (
-        <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-4 sm:px-6 mt-4">
+        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 px-4 py-3 sm:px-6 rounded-2xl shadow-sm">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
               disabled={paginaActual === 1}
-              className="relative inline-flex items-center rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+              className="relative inline-flex items-center rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
             >
-             Anterior
+              Anterior
             </button>
             <button
               onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
               disabled={paginaActual === totalPaginas}
-              className="relative ml-3 inline-flex items-center rounded-md border border-zinc-800 bg-zinc-900 px-4 py-2 text-sm font-medium text-zinc-400 hover:bg-zinc-800 disabled:opacity-50 transition-colors"
+              className="relative ml-3 inline-flex items-center rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
             >
-            Siguiente
+              Siguiente
             </button>
           </div>
     
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-zinc-400">
+              <p className="text-xs text-zinc-400">
                 Mostrando <span className="font-semibold text-zinc-200">{primerIndice + 1}</span> a{' '}
                 <span className="font-semibold text-zinc-200">
                   {Math.min(ultimoIndice, productos.length)}
@@ -274,13 +309,13 @@ export default function Inventario() {
             </div>
       
             <div>
-              <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <nav className="isolate inline-flex -space-x-px rounded-xl shadow-sm overflow-hidden border border-zinc-800" aria-label="Pagination">
                 {/* Botón Anterior */}
                 <button
                   onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
                   disabled={paginaActual === 1}
-                  className="relative inline-flex items-center rounded-l-md px-3 py-2 text-zinc-400 ring-1 ring-inset ring-zinc-800 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                  >
+                  className="relative inline-flex items-center px-3 py-2 bg-zinc-950 text-zinc-400 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                >
                   <span className="sr-only">Anterior</span>
                   ‹
                 </button>
@@ -293,10 +328,10 @@ export default function Inventario() {
                     <button
                       key={numeroPagina}
                       onClick={() => setPaginaActual(numeroPagina)}
-                      className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 transition-colors ${
+                      className={`relative inline-flex items-center px-3.5 py-2 text-xs font-semibold focus:z-20 transition-colors cursor-pointer ${
                         esActiva
-                          ? 'z-10 bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/30'
-                          : 'text-zinc-400 ring-1 ring-inset ring-zinc-800 hover:bg-zinc-800'
+                          ? 'z-10 bg-[#5BA535] text-white font-bold'
+                          : 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-l border-zinc-800'
                       }`}
                     >
                       {numeroPagina}
@@ -308,8 +343,8 @@ export default function Inventario() {
                 <button
                   onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
                   disabled={paginaActual === totalPaginas}
-                  className="relative inline-flex items-center rounded-r-md px-3 py-2 text-zinc-400 ring-1 ring-inset ring-zinc-800 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                  >
+                  className="relative inline-flex items-center px-3 py-2 bg-zinc-950 text-zinc-400 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors border-l border-zinc-800 cursor-pointer"
+                >
                   <span className="sr-only">Siguiente</span>
                   ›
                 </button>

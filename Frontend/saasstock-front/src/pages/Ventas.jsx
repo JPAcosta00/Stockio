@@ -2,6 +2,21 @@ import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
 import CobroModal from '../components/CobroModal';
+import { 
+  ShoppingCart, 
+  Search, 
+  Barcode, 
+  Trash2, 
+  CreditCard, 
+  Clock, 
+  FileText, 
+  CheckCircle2, 
+  Loader2, 
+  Plus, 
+  Minus,
+  Eye,
+  Calendar
+} from 'lucide-react';
 
 // HELPER: Genera o recupera un ID único para la pestaña/sesión actual del navegador
 const getCartStorageKey = () => {
@@ -27,6 +42,7 @@ const getCartStorageKey = () => {
     return `carrito_guest_${Date.now()}`;
   }
 };
+
 export default function Ventas() {
   // Clave dinámica aislada por usuario/tenant
   const cartKey = getCartStorageKey();
@@ -304,39 +320,51 @@ export default function Ventas() {
   });
 
   return (
-    <div className="p-6 bg-zinc-950 text-zinc-100 min-h-screen space-y-6">
+    <div className="space-y-6">
+      
       {/* CABECERA */}
-      <div>
-        <h1 className="text-xl font-bold tracking-tight text-zinc-100">Terminal de Ventas</h1>
-        <p className="text-xs text-zinc-400">Punto de venta y registro de operaciones en tiempo real.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
+            <ShoppingCart className="w-6 h-6 text-[#5BA535]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Terminal de Ventas</h1>
+            <p className="text-xs text-zinc-400 mt-0.5">Punto de venta y registro de operaciones en tiempo real.</p>
+          </div>
+        </div>
       </div>
 
       {/* BLOQUE SUPERIOR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
         {/* INGRESO MANUAL / ESCANER CON AUTOCOMPLETE */}
-        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-xl h-fit space-y-3 relative" ref={dropdownRef}>
-          <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Ingreso de Artículo</h2>
+        <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl h-fit space-y-4 relative shadow-sm" ref={dropdownRef}>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Ingreso de Artículo</h2>
 
           <form onSubmit={handleBarcodeSubmit} className="space-y-3">
             <div className="relative">
-              <label className="block text-xs text-zinc-400 font-medium mb-1">
+              <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">
                 Código de Barras o Nombre:
               </label>
               <div className="flex gap-2">
-                <input
-                  ref={barcodeRef}
-                  type="text"
-                  placeholder="Escaneá o buscá un producto..."
-                  value={barcodeInput}
-                  onChange={(e) => setBarcodeInput(e.target.value)}
-                  onFocus={() => sugerencias.length > 0 && setMostrarDropdown(true)}
-                  disabled={enviando || buscandoProducto}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-100 placeholder-zinc-700 focus:outline-none focus:border-emerald-500 font-mono tracking-wider"
-                />
+                <div className="relative flex-1">
+                  <Barcode className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    ref={barcodeRef}
+                    type="text"
+                    placeholder="Escaneá o buscá..."
+                    value={barcodeInput}
+                    onChange={(e) => setBarcodeInput(e.target.value)}
+                    onFocus={() => sugerencias.length > 0 && setMostrarDropdown(true)}
+                    disabled={enviando || buscandoProducto}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-[#5BA535] font-mono tracking-wider transition-colors"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={!barcodeInput.trim() || buscandoProducto || enviando}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 rounded-lg text-xs font-semibold transition-colors disabled:opacity-30"
+                  className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-30 cursor-pointer shadow-sm"
                 >
                   {buscandoProducto ? '...' : 'Añadir'}
                 </button>
@@ -344,9 +372,12 @@ export default function Ventas() {
 
               {/* SUGERENCIAS */}
               {mostrarDropdown && (
-                <div className="absolute left-0 right-0 top-full mt-1 bg-zinc-900 border border-zinc-700 rounded-lg shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-zinc-800">
+                <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-zinc-800">
                   {buscandoSugerencias ? (
-                    <div className="p-3 text-xs text-zinc-500 text-center">Buscando productos...</div>
+                    <div className="p-3 text-xs text-zinc-400 text-center flex items-center justify-center gap-2">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5BA535]" />
+                      <span>Buscando productos...</span>
+                    </div>
                   ) : sugerencias.length === 0 ? (
                     <div className="p-3 text-xs text-zinc-500 text-center">Sin coincidencias.</div>
                   ) : (
@@ -355,15 +386,15 @@ export default function Ventas() {
                         key={prod.id}
                         type="button"
                         onClick={() => agregarProductoAlCarrito(prod)}
-                        className="w-full text-left p-2.5 hover:bg-zinc-800 flex justify-between items-center transition-colors group"
+                        className="w-full text-left p-3 hover:bg-zinc-800/80 flex justify-between items-center transition-colors group cursor-pointer"
                       >
                         <div>
-                          <p className="text-xs font-medium text-zinc-200 group-hover:text-emerald-400">{prod.name}</p>
+                          <p className="text-xs font-medium text-zinc-200 group-hover:text-[#5BA535]">{prod.name}</p>
                           <p className="text-[10px] text-zinc-500 font-mono">{prod.barcode || 'Sin código'}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-mono font-bold text-zinc-300">${prod.price?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-                          <span className={`text-[9px] ${prod.stock > 0 ? 'text-zinc-400' : 'text-red-400'}`}>
+                          <p className="text-xs font-mono font-bold text-zinc-200">${prod.price?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                          <span className={`text-[10px] font-medium ${prod.stock > 0 ? 'text-zinc-400' : 'text-red-400'}`}>
                             Stock: {prod.stock}
                           </span>
                         </div>
@@ -373,47 +404,49 @@ export default function Ventas() {
                 </div>
               )}
             </div>
-            <p className="text-[10px] text-zinc-500 italic">
+            <p className="text-[11px] text-zinc-500 italic">
               💡 Podés escanear con la lectora o escribir para buscar por nombre.
             </p>
           </form>
         </div>
 
         {/* DETALLE DEL CARRITO */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-5 rounded-xl flex flex-col justify-between min-h-[260px]">
+        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-5 rounded-2xl flex flex-col justify-between shadow-sm min-h-[280px]">
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">Mostrador Actual</h2>
+              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Mostrador Actual</h2>
               {carrito.length > 0 && (
                 <button
                   type="button"
                   onClick={limpiarMostrador}
-                  className="text-xs bg-red-950/40 border border-red-800/50 hover:bg-red-900/60 text-red-300 font-medium py-1 px-3 rounded-lg flex items-center gap-1.5 transition-all duration-200"
+                  className="text-xs bg-red-950/40 border border-red-900/50 hover:bg-red-900/60 text-red-300 font-medium py-1 px-3 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer"
                 >
-                  🗑️ Vaciar
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Vaciar</span>
                 </button>
               )}
             </div>
 
             {carrito.length === 0 ? (
-              <div className="text-center py-12 text-zinc-600 text-xs">
-                Mostrador vacío.
+              <div className="text-center py-12 text-zinc-600 text-xs flex flex-col items-center justify-center">
+                <ShoppingCart className="w-8 h-8 text-zinc-700 mb-2" />
+                <span>Mostrador vacío.</span>
               </div>
             ) : (
               <div className="overflow-x-auto max-h-60 overflow-y-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="border-b border-zinc-800 text-zinc-500 font-semibold uppercase">
-                      <th className="pb-2">Detalle</th>
-                      <th className="pb-2 text-center">Cant.</th>
-                      <th className="pb-2 text-right">Unitario</th>
-                      <th className="pb-2 text-right">Subtotal</th>
-                      <th className="pb-2"></th>
+                    <tr className="border-b border-zinc-800 text-zinc-500 font-semibold uppercase text-[10px]">
+                      <th className="pb-2.5">Detalle</th>
+                      <th className="pb-2.5 text-center">Cant.</th>
+                      <th className="pb-2.5 text-right">Unitario</th>
+                      <th className="pb-2.5 text-right">Subtotal</th>
+                      <th className="pb-2.5"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/40">
                     {carrito.map((item) => (
-                      <tr key={item.productId} className="hover:bg-zinc-950/20">
+                      <tr key={item.productId} className="hover:bg-zinc-950/30 transition-colors">
                         <td className="py-2.5 font-medium text-zinc-300">
                           {item.name} <span className="block text-[10px] text-zinc-500 font-mono">{item.barcode}</span>
                         </td>
@@ -422,17 +455,17 @@ export default function Ventas() {
                             type="number"
                             value={item.quantity}
                             onChange={(e) => modificarCantidad(item.productId, parseInt(e.target.value) || 0)}
-                            className="w-12 text-center bg-zinc-950 border border-zinc-800 rounded p-1 font-mono text-xs text-zinc-200 focus:outline-none focus:border-emerald-500"
+                            className="w-14 text-center bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-[#5BA535]"
                           />
                         </td>
-                        <td className="py-2.5 text-right font-mono">${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
-                        <td className="py-2.5 text-right font-mono">${(item.quantity * item.unitPrice).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td className="py-2.5 text-right font-mono text-zinc-300">${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td className="py-2.5 text-right font-mono text-zinc-200 font-semibold">${(item.quantity * item.unitPrice).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                         <td className="py-2.5 text-center">
                           <button
                             onClick={() => quitarDelCarrito(item.productId)}
-                            className="text-red-400 hover:text-red-300 px-2 text-sm"
+                            className="text-red-400 hover:text-red-300 p-1.5 transition-colors cursor-pointer"
                           >
-                            ×
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
                       </tr>
@@ -446,8 +479,8 @@ export default function Ventas() {
           {/* TOTALES */}
           <div className="mt-4 border-t border-zinc-800 pt-4 space-y-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-xs font-semibold text-zinc-400">TOTAL FACTURADO:</span>
-              <span className="text-lg font-mono font-bold text-emerald-400">
+              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Facturado:</span>
+              <span className="text-lg font-mono font-bold text-[#5BA535]">
                 ${totalVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -455,21 +488,25 @@ export default function Ventas() {
             <button
               onClick={() => setMostrarModalCobro(true)}
               disabled={carrito.length === 0 || enviando}
-              className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-950 font-bold py-2.5 rounded-lg text-xs transition-colors disabled:opacity-20"
+              className="w-full bg-[#5BA535] hover:bg-[#4b8c2c] text-white font-semibold py-2.5 rounded-xl text-xs transition-colors disabled:opacity-30 cursor-pointer shadow-sm flex items-center justify-center gap-2"
             >
-              {enviando ? '⏳ Guardando Venta...' : '⚡ Confirmar Registro'}
+              <CreditCard className="w-4 h-4" />
+              <span>{enviando ? 'Guardando Venta...' : 'Confirmar Registro'}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* HISTORIAL DE VENTAS */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-4 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
-          <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">📋 Registro Histórico de Ventas</h2>
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-[#5BA535]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Registro Histórico de Ventas</h2>
+          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-lg">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-xl">
               {[
                 { id: 'todos', label: 'Todos' },
                 { id: 'hoy', label: 'Hoy' },
@@ -479,9 +516,9 @@ export default function Ventas() {
                 <button
                   key={item.id}
                   onClick={() => setFiltroTiempo(item.id)}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
                     filtroTiempo === item.id
-                      ? 'bg-zinc-800 text-emerald-400 font-semibold shadow-sm'
+                      ? 'bg-[#5BA535] text-white font-semibold shadow-sm'
                       : 'text-zinc-400 hover:text-zinc-200'
                   }`}
                 >
@@ -490,23 +527,26 @@ export default function Ventas() {
               ))}
             </div>
 
-            <div className="relative w-full sm:w-56">
-              <span className="absolute left-3 top-2 text-zinc-500 text-xs">🔍</span>
+            <div className="relative w-full sm:w-60">
+              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Buscar por ID o Código..."
                 value={busquedaHistorial}
                 onChange={(e) => setBusquedaHistorial(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#5BA535] font-mono transition-colors"
               />
             </div>
           </div>
         </div>
 
         {loadingHistorial ? (
-          <p className="text-center py-6 text-zinc-500 text-xs">Cargando historial...</p>
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-[#5BA535] mb-2" />
+            <p className="text-xs text-zinc-400">Cargando historial...</p>
+          </div>
         ) : historialFiltrado.length === 0 ? (
-          <div className="text-center py-8 text-zinc-600 text-xs">
+          <div className="text-center py-12 text-zinc-600 text-xs">
             {busquedaHistorial || filtroTiempo !== 'todos'
               ? 'No se encontraron ventas para los filtros seleccionados.'
               : 'No se registran transacciones previas.'}
@@ -515,7 +555,7 @@ export default function Ventas() {
           <div className="overflow-x-auto max-h-72 overflow-y-auto">
             <table className="w-full text-left text-xs divide-y divide-zinc-800">
               <thead>
-                <tr className="text-zinc-500 font-semibold uppercase">
+                <tr className="text-zinc-500 font-semibold uppercase text-[10px]">
                   <th className="pb-3">ID de venta</th>
                   <th className="pb-3">Fecha y Hora</th>
                   <th className="pb-3 text-right">Monto Total</th>
@@ -529,7 +569,7 @@ export default function Ventas() {
                     onClick={() => abrirDetalleVenta(v)}
                     className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3 font-mono text-emerald-500 text-[11px] group-hover:underline">
+                    <td className="py-3 font-mono text-[#5BA535] text-[11px] group-hover:underline font-semibold">
                       #{v.id}
                     </td>
                     <td className="py-3 text-zinc-300">
@@ -542,11 +582,12 @@ export default function Ventas() {
                       })}{' '}
                       hs.
                     </td>
-                    <td className="py-3 text-right font-mono text-zinc-100 font-bold text-sm">
+                    <td className="py-3 text-right font-mono text-zinc-100 font-bold text-xs">
                       ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3 text-center text-xs text-zinc-500 group-hover:text-zinc-300">
-                      🔍 Ver Detalle
+                    <td className="py-3 text-center text-xs text-zinc-400 group-hover:text-white flex items-center justify-center gap-1.5">
+                      <Eye className="w-3.5 h-3.5 text-[#5BA535]" />
+                      <span>Ver Detalle</span>
                     </td>
                   </tr>
                 ))}
