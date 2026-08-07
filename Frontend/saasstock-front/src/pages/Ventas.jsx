@@ -16,7 +16,7 @@ import {
   X
 } from 'lucide-react';
 
-// HELPER: Genera o recupera un ID único para la pestaña/sesión actual del navegador
+// Genera o recupera un ID único para la pestaña/sesión actual del navegador
 const getCartStorageKey = () => {
   try {
     const token = localStorage.getItem('token');
@@ -362,7 +362,7 @@ export default function Ventas() {
             <ShoppingCart className="w-6 h-6 text-[#5BA535]" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Terminal de Ventas</h1>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">Terminal de Ventas</h1>
             <p className="text-xs text-zinc-400 mt-0.5">Punto de venta y registro de operaciones en tiempo real.</p>
           </div>
         </div>
@@ -551,12 +551,12 @@ export default function Ventas() {
         </div>
       </div>
 
-      {/* HISTORIAL DE VENTAS */}
+      {/* HISTORIAL DE VENTAS (se puede refactorizar)*/} 
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
           <div className="flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#5BA535]" />
-            <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Registro Histórico de Ventas</h2>
+            <h2 className="text-xs font-bold uppercase tracking-tight text-zinc-300">Registro Histórico de Ventas</h2>
           </div>
 
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
