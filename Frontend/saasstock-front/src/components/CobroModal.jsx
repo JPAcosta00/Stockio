@@ -40,19 +40,19 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-white border border-emerald-100 rounded-2xl w-full max-w-md shadow-2xl shadow-emerald-950/10 overflow-hidden flex flex-col">
         
         {/* Cabecera */}
-        <div className="p-5 border-b border-zinc-800 flex justify-between items-center">
+        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
           <div>
-            <h3 className="text-base font-bold text-zinc-100 uppercase tracking-wider">Calculadora de Cobro</h3>
-            <p className="text-xs text-zinc-400">Seleccioná medio de pago y calculá el vuelto</p>
+            <h3 className="text-base font-extrabold text-slate-800 uppercase tracking-wider">Calculadora de Cobro</h3>
+            <p className="text-xs text-slate-500 font-medium">Seleccioná medio de pago y calculá el vuelto</p>
           </div>
           <button
             onClick={onClose}
             disabled={enviando}
-            className="text-zinc-500 hover:text-zinc-300 text-lg p-1 rounded-lg transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-emerald-50 text-slate-500 hover:text-[#1C562A] flex items-center justify-center transition-colors font-bold disabled:opacity-50"
           >
             ✕
           </button>
@@ -61,16 +61,16 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
           
           {/* Tarjeta de Total */}
-          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-center space-y-1">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total a Cobrar</span>
-            <p className="text-3xl font-mono font-black text-emerald-400">
+          <div className="bg-slate-50 border border-emerald-100 rounded-2xl p-4 text-center space-y-1">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total a Cobrar</span>
+            <p className="text-3xl font-mono font-black text-[#1C562A]">
               ${totalVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           {/* Selector de Medio de Pago */}
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-2">Medio de Pago</label>
+            <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Medio de Pago</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'EFECTIVO', label: '💵 Efectivo' },
@@ -82,10 +82,10 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                   key={med.id}
                   type="button"
                   onClick={() => setMedioPago(med.id)}
-                  className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
                     medioPago === med.id
-                      ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 font-semibold'
-                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                      ? 'bg-[#1C562A] border-[#1C562A] text-white shadow-sm shadow-[#1C562A]/20'
+                      : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-100/60'
                   }`}
                 >
                   {med.label}
@@ -100,9 +100,9 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
               
               {/* Input Monto Recibido */}
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">Paga con ($):</label>
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Paga con ($):</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-zinc-500 text-sm font-mono">$</span>
+                  <span className="absolute left-3.5 top-3 text-slate-400 text-sm font-mono font-bold">$</span>
                   <input
                     ref={inputRef}
                     type="number"
@@ -110,7 +110,7 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                     placeholder="0.00"
                     value={montoRecibido}
                     onChange={(e) => setMontoRecibido(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-8 pr-3 py-2 text-lg text-zinc-100 font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-2.5 text-lg text-slate-800 font-mono focus:outline-none focus:border-[#1C562A] focus:ring-2 focus:ring-[#1C562A]/10 transition-all"
                   />
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                 <button
                   type="button"
                   onClick={handleExacto}
-                  className="px-2.5 py-1 bg-zinc-800 hover:bg-zinc-700 text-emerald-400 border border-zinc-700 text-xs font-mono font-bold rounded-md transition-colors"
+                  className="px-3 py-1.5 bg-[#1C562A]/10 hover:bg-[#1C562A]/20 text-[#1C562A] border border-[#1C562A]/20 text-xs font-mono font-bold rounded-lg transition-colors"
                 >
                   Exacto
                 </button>
@@ -129,7 +129,7 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                     key={monto}
                     type="button"
                     onClick={() => handleQuickAmount(monto)}
-                    className="px-2.5 py-1 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-mono rounded-md transition-colors"
+                    className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-semibold rounded-lg transition-colors"
                   >
                     +${monto.toLocaleString('es-AR')}
                   </button>
@@ -137,16 +137,16 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
               </div>
 
               {/* Display de Vuelto / Alerta */}
-              <div className={`p-3 rounded-xl border flex justify-between items-center transition-all ${
+              <div className={`p-3.5 rounded-xl border flex justify-between items-center transition-all ${
                 pagoInsuficiente 
-                  ? 'bg-red-950/30 border-red-800/50 text-red-400' 
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+                  ? 'bg-rose-50 border-rose-200 text-rose-700' 
+                  : 'bg-emerald-50/50 border-emerald-100 text-slate-700'
               }`}>
-                <span className="text-xs font-semibold uppercase tracking-wider">
+                <span className="text-xs font-bold uppercase tracking-wider">
                   {pagoInsuficiente ? '⚠️ Falta abonar' : '💵 Vuelto a Entregar'}
                 </span>
                 <span className={`text-xl font-mono font-bold ${
-                  pagoInsuficiente ? 'text-red-400' : 'text-emerald-400'
+                  pagoInsuficiente ? 'text-rose-600' : 'text-[#1C562A]'
                 }`}>
                   ${Math.abs(vuelto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </span>
@@ -160,14 +160,14 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
               type="button"
               onClick={onClose}
               disabled={enviando}
-              className="w-1/3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50"
+              className="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50 shadow-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={enviando || pagoInsuficiente}
-              className="w-2/3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-lg shadow-emerald-950/50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-2/3 bg-[#1C562A] hover:bg-[#154320] text-white font-bold py-2.5 rounded-xl text-xs transition-colors shadow-md shadow-[#1C562A]/20 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {enviando ? '⏳ Finalizando...' : '⚡ Finalizar y Registrar'}
             </button>
