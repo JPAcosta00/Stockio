@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AlertProvider } from '../context/AlertContext';
 import Login from '../pages/Login';
 import DashboardLayout from '../components/DashboardLayout';
 import Inventario from '../pages/Inventario';

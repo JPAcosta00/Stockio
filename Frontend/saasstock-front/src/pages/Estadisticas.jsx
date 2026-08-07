@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
+import { useAlert } from '../context/AlertContext'; // Importado
 import { Search, Calendar, Loader2, DollarSign, ShoppingBag, Package, AlertTriangle, Download } from 'lucide-react';
 import SalesTimelineChart from '../components/SalesTimelineChart.jsx';
 
 export default function Estadisticas() {
+  const { showAlert } = useAlert(); // Hook para alertas
   const [name, setName] = useState('');
   const [period, setPeriod] = useState('');
 
@@ -40,7 +42,6 @@ export default function Estadisticas() {
     try {
       setDownloadingPdf(true);
 
-      // Sanitizar para asegurar que sean cadenas de texto y no objetos
       const cleanName = typeof filterName === 'string' ? filterName : undefined;
       const cleanPeriod = typeof filterPeriod === 'string' ? filterPeriod : undefined;
 
@@ -67,14 +68,14 @@ export default function Estadisticas() {
       window.URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Error al descargar el PDF de estadísticas:", err);
-      alert("No se pudo generar el reporte de estadísticas. Intentá nuevamente.");
+      showAlert("No se pudo generar el reporte de estadísticas. Intentá nuevamente.", "error");
     } finally {
       setDownloadingPdf(false);
     }
   };
 
   return (
-    <div className="p-8 bg-zinc-950 min-h-screen space-y-8 text-zinc-100 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-8 bg-zinc-950 min-h-screen space-y-8 text-zinc-100 max-w-7xl mx-auto">
       
       {/* Encabezado */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-900/40 p-6 rounded-2xl border border-zinc-800/80 backdrop-blur-sm shadow-sm">
@@ -87,7 +88,7 @@ export default function Estadisticas() {
         <button
           onClick={() => handleDownloadPdf(name, period)}
           disabled={downloadingPdf || loading}
-          className="flex items-center gap-2 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-md shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 cursor-pointer"
+          className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white px-4 py-2.5 rounded-xl font-semibold text-xs tracking-wide transition-all shadow-md shadow-emerald-950/20 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 w-full sm:w-auto cursor-pointer"
         >
           {downloadingPdf ? (
             <>
@@ -174,7 +175,7 @@ export default function Estadisticas() {
           </div>
 
           {/* Gráfico de Línea de Tiempo */}
-          <div className="bg-zinc-900/70 p-6 rounded-2xl border border-zinc-800 shadow-sm">
+          <div className="bg-zinc-900/70 p-6 rounded-2xl border border-zinc-800 shadow-sm overflow-x-auto">
             <SalesTimelineChart data={data.salesTimeline} />
           </div>
 
@@ -186,7 +187,7 @@ export default function Estadisticas() {
             ) : (
               <div className="divide-y divide-zinc-800/60">
                 {data.topProducts.map((p, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0">
+                  <div key={idx} className="flex justify-between items-center py-3 first:pt-0 last:pb-0 gap-4">
                     <div className="min-w-0 pr-4">
                       <p className="text-xs font-semibold text-zinc-200 truncate">{p.productName}</p>
                       <p className="text-[10px] text-zinc-500 mt-0.5">{p.salesCount} unidades despachadas</p>

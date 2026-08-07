@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/apiClient';
+import { useAlert } from '../context/AlertContext'; // Importado
 import { Loader2, PlusCircle, MinusCircle, FileText, DollarSign, TrendingUp, CreditCard, Banknote, X, AlertCircle, Calendar } from 'lucide-react';
 
 export default function Caja() {
+  const { showAlert } = useAlert(); // Hook para alertas
+
   // Estado general de la caja
   const [cajaActiva, setCajaActiva] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,14 +57,18 @@ export default function Caja() {
   const handleAbrirCaja = async (e) => {
     e.preventDefault();
     const monto = Number(montoInicialInput);
-    if (monto < 0) return alert("El monto inicial debe ser mayor o igual a 0");
+    if (monto < 0) {
+      showAlert("El monto inicial debe ser mayor o igual a 0", "warning");
+      return;
+    }
 
     try {
       const response = await apiClient.post('/caja/abrir', { montoDeInicio: monto });
       setCajaActiva(response.data);
       setMontoInicialInput('');
+      showAlert("Caja abierta exitosamente", "success");
     } catch (error) {
-      alert(error.response?.data?.mensaje || "Error al abrir la caja");
+      showAlert(error.response?.data?.mensaje || "Error al abrir la caja", "error");
     }
   };
 
@@ -71,10 +78,12 @@ export default function Caja() {
     const monto = Number(montoMovimiento);
 
     if (!monto || monto <= 0) {
-      return alert("El monto debe ser un número positivo mayor a 0.");
+      showAlert("El monto debe ser un número positivo mayor a 0.", "warning");
+      return;
     }
     if (!conceptoMovimiento.trim()) {
-      return alert("Debe ingresar un concepto para la transacción.");
+      showAlert("Debe ingresar un concepto para la transacción.", "warning");
+      return;
     }
 
     try {
@@ -95,8 +104,9 @@ export default function Caja() {
       setMostrarModalMovimiento(false);
 
       await obtenerEstadoCaja();
+      showAlert("Movimiento registrado correctamente", "success");
     } catch (error) {
-      alert(error.response?.data?.mensaje || "Error al registrar el movimiento.");
+      showAlert(error.response?.data?.mensaje || "Error al registrar el movimiento.", "error");
     } finally {
       setGuardandoMovimiento(false);
     }
@@ -105,7 +115,8 @@ export default function Caja() {
   const handlePrepararCierre = (e) => {
     e.preventDefault();
     if (efectivoRealContado === '' || Number(efectivoRealContado) < 0) {
-      return alert("Ingrese un monto válido de efectivo contado.");
+      showAlert("Ingrese un monto válido de efectivo contado.", "warning");
+      return;
     }
     setConfirmandoCierre(true);
   };
@@ -129,8 +140,9 @@ export default function Caja() {
       setConfirmandoCierre(false);
       setEfectivoRealContado('');
       setObservaciones('');
+      showAlert("Caja cerrada exitosamente", "success");
     } catch (error) {
-      alert(error.response?.data?.mensaje || "Error al cerrar la caja");
+      showAlert(error.response?.data?.mensaje || "Error al cerrar la caja", "error");
     } finally {
       setCerrandoCaja(false);
     }
@@ -146,7 +158,6 @@ export default function Caja() {
     e.preventDefault();
     try {
       setGenerandoReporte(true);
-      // Enviamos la fecha seleccionada por query param (asegurate que tu backend acepte ?fecha=YYYY-MM-DD o adaptá el parámetro)
       const response = await apiClient.get(`/caja/reporte-pdf?fecha=${fechaReporte}`, { responseType: 'blob' });
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -158,9 +169,10 @@ export default function Caja() {
       link.parentNode.removeChild(link);
       
       setMostrarModalReporte(false);
+      showAlert("Reporte PDF generado con éxito", "success");
     } catch (error) {
       console.error("Error al generar el reporte PDF:", error);
-      alert(error.response?.data?.mensaje || "No se encontró caja o reporte para la fecha seleccionada.");
+      showAlert(error.response?.data?.mensaje || "No se encontró caja o reporte para la fecha seleccionada.", "error");
     } finally {
       setGenerandoReporte(false);
     }

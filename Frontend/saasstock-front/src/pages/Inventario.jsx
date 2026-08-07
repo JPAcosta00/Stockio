@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { exportarAExcel, exportarAPDF, importarArchivoExcel } from '../utils/excelPdfUtils';
+import { useAlert } from '../context/AlertContext'; // Importado
 import apiClient from '../api/apiClient';
 import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
@@ -9,12 +10,12 @@ import {
   FileSpreadsheet, 
   FileText, 
   Upload, 
-  AlertTriangle, 
   Loader2, 
   Plus 
 } from 'lucide-react';
 
 export default function Inventario() {
+  const { showAlert, showConfirm } = useAlert(); // Hook para alertas y confirmaciones
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -26,7 +27,7 @@ export default function Inventario() {
   
   const [cargandoImportacion, setCargandoImportacion] = useState(false);
 
-  //para limitar la cantidad de productos
+  // para limitar la cantidad de productos
   const [paginaActual, setPaginaActual] = useState(1);
   const productosPorPagina = 15;
 
@@ -37,7 +38,7 @@ export default function Inventario() {
     id: '', barcode: '', name: '', description: '', price: 0, stock: 0, minimumStock: 0
   });
 
-  // 1. Cargar inventario INICIAL (se trae al montar el componente)
+  // 1. Cargar inventario INICIAL
   const cargarInventario = async () => {
     try {
       setLoading(true);
@@ -63,21 +64,19 @@ export default function Inventario() {
 
       const esStockCritico = filtroPeriodo === 'critico';
       
-      // Se arma el objeto con los filtros actuales
       const nuevosFiltros = {
         Name: filtroNombre.trim(),
         Period: esStockCritico ? '' : filtroPeriodo,
         IsCriticalStock: esStockCritico
       };
 
-      // Se guardan los filtros activos para usar en la exportacion de productos
       setFiltrosActivos(nuevosFiltros);
 
       const response = await apiClient.get('/products', { params: nuevosFiltros });
-      setProductos(response.data); // Actualiza la tabla con los resultados filtrados
+      setProductos(response.data);
     } catch (error) {
       console.error("Error al filtrar los productos:", error);
-      alert("Hubo un error al realizar la búsqueda.");
+      showAlert("Hubo un error al realizar la búsqueda.", "error");
     } finally {
       setLoading(false);
     }
@@ -99,16 +98,19 @@ export default function Inventario() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`¿Estás seguro de que querés eliminar el producto "${name}"?`)) {
-      try {
-        await apiClient.delete(`/products/${id}`);
-        alert("Producto eliminado con éxito");
-        cargarInventario();
-      } catch (error) {
-        alert("No se pudo eliminar el producto");
+  const handleDelete = (id, name) => {
+    showConfirm(
+      `¿Estás seguro de que querés eliminar el producto "${name}"?`,
+      async () => {
+        try {
+          await apiClient.delete(`/products/${id}`);
+          showAlert("Producto eliminado con éxito", "success");
+          cargarInventario();
+        } catch (error) {
+          showAlert("No se pudo eliminar el producto", "error");
+        }
       }
-    }
+    );
   };
 
   const handleSaveSubmit = async (e) => {
@@ -116,14 +118,15 @@ export default function Inventario() {
     try {
       if (modalMode === 'create') {
         await apiClient.post('/products', formData);
+        showAlert("Producto creado con éxito", "success");
       } else if (modalMode === 'edit') {
-        console.log("Enviando a editar:", formData.id, formData);
         await apiClient.put(`/products/${formData.id}`, formData);
+        showAlert("Producto actualizado con éxito", "success");
       }
       setIsModalOpen(false);
       cargarInventario();
     } catch (error) {
-      alert("Hubo un error al procesar la solicitud.");
+      showAlert("Hubo un error al procesar la solicitud.", "error");
     }
   };
 
@@ -133,28 +136,24 @@ export default function Inventario() {
     setCargandoImportacion(true);
     try {
       const resultado = await importarArchivoExcel(file);
-      alert(resultado.message);
+      showAlert(resultado.message || "Archivo importado con éxito", "success");
       cargarInventario();
     } catch (error) {
-      alert(error.response?.data || "Error inesperado al subir.");
+      showAlert(error.response?.data || "Error inesperado al subir.", "error");
     } finally {
       setCargandoImportacion(false);
       e.target.value = ''; 
     }
   };
 
-  // Calculo de los indices
+  // Cálculo de índices para paginación
   const ultimoIndice = paginaActual * productosPorPagina;
   const primerIndice = ultimoIndice - productosPorPagina;
-
-  // Array que muestra el limite de la pagina
   const productosPaginados = productos.slice(primerIndice, ultimoIndice);
-
-  // Calculo del total de paginas 
   const totalPaginas = Math.ceil(productos.length / productosPorPagina);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-0">
       
       {/* ENCABEZADO */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm">
@@ -170,7 +169,7 @@ export default function Inventario() {
         
         <button 
           onClick={handleOpenCreate} 
-          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center justify-center gap-2 self-stretch sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Nuevo Producto</span>
@@ -216,7 +215,6 @@ export default function Inventario() {
             </select>
           </div>
 
-          {/* BOTÓN BUSCAR */}
           <button 
             onClick={handleBuscar}
             className="w-full md:w-auto bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-6 py-2.5 rounded-xl text-xs transition-colors border border-zinc-700 cursor-pointer shadow-sm"
@@ -237,16 +235,15 @@ export default function Inventario() {
             
             <button onClick={() => exportarAExcel({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
               <FileSpreadsheet className="w-3.5 h-3.5 text-[#5BA535]" />
-              <span>Exportar Excel (Vista)</span>
+              <span>Exportar Excel</span>
             </button>
             
             <button onClick={() => exportarAPDF({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
               <FileText className="w-3.5 h-3.5 text-red-400" />
-              <span>Exportar PDF (Vista)</span>
+              <span>Exportar PDF</span>
             </button>
           </div>
 
-          {/* Botón rápido para restablecer la vista */}
           {(filtroNombre || filtroPeriodo) && (
             <button 
               onClick={() => {
@@ -270,7 +267,9 @@ export default function Inventario() {
         </div>
       ) : (
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
+          <div className="overflow-x-auto">
+            <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} />
+          </div>
         </div>
       )}
 
@@ -310,7 +309,6 @@ export default function Inventario() {
       
             <div>
               <nav className="isolate inline-flex -space-x-px rounded-xl shadow-sm overflow-hidden border border-zinc-800" aria-label="Pagination">
-                {/* Botón Anterior */}
                 <button
                   onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
                   disabled={paginaActual === 1}
@@ -320,7 +318,6 @@ export default function Inventario() {
                   ‹
                 </button>
 
-                {/* Números de Página */}
                 {[...Array(totalPaginas)].map((_, index) => {
                   const numeroPagina = index + 1;
                   const esActiva = numeroPagina === paginaActual;
@@ -339,7 +336,6 @@ export default function Inventario() {
                   );
                 })}
 
-                {/* Botón Siguiente */}
                 <button
                   onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
                   disabled={paginaActual === totalPaginas}
@@ -353,7 +349,6 @@ export default function Inventario() {
           </div>
         </div>
       )}
-    
     </div>
   );
 }

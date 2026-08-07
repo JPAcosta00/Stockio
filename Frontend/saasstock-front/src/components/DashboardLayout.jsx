@@ -9,7 +9,9 @@ import {
   ShoppingBag, 
   User, 
   LogOut, 
-  ChevronUp 
+  ChevronUp,
+  Menu,
+  X
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -17,6 +19,7 @@ export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const navigationLinks = [
     { name: 'Inicio', href: '/', icon: Home },
@@ -31,14 +34,44 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen flex flex-col md:flex-row bg-zinc-950 text-zinc-100">
+      
+      {/* BARRA SUPERIOR MÓVIL */}
+      <div className="md:hidden flex items-center justify-between bg-zinc-900 border-b border-zinc-800 p-4 sticky top-0 z-30">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#5BA535] to-[#1C562A] flex items-center justify-center text-white font-bold shadow-md shrink-0">
+            <Package className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-extrabold tracking-tight text-white leading-tight">
+              Stock<span className="text-[#5BA535]">io</span>
+            </h2>
+          </div>
+        </div>
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-2 rounded-xl bg-zinc-800 text-zinc-300 hover:text-white cursor-pointer"
+        >
+          {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* OVERLAY PARA MÓVIL CUANDO EL SIDEBAR ESTÁ ABIERTO */}
+      {sidebarOpen && (
+        <div 
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-20 md:hidden"
+        />
+      )}
       
       {/* SIDEBAR */}
-      <aside className="w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20">
+      <aside className={`w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col justify-between p-4 fixed h-full z-20 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div>
           
           {/* Brand/Logo de Stockio */}
-          <div className="mb-8 px-2 pt-2 flex items-center gap-3">
+          <div className="mb-8 px-2 pt-2 hidden md:flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#5BA535] to-[#1C562A] flex items-center justify-center text-white font-bold shadow-md shrink-0">
               {/* Icono isotipo simplificado */}
               <Package className="w-5 h-5 text-white" />
@@ -62,6 +95,7 @@ export default function DashboardLayout({ children }) {
                 <Link
                   key={item.name}
                   to={item.href}
+                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-zinc-800 text-white font-semibold border-l-2 border-[#5BA535] shadow-sm'
@@ -83,7 +117,10 @@ export default function DashboardLayout({ children }) {
             <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl overflow-hidden p-1 space-y-1 z-30 animate-in fade-in slide-in-from-bottom-2">
               <Link
                 to="/perfil"
-                onClick={() => setShowProfileMenu(false)}
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  setSidebarOpen(false);
+                }}
                 className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-lg transition-colors"
               >
                 <User className="w-3.5 h-3.5 text-[#5BA535]" />
@@ -93,6 +130,7 @@ export default function DashboardLayout({ children }) {
               <button
                 onClick={() => {
                   setShowProfileMenu(false);
+                  setSidebarOpen(false);
                   logout();
                 }}
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-950/30 rounded-lg transition-colors text-left cursor-pointer"
@@ -115,7 +153,7 @@ export default function DashboardLayout({ children }) {
                 {/* Indicador de estado online */}
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-zinc-900 rounded-full"></span>
               </div>
-                  
+                
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-zinc-200 truncate group-hover:text-white">
                   {user?.email || 'usuario@stockio.com'}
@@ -125,7 +163,7 @@ export default function DashboardLayout({ children }) {
                 </p>
               </div>
             </div>
-                  
+                
             <ChevronUp 
               className={`w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-transform shrink-0 ${
                 showProfileMenu ? 'rotate-180' : ''
@@ -137,7 +175,7 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <main className="flex-1 ml-64 p-8 bg-zinc-950 min-h-screen text-zinc-100">
+      <main className="flex-1 md:ml-64 p-4 md:p-8 bg-zinc-950 min-h-screen text-zinc-100">
         <div className="max-w-7xl mx-auto">
           {children}
         </div>
