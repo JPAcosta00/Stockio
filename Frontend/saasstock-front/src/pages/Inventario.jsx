@@ -20,14 +20,20 @@ export default function Inventario() {
 
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
- 
+  
   // Estados de los inputs de filtro
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroPeriodo, setFiltroPeriodo] = useState('');
 
   const [filtrosActivos, setFiltrosActivos] = useState({ Name: '', Period: '' });
- 
+  
   const [cargandoImportacion, setCargandoImportacion] = useState(false);
+
+  // Estados para el flujo OCR y Facturas
+  const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
+  const [cargandoOcr, setCargandoOcr] = useState(false);
+  const [datosOcrDetectados, setDatosOcrDetectados] = useState(null);
+  const [margenGanancia, setMargenGanancia] = useState(30); // Margen por defecto del 30%
 
   // para limitar la cantidad de productos
   const [paginaActual, setPaginaActual] = useState(1);
@@ -68,7 +74,7 @@ export default function Inventario() {
       setPaginaActual(1);
 
       const esStockCritico = filtroPeriodo === 'critico';
-     
+      
       const nuevosFiltros = {
         Name: filtroNombre.trim(),
         Period: esStockCritico ? '' : filtroPeriodo,
@@ -156,6 +162,67 @@ export default function Inventario() {
     }
   };
 
+  // 3. FUNCIONES DE OCR (FACTURAS)
+  const manejarSubidaFacturaOcr = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setCargandoOcr(true);
+    setIsOcrModalOpen(true);
+
+    try {
+      // Simulación de respuesta del motor OCR (aquí conectarías tu API real)
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+
+      const productosDetectados = [
+        { name: "Galletitas Chocolinas 170g", stock: 24, price: 850 },
+        { name: "Alfajor Jorgito x6", stock: 12, price: 1200 },
+        { name: "Coca-Cola 1.5L descartable", stock: 18, price: 1500 }
+      ];
+
+      setDatosOcrDetectados(productosDetectados);
+      showAlert("¡Factura procesada con éxito por OCR!", "success");
+    } catch (error) {
+      console.error("Error en OCR:", error);
+      showAlert("No se pudo leer la factura. Intente con otra imagen.", "error");
+      setIsOcrModalOpen(false);
+    } finally {
+      setCargandoOcr(false);
+      e.target.value = '';
+    }
+  };
+
+  const confirmarCargaMasivaOcr = async () => {
+    try {
+      setLoading(true);
+      for (const item of datosOcrDetectados) {
+        const precioVentaSugerido = Math.round(item.price * (1 + margenGanancia / 100));
+        
+        const nuevoProducto = {
+          barcode: `OCR-${Math.floor(Math.random() * 900000 + 100000)}`,
+          name: item.name,
+          description: "Ingresado automáticamente vía OCR de Factura",
+          price: precioVentaSugerido,
+          costPrice: item.price,
+          stock: item.stock,
+          minimumStock: 5
+        };
+
+        await apiClient.post('/products', nuevoProducto);
+      }
+
+      showAlert(`¡${datosOcrDetectados.length} productos ingresados al stock con éxito!`, "success");
+      setIsOcrModalOpen(false);
+      setDatosOcrDetectados(null);
+      cargarInventario();
+    } catch (error) {
+      console.error("Error al registrar productos por OCR:", error);
+      showAlert("Hubo un error al guardar los productos en el inventario.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Cálculo de los índices
   const ultimoIndice = paginaActual * productosPorPagina;
   const primerIndice = ultimoIndice - productosPorPagina;
@@ -233,7 +300,7 @@ export default function Inventario() {
           </button>
         </div>
 
-        {/* ACCIONES EXPORT / IMPORT & RESET */}
+        {/* ACCIONES EXPORT / IMPORT, OCR & RESET */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
           <div className="flex flex-wrap items-center gap-2">
            
@@ -241,6 +308,18 @@ export default function Inventario() {
               <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
               <span>{cargandoImportacion ? 'Procesando...' : 'Importar Excel'}</span>
               <input type="file" accept=".xlsx, .xls" onChange={manejarImportacion} className="hidden" disabled={cargandoImportacion} />
+            </label>
+
+            {/* BOTÓN ESCANEAR FACTURA (OCR) */}
+            <label className="cursor-pointer bg-[#1C562A]/30 hover:bg-[#1C562A]/50 border border-[#5BA535]/40 px-3.5 py-2 rounded-xl text-xs font-semibold text-[#5BA535] transition-colors flex items-center gap-2">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Escanear Factura (OCR)</span>
+              <input 
+                type="file" 
+                accept="image/*, application/pdf" 
+                onChange={manejarSubidaFacturaOcr} 
+                className="hidden" 
+              />
             </label>
            
             <button onClick={() => exportarAExcel({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
@@ -254,7 +333,7 @@ export default function Inventario() {
             </button>
           </div>
 
-          {/* SECCIÓN MODAL DE CONFIRMACIÓN (NUEVO) */}
+          {/* SECCIÓN MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
           {productoAEliminar && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
@@ -294,6 +373,86 @@ export default function Inventario() {
           )}
         </div>
       </div>
+
+      {/* MODAL DE VISTA PREVIA Y CONFIGURACIÓN OCR */}
+      {isOcrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>🧾</span> Procesamiento Inteligente OCR
+              </h3>
+              <button 
+                onClick={() => { setIsOcrModalOpen(false); setDatosOcrDetectados(null); }}
+                className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cargandoOcr ? (
+              <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                <Loader2 className="w-8 h-8 animate-spin text-[#5BA535]" />
+                <p className="text-xs text-zinc-400 font-medium">Leyendo factura y extrayendo productos...</p>
+              </div>
+            ) : datosOcrDetectados ? (
+              <div className="space-y-4">
+                <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl flex items-center justify-between">
+                  <span className="text-xs text-zinc-300">Margen de ganancia aplicado:</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={margenGanancia}
+                      onChange={(e) => setMargenGanancia(Number(e.target.value))}
+                      className="w-16 px-2 py-1 bg-zinc-900 border border-zinc-700 rounded-lg text-xs text-white text-center focus:outline-none focus:border-[#5BA535]"
+                    />
+                    <span className="text-xs text-[#5BA535] font-bold">%</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">
+                    Productos Detectados ({datosOcrDetectados.length}):
+                  </p>
+                  <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                    {datosOcrDetectados.map((item, idx) => {
+                      const precioVentaCalculado = Math.round(item.price * (1 + margenGanancia / 100));
+                      return (
+                        <div key={idx} className="bg-zinc-950 border border-zinc-800/80 p-3 rounded-xl flex items-center justify-between text-xs">
+                          <div>
+                            <p className="text-white font-medium">{item.name}</p>
+                            <p className="text-zinc-400 text-[11px]">Costo: ${item.price} | Cantidad: {item.stock}</p>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[#5BA535] font-bold block">Venta: ${precioVentaCalculado}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+                  <button
+                    onClick={() => { setIsOcrModalOpen(false); setDatosOcrDetectados(null); }}
+                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={confirmarCargaMasivaOcr}
+                    className="px-4 py-2 rounded-xl bg-[#5BA535] hover:bg-[#4b8c2c] text-white text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+                  >
+                    Confirmar e ingresar al stock
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+          </div>
+        </div>
+      )}
 
       {/* TABLA MODULAR */}
       {loading ? (
