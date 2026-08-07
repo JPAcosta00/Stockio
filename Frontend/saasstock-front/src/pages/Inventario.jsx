@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { exportarAExcel, exportarAPDF, importarArchivoExcel } from '../utils/excelPdfUtils';
 import apiClient from '../api/apiClient';
 import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
-import { useAlert } from '../context/AlertContext'; // <-- Importamos tu hook de alertas
+import { useAlert } from '../context/AlertContext';
 import {
   Package,
   Search,
@@ -12,11 +12,12 @@ import {
   Upload,
   AlertTriangle,
   Loader2,
-  Plus
+  Plus,
+  Barcode
 } from 'lucide-react';
 
 export default function Inventario() {
-  const { showAlert } = useAlert(); // <-- Inicializamos la función showAlert
+  const { showAlert } = useAlert();
 
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,6 @@ export default function Inventario() {
   // Estados de los inputs de filtro
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroPeriodo, setFiltroPeriodo] = useState('');
-
   const [filtrosActivos, setFiltrosActivos] = useState({ Name: '', Period: '' });
   
   const [cargandoImportacion, setCargandoImportacion] = useState(false);
@@ -33,15 +33,18 @@ export default function Inventario() {
   const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
   const [cargandoOcr, setCargandoOcr] = useState(false);
   const [datosOcrDetectados, setDatosOcrDetectados] = useState(null);
-  const [margenGanancia, setMargenGanancia] = useState(30); // Margen por defecto del 30%
+  const [margenGanancia, setMargenGanancia] = useState(30);
 
-  // para limitar la cantidad de productos
+  // Referencias para autofocus en pistoleo de barcodes
+  const barcodeInputsRef = useRef([]);
+
+  // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const productosPorPagina = 15;
 
   const [productoAEliminar, setProductoAEliminar] = useState(null);
 
-  // Estados del Modal
+  // Estados del Modal CRUD
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('view');
   const [formData, setFormData] = useState({
@@ -171,13 +174,13 @@ export default function Inventario() {
     setIsOcrModalOpen(true);
 
     try {
-      // Simulación de respuesta del motor OCR (aquí conectarías tu API real)
       await new Promise((resolve) => setTimeout(resolve, 2500));
 
+      // Se inicializa 'barcode' como string vacío para ser ingresado manualmente o mediante lector
       const productosDetectados = [
-        { name: "Galletitas Chocolinas 170g", stock: 24, price: 850 },
-        { name: "Alfajor Jorgito x6", stock: 12, price: 1200 },
-        { name: "Coca-Cola 1.5L descartable", stock: 18, price: 1500 }
+        { barcode: '', name: "Galletitas Chocolinas 170g", stock: 24, price: 850 },
+        { barcode: '', name: "Alfajor Jorgito x6", stock: 12, price: 1200 },
+        { barcode: '', name: "Coca-Cola 1.5L descartable", stock: 18, price: 1500 }
       ];
 
       setDatosOcrDetectados(productosDetectados);
@@ -192,31 +195,58 @@ export default function Inventario() {
     }
   };
 
+  // Actualiza el código de barras de un producto individual detectado por OCR
+  const handleOcrBarcodeChange = (index, value) => {
+    setDatosOcrDetectados((prev) => {
+      const actualizados = [...prev];
+      actualizados[index].barcode = value;
+      return actualizados;
+    });
+  };
+
+  // Manejo de foco automático al presionar 'Enter' (lo que envía la lectora de código de barras)
+  const handleBarcodeKeyDown = (e, index) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (barcodeInputsRef.current[index + 1]) {
+        barcodeInputsRef.current[index + 1].focus();
+      }
+    }
+  };
+
   const confirmarCargaMasivaOcr = async () => {
     try {
       setLoading(true);
+    
       for (const item of datosOcrDetectados) {
         const precioVentaSugerido = Math.round(item.price * (1 + margenGanancia / 100));
         
+        // Si el usuario pistoleó un código usa ese, de lo contrario genera un fallback provisional
+        const codigoFinal = item.barcode.trim() !== '' 
+          ? item.barcode.trim() 
+          : `OCR-${Math.floor(Math.random() * 900000 + 100000)}`;
+
         const nuevoProducto = {
-          barcode: `OCR-${Math.floor(Math.random() * 900000 + 100000)}`,
+          barcode: codigoFinal,
           name: item.name,
           description: "Ingresado automáticamente vía OCR de Factura",
-          price: precioVentaSugerido,
-          costPrice: item.price,
-          stock: item.stock,
+          price: Number(precioVentaSugerido),
+          stock: parseInt(item.stock, 10),
           minimumStock: 5
         };
-
+      
         await apiClient.post('/products', nuevoProducto);
       }
-
+    
       showAlert(`¡${datosOcrDetectados.length} productos ingresados al stock con éxito!`, "success");
       setIsOcrModalOpen(false);
       setDatosOcrDetectados(null);
       cargarInventario();
     } catch (error) {
       console.error("Error al registrar productos por OCR:", error);
+      if (error.response?.data) {
+        console.error("Respuesta del servidor:", error.response.data);
+      }
       showAlert("Hubo un error al guardar los productos en el inventario.", "error");
     } finally {
       setLoading(false);
@@ -267,9 +297,9 @@ export default function Inventario() {
                 value={filtroNombre}
                 onChange={(e) => setFiltroNombre(e.target.value)}
                 onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleBuscar();
-                    }
+                  if (e.key === 'Enter') {
+                    handleBuscar();
+                  }
                 }}
                 className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors"
               />
@@ -333,7 +363,7 @@ export default function Inventario() {
             </button>
           </div>
 
-          {/* SECCIÓN MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+          {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
           {productoAEliminar && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
@@ -374,10 +404,10 @@ export default function Inventario() {
         </div>
       </div>
 
-      {/* MODAL DE VISTA PREVIA Y CONFIGURACIÓN OCR */}
+      {/* MODAL DE VISTA PREVIA, VINCULACIÓN DE CÓDIGOS Y CONFIGURACIÓN OCR */}
       {isOcrModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
             
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
@@ -412,20 +442,35 @@ export default function Inventario() {
                 </div>
 
                 <div>
-                  <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-2">
-                    Productos Detectados ({datosOcrDetectados.length}):
-                  </p>
-                  <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+                      Productos Detectados ({datosOcrDetectados.length}):
+                    </p>
+                    <span className="text-[10px] text-zinc-500">Pistoleá los códigos para vincularlos rápidamente</span>
+                  </div>
+
+                  <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                     {datosOcrDetectados.map((item, idx) => {
                       const precioVentaCalculado = Math.round(item.price * (1 + margenGanancia / 100));
                       return (
-                        <div key={idx} className="bg-zinc-950 border border-zinc-800/80 p-3 rounded-xl flex items-center justify-between text-xs">
-                          <div>
+                        <div key={idx} className="bg-zinc-950 border border-zinc-800/80 p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div className="flex-1">
                             <p className="text-white font-medium">{item.name}</p>
-                            <p className="text-zinc-400 text-[11px]">Costo: ${item.price} | Cantidad: {item.stock}</p>
+                            <p className="text-zinc-400 text-[11px]">Costo: ${item.price} | Cantidad: {item.stock} | <span className="text-[#5BA535] font-semibold">Venta: ${precioVentaCalculado}</span></p>
                           </div>
-                          <div className="text-right">
-                            <span className="text-[#5BA535] font-bold block">Venta: ${precioVentaCalculado}</span>
+
+                          {/* Campo de Código de Barras integrado para Lectora */}
+                          <div className="relative min-w-[190px]">
+                            <Barcode className="w-4 h-4 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                            <input
+                              ref={(el) => (barcodeInputsRef.current[idx] = el)}
+                              type="text"
+                              placeholder="Escanear o ingresar código"
+                              value={item.barcode}
+                              onChange={(e) => handleOcrBarcodeChange(idx, e.target.value)}
+                              onKeyDown={(e) => handleBarcodeKeyDown(e, idx)}
+                              className="w-full pl-8 pr-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors"
+                            />
                           </div>
                         </div>
                       );
@@ -466,9 +511,9 @@ export default function Inventario() {
         </div>
       )}
 
-      {/* MODAL MODULAR */}
+      {/* MODAL MODULAR CRUD */}
       <ProductModal isOpen={isModalOpen} mode={modalMode} formData={formData} setFormData={setFormData} onClose={() => setIsModalOpen(false)} onSubmit={handleSaveSubmit} />
-     
+      
       {/* CONTROLES DE PAGINACIÓN */}
       {totalPaginas > 1 && (
         <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 px-4 py-3 sm:px-6 rounded-2xl shadow-sm">
