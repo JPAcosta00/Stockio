@@ -41,7 +41,7 @@ namespace Infraestructure.Services
         
                 var headerRange = worksheet.Range("A1:F1");
                 headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1C562A");
                 headerRange.Style.Font.FontColor = XLColor.White;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         
@@ -102,7 +102,7 @@ namespace Infraestructure.Services
                     // Estilos para la fila de totales
                     var totalRange = worksheet.Range(currentRow, 1, currentRow, 6);
                     totalRange.Style.Font.Bold = true;
-                    totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D9E1F2");
+                    totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
                     totalRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
         
@@ -115,7 +115,7 @@ namespace Infraestructure.Services
                     worksheet.Cell(summaryStartRow, 2).Value = "VALOR";
                     var kpiHeader = worksheet.Range(summaryStartRow, 1, summaryStartRow, 2);
                     kpiHeader.Style.Font.Bold = true;
-                    kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#2F5597");
+                    kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#1C562A");
                     kpiHeader.Style.Font.FontColor = XLColor.White;
         
                     // Total Productos Únicos
@@ -153,7 +153,8 @@ namespace Infraestructure.Services
             }
         }
 
-        public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> products){
+        public async Task<byte[]> GeneratePdfAsync(IEnumerable<Product> products)
+        {
             // Si la lista viene nula o vacía, asegura una lista vacía para evitar fallos
             products ??= Enumerable.Empty<Product>();
 
@@ -163,107 +164,115 @@ namespace Infraestructure.Services
 
             // Obtiene la hora de Argentina independientemente de si corre en Windows o Linux/Render
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
-            OperatingSystem.IsWindows() ? "Argentina Standard Time" : "America/Argentina/Buenos_Aires");
+                OperatingSystem.IsWindows() ? "Argentina Standard Time" : "America/Argentina/Buenos_Aires");
             var fechaEmision = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
 
+            var primaryColor = "#1C562A"; // Verde institucional
+
             // Genera el documento PDF usando el contenedor de QuestPDF
-            var document = Document.Create(container =>{
-                container.Page(page =>{
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
                     page.Size(PageSizes.A4);
                     page.Margin(1.5f, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
 
-                // --- CABECERA DEL DOCUMENTO ---
-                page.Header().Row(row =>{
-                    row.RelativeItem().Column(column =>{
-                        column.Item().Text("REPORTE DE INVENTARIO").FontSize(20).Bold().FontColor("#1F4E78");
-                        column.Item().Text($"Fecha de Emisión: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
-                        column.Item().Text("Sistema de Stock y Ventas").FontSize(9).FontColor(Colors.Grey.Medium);
+                    // --- CABECERA DEL DOCUMENTO ---
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Column(column =>
+                        {
+                            column.Item().Text("REPORTE DE INVENTARIO").FontSize(20).ExtraBold().FontColor(primaryColor);
+                            column.Item().Text($"Fecha de Emisión: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
+                            column.Item().Text("Sistema de Stock y Ventas").FontSize(9).FontColor(Colors.Grey.Medium);
+                        });
+
+                        row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>
+                        {
+                            col.Item().Border(1).BorderColor(primaryColor).Padding(5).AlignCenter().Text("SaaS Stock").Bold().FontColor(primaryColor);
+                        });
                     });
 
-                row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>{
-                    // Espacio para el logo del tenant
-                    col.Item().Border(1).BorderColor("#1F4E78").Padding(5).AlignCenter().Text("SaaS Stock").Bold().FontColor("#1F4E78");
+                    // --- CONTENIDO PRINCIPAL (TABLA) ---
+                    page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
+                    {
+                        // Tabla de Productos
+                        column.Item().Table(table =>
+                        {
+                            // Definición de Columnas 
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(120); // Código de Barras
+                                columns.RelativeColumn(3);   // Nombre
+                                columns.RelativeColumn(1);   // Precio
+                                columns.RelativeColumn(1);   // Stock
+                                columns.RelativeColumn(1.2f); // Total por Producto
+                            });
+
+                            // Cabecera de la Tabla
+                            table.Header(header =>
+                            {
+                                header.Cell().Background(primaryColor).Padding(5).Text("Código de Barras").Bold().FontColor(Colors.White);
+                                header.Cell().Background(primaryColor).Padding(5).Text("Producto").Bold().FontColor(Colors.White);
+                                header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Precio").Bold().FontColor(Colors.White);
+                                header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Stock").Bold().FontColor(Colors.White);
+                                header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Subtotal").Bold().FontColor(Colors.White);
+                            });
+
+                            // Filas de la Tabla
+                            foreach (var prod in products)
+                            {
+                                decimal subtotal = prod.Price * prod.Stock;
+
+                                table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Barcode ?? "S/N");
+                                table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Name);
+                                table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${prod.Price:N2}");
+                                table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"{prod.Stock:N0}");
+                                table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${subtotal:N2}");
+                            }
+                        });
+
+                        column.Item().PaddingTop(20).AlignRight().Width(200).BorderTop(1).BorderColor(primaryColor).PaddingTop(5).Column(totalCol =>
+                        {
+                            totalCol.Item().Row(r =>
+                            {
+                                r.RelativeItem().Text("Total Unidades:").Bold();
+                                r.ConstantItem(80).AlignRight().Text($"{totalItems:N0}");
+                            });
+                            totalCol.Item().Row(r =>
+                            {
+                                r.RelativeItem().Text("Valor del Inventario:").Bold().FontColor(primaryColor);
+                                r.ConstantItem(80).AlignRight().Text($"${valorTotalInventario:N2}").Bold().FontColor(primaryColor);
+                            });
+                        });
                     });
-                });
 
-            // --- CONTENIDO PRINCIPAL (TABLA) ---
-            page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>{
-                // Tabla de Productos
-                column.Item().Table(table =>
-                {
-                    // Definición de Columnas 
-                    table.ColumnsDefinition(columns =>
+                    // --- PIE DE PÁGINA ---
+                    page.Footer().Row(row =>
                     {
-                        columns.ConstantColumn(120); // Código de Barras
-                        columns.RelativeColumn(3);   // Nombre
-                        columns.RelativeColumn(1);   // Precio
-                        columns.RelativeColumn(1);   // Stock
-                        columns.RelativeColumn(1.2f); // Total por Producto
-                    });
+                        row.RelativeItem().Text("Documento confidencial generado de forma automatizada por el sistema de control de stock.")
+                            .FontSize(8)
+                            .FontColor(Colors.Grey.Medium);
 
-                    // Cabecera de la Tabla
-                    table.Header(header =>
-                    {
-                        header.Cell().Background("#1F4E78").Padding(5).Text("Código de Barras").Bold().FontColor(Colors.White);
-                        header.Cell().Background("#1F4E78").Padding(5).Text("Producto").Bold().FontColor(Colors.White);
-                        header.Cell().Background("#1F4E78").Padding(5).AlignRight().Text("Precio").Bold().FontColor(Colors.White);
-                        header.Cell().Background("#1F4E78").Padding(5).AlignRight().Text("Stock").Bold().FontColor(Colors.White);
-                        header.Cell().Background("#1F4E78").Padding(5).AlignRight().Text("Subtotal").Bold().FontColor(Colors.White);
-                    });
-
-                    // Filas de la Tabla
-                    foreach (var prod in products)
-                    {
-                        decimal subtotal = prod.Price * prod.Stock;
-
-                        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Barcode ?? "S/N");
-                        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Name);
-                        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${prod.Price:N2}");
-                        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"{prod.Stock:N0}");
-                        table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${subtotal:N2}");
-                    }
-                });
-
-                column.Item().PaddingTop(20).AlignRight().Width(200).BorderTop(1).BorderColor("#1F4E78").PaddingTop(5).Column(totalCol =>
-                {
-                    totalCol.Item().Row(r =>
-                    {
-                        r.RelativeItem().Text("Total Unidades:").Bold();
-                        r.ConstantItem(80).AlignRight().Text($"{totalItems:N0}");
-                    });
-                    totalCol.Item().Row(r =>
-                    {
-                        r.RelativeItem().Text("Valor del Inventario:").Bold().FontColor("#1F4E78");
-                        r.ConstantItem(80).AlignRight().Text($"${valorTotalInventario:N2}").Bold().FontColor("#1F4E78");
+                        row.RelativeItem().AlignRight().Text(text =>
+                        {
+                            text.Span("Página ").FontSize(8).FontColor(Colors.Grey.Medium);
+                            text.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Medium);
+                            text.Span(" de ").FontSize(8).FontColor(Colors.Grey.Medium);
+                            text.TotalPages().FontSize(8).FontColor(Colors.Grey.Medium);
+                        });
                     });
                 });
             });
 
-            // --- PIE DE PÁGINA  ---
-            page.Footer().Row(row =>{
-                // Columna izquierda
-                row.RelativeItem().Text("Documento confidencial generado de forma automatizada por el sistema de control de stock.")
-                    .FontSize(8)
-                    .FontColor(Colors.Grey.Medium);
-
-                // Columna derecha: Numeración dinámica (Página X de Y)
-                row.RelativeItem().AlignRight().Text(text =>{
-                    text.Span("Página ").FontSize(8).FontColor(Colors.Grey.Medium);
-                    text.CurrentPageNumber().FontSize(8).FontColor(Colors.Grey.Medium);
-                    text.Span(" de ").FontSize(8).FontColor(Colors.Grey.Medium);
-                    text.TotalPages().FontSize(8).FontColor(Colors.Grey.Medium);
-                });
-            });
-        });
-        }); //se cierra el documento
-
-        // Se compila "document" y lo pasa a byte[]
-        using (var stream = new MemoryStream()){
-            document.GeneratePdf(stream);
-            return stream.ToArray(); 
+            // Se compila "document" y lo pasa a byte[]
+            using (var stream = new MemoryStream())
+            {
+                document.GeneratePdf(stream);
+                return stream.ToArray();
+            }
         }
-    }   
     }
 }  

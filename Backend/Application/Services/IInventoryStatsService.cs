@@ -120,7 +120,7 @@ public class InventoryStatsService : IInventoryStatsService
     {
         var stats = await GetStatsByInventoryFiltersAsync(tenantId, filter);
 
-        var primaryColor = "#0F172A"; // Slate 900
+        var primaryColor = "#1C562A"; // Verde institucional
         var bgLight = "#F8FAFC";      // Slate 50
         var borderLight = "#E2E8F0";  // Slate 200
         var textMuted = "#64748B";    // Slate 500
@@ -136,7 +136,7 @@ public class InventoryStatsService : IInventoryStatsService
                 page.Margin(30);
                 page.Size(PageSizes.A4);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(10).FontColor(primaryColor));
+                page.DefaultTextStyle(x => x.FontSize(10).FontColor("#0F172A"));
 
                 // Encabezado + Caja de Filtro
                 page.Header().Column(col =>
@@ -145,7 +145,7 @@ public class InventoryStatsService : IInventoryStatsService
                     {
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("Reporte de Estadísticas de Inventario").FontSize(18).Bold().FontColor(primaryColor);
+                            c.Item().Text("Reporte de Estadísticas de Inventario").FontSize(18).ExtraBold().FontColor(primaryColor);
                             c.Item().Text($"Generado el: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(textMuted);
                         });
                     });
@@ -164,8 +164,8 @@ public class InventoryStatsService : IInventoryStatsService
                 {
                     col.Spacing(15);
 
-                    // KPIs estructurados con Row / Column (remplaza Grid deprecado)
-                    col.Item().Text("Resumen General").FontSize(12).Bold();
+                    // KPIs estructurados con Row / Column
+                    col.Item().Text("Resumen General").FontSize(12).Bold().FontColor(primaryColor);
                     col.Item().Column(kpiCol =>
                     {
                         kpiCol.Spacing(8);
@@ -208,7 +208,7 @@ public class InventoryStatsService : IInventoryStatsService
                     });
 
                     // Tabla de Productos Más Vendidos
-                    col.Item().Text("Productos Más Vendidos").FontSize(12).Bold();
+                    col.Item().Text("Productos Más Vendidos").FontSize(12).Bold().FontColor(primaryColor);
                     col.Item().Table(table =>
                     {
                         table.ColumnsDefinition(cols =>

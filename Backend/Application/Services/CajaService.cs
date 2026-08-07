@@ -261,7 +261,7 @@ public class CajaService : ICajaService
                             c.Item().Text("REPORTE DE CAJA DIARIA")
                                 .FontSize(20)
                                 .ExtraBold()
-                                .FontColor("#0f172a");
+                                .FontColor("#1C562A");
 
                             c.Item().Text($"Fecha de impresión: {fechaImpresionLocal:dd/MM/yyyy HH:mm} hs")
                                 .FontSize(8.5f)
@@ -269,7 +269,7 @@ public class CajaService : ICajaService
                         });
 
                         row.ConstantItem(100).AlignRight().Container()
-                            .Background("#e0f2fe")
+                            .Background("#f0fdf4")
                             .PaddingVertical(4)
                             .PaddingHorizontal(8)
                             .CornerRadius(4)
@@ -277,7 +277,7 @@ public class CajaService : ICajaService
                             .Text("CAJA ACTIVA")
                             .FontSize(8)
                             .Bold()
-                            .FontColor("#0369a1");
+                            .FontColor("#15803d");
                     });
 
                     col.Item().PaddingTop(10).LineHorizontal(1).LineColor("#e2e8f0");
@@ -336,7 +336,7 @@ public class CajaService : ICajaService
                             c.Item().Text("Desglose de Ingresos por Medio de Pago")
                                 .FontSize(11)
                                 .Bold()
-                                .FontColor("#334155");
+                                .FontColor("#1C562A");
 
                             c.Item().PaddingTop(6).Table(table =>
                             {
@@ -364,7 +364,7 @@ public class CajaService : ICajaService
                         c.Item().Text("Detalle de Movimientos")
                             .FontSize(11)
                             .Bold()
-                            .FontColor("#334155");
+                            .FontColor("#1C562A");
 
                         c.Item().PaddingTop(6).Table(table =>
                         {
@@ -378,10 +378,10 @@ public class CajaService : ICajaService
 
                             table.Header(header =>
                             {
-                                header.Cell().Background("#0f172a").Padding(6).Text("Hora").Bold().FontColor(Colors.White).FontSize(8.5f);
-                                header.Cell().Background("#0f172a").Padding(6).Text("Concepto").Bold().FontColor(Colors.White).FontSize(8.5f);
-                                header.Cell().Background("#0f172a").Padding(6).Text("Tipo").Bold().FontColor(Colors.White).FontSize(8.5f);
-                                header.Cell().Background("#0f172a").Padding(6).AlignRight().Text("Monto").Bold().FontColor(Colors.White).FontSize(8.5f);
+                                header.Cell().Background("#1C562A").Padding(6).Text("Hora").Bold().FontColor(Colors.White).FontSize(8.5f);
+                                header.Cell().Background("#1C562A").Padding(6).Text("Concepto").Bold().FontColor(Colors.White).FontSize(8.5f);
+                                header.Cell().Background("#1C562A").Padding(6).Text("Tipo").Bold().FontColor(Colors.White).FontSize(8.5f);
+                                header.Cell().Background("#1C562A").Padding(6).AlignRight().Text("Monto").Bold().FontColor(Colors.White).FontSize(8.5f);
                             });
 
                             if (movimientos.Any())
