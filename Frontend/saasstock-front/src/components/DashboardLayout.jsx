@@ -108,22 +108,26 @@ export default function DashboardLayout({ children }) {
             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-zinc-800/60 transition-colors text-left group cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0 font-bold text-xs text-[#5BA535]">
-                {getInitials(user?.email)}
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center font-bold text-xs text-[#5BA535]">
+                  {getInitials(user?.email)}
+                </div>
+                {/* Indicador de estado online */}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-zinc-900 rounded-full"></span>
               </div>
-
+                  
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-semibold text-zinc-200 truncate group-hover:text-white">
                   {user?.email || 'usuario@stockio.com'}
                 </p>
-                <p className="text-[10px] text-zinc-500 font-medium truncate uppercase tracking-wider mt-0.5">
-                  {user?.role || 'Administrador'}
+                <p className="text-[10px] text-emerald-400/80 font-medium tracking-wide mt-0.5">
+                  Sesión activa
                 </p>
               </div>
             </div>
-
+                  
             <ChevronUp 
-              className={`w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-transform ${
+              className={`w-4 h-4 text-zinc-500 group-hover:text-zinc-300 transition-transform shrink-0 ${
                 showProfileMenu ? 'rotate-180' : ''
               }`} 
             />
