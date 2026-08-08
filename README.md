@@ -1,4 +1,4 @@
-# 📦 Sistema de Gestión de Stock y Ventas
+# 📦 Stockio
 
 Aplicación web para administrar productos, controlar el stock y registrar ventas. 
 
