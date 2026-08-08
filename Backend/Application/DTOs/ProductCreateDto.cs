@@ -8,4 +8,5 @@ public class ProductCreateDto
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public int MinimumStock { get; set; }
+    public Guid? ProviderId { get; set; }
 }

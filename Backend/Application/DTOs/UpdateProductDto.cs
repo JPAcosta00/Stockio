@@ -11,6 +11,7 @@ namespace Application.DTOs
         [JsonPropertyName("stock")]
         public int StockActual {get; set;}
         
+        public Guid? ProviderId { get; set; }
         
         [JsonPropertyName("minimumStock")]
         public int StockMinimum { get; set; }

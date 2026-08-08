@@ -98,6 +98,13 @@ builder.Services.AddScoped<IInventoryStatsService, InventoryStatsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICajaService, CajaService>();
 builder.Services.AddScoped<ICajaRepository, CajaRepository>();
+builder.Services.AddScoped<IProviderRepository, ProviderRepository>();
+builder.Services.AddScoped<IProviderService, ProviderService>();
+builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
+builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
+
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<IOcrService, OcrService>();
 
 // --- ROBUSTEZ Y VALIDACIONES ---
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

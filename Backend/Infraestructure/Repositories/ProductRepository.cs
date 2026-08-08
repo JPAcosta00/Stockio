@@ -20,10 +20,19 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             .Where(p => p.TenantId == tenantId 
                      && p.IsActive 
                      && (p.Barcode.ToLower() == cleanQuery || p.Name.ToLower().Contains(cleanQuery)))
+            .Include(p => p.Provider)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Product>> GetProductsWithProviderAsync(Guid tenantId)
+    {
+        return await _context.Products
+            .Where(p => p.TenantId == tenantId && p.IsActive)
+            .Include(p => p.Provider) // <--- ¡Aquí está la magia de EF Core!
             .ToListAsync();
     }
 
     public async new Task<Product?> GetByIdAsync(Guid id){
-        return await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        return await _context.Products.Include(p => p.Provider).FirstOrDefaultAsync(p => p.Id == id);
     }
 }

@@ -268,16 +268,10 @@ public class CajaService : ICajaService
                                 .FontColor(Colors.Grey.Darken1);
                         });
 
-                        row.ConstantItem(100).AlignRight().Container()
-                            .Background("#f0fdf4")
-                            .PaddingVertical(4)
-                            .PaddingHorizontal(8)
-                            .CornerRadius(4)
-                            .AlignCenter()
-                            .Text("CAJA ACTIVA")
-                            .FontSize(8)
-                            .Bold()
-                            .FontColor("#15803d");
+                        row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>
+                        {
+                            col.Item().Border(1).BorderColor("#1C562A").Padding(5).AlignCenter().Text("Stockio").Bold().FontColor("#1C562A");
+                        });
                     });
 
                     col.Item().PaddingTop(10).LineHorizontal(1).LineColor("#e2e8f0");

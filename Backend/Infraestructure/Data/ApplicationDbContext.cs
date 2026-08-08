@@ -19,9 +19,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<Provider> Providers { get; set; }
     public DbSet<Sale> Sales { get; set; }
     public DbSet<SaleDetail> SaleDetails { get; set; }
-
+    public DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
+    public DbSet<PurchaseInvoiceDetail> PurchaseInvoiceDetails { get; set; }
     public DbSet<Caja> Cajas { get; set; } = null!;
     public DbSet<MovimientoCaja> MovimientosCaja { get; set; } = null!;
 
@@ -79,19 +81,93 @@ public class ApplicationDbContext : DbContext
         {
             entity.ToTable("products");
             entity.HasKey(p => p.Id);
-            entity.Property(p => p.Barcode).IsRequired().HasMaxLength(50);
-            entity.Property(p => p.Name).IsRequired().HasMaxLength(150);
-            entity.Property(p => p.Price).HasPrecision(18, 2);
 
+            // Configuramos la relación con Tenant para que no invente columnas raras
             entity.HasOne(p => p.Tenant)
                   .WithMany(t => t.Products)
                   .HasForeignKey(p => p.TenantId)
                   .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(p => new { p.TenantId, p.Barcode }).IsUnique();
         });
 
-        // Caja (Estandarizado nombre de tabla en minúscula)
+        // Provider
+        modelBuilder.Entity<Provider>(entity =>
+        {
+            entity.ToTable("providers");
+            entity.HasKey(p => p.Id);
+            
+            entity.Property(p => p.Name).IsRequired().HasMaxLength(150);
+            entity.Property(p => p.AccountBalance).HasPrecision(18, 2);
+    
+            entity.HasOne(p => p.Tenant)
+                  .WithMany(t => t.Providers)
+                  .HasForeignKey(p => p.TenantId)
+                  .OnDelete(DeleteBehavior.Cascade);
+    
+            entity.HasIndex(p => new { p.TenantId, p.Name });
+        });
+
+        // Configuración para PurchaseInvoice
+        modelBuilder.Entity<PurchaseInvoice>(entity =>
+        {
+            entity.ToTable("purchaseinvoices"); 
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.InvoiceNumber)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(e => e.TotalAmount)
+                .HasColumnType("decimal(18,2)");
+
+            entity.Property(e => e.PaidAmount)
+                .HasColumnType("decimal(18,2)");
+
+            entity.HasOne(e => e.Provider)
+                .WithMany(p => p.PurchaseInvoices)
+                .HasForeignKey(e => e.ProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.TenantId);
+        });
+
+        
+       modelBuilder.Entity<PurchaseInvoiceDetail>(entity =>
+        {
+            entity.ToTable("purchaseinvoicedetails");
+            entity.HasKey(d => d.Id);
+
+            entity.Property(d => d.UnitPrice)
+                .HasPrecision(18, 2);
+
+            // Forzar utf8mb4_0900_ai_ci en todas las columnas de esta tabla
+            entity.Property(d => d.Id)
+                .HasColumnType("char(36)")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_0900_ai_ci");
+
+            entity.Property(d => d.PurchaseInvoiceId)
+                .HasColumnType("char(36)")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_0900_ai_ci");
+
+            entity.Property(d => d.ProductId)
+                .HasColumnType("char(36)")
+                .HasCharSet("utf8mb4")
+                .UseCollation("utf8mb4_0900_ai_ci");
+
+            // Relaciones
+            entity.HasOne(d => d.PurchaseInvoice)
+                .WithMany(p => p.Details)
+                .HasForeignKey(d => d.PurchaseInvoiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Product)
+                .WithMany()
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+        
+        // Caja
         modelBuilder.Entity<Caja>(entity =>
         {
             entity.ToTable("cajas");
@@ -110,12 +186,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(c => c.Diferencia).HasPrecision(18, 2);
         });
 
-        // MovimientoCaja (Estandarizado nombre de tabla en minúscula)
-        modelBuilder.Entity<MovimientoCaja>(entity =>{
+        // MovimientoCaja
+        modelBuilder.Entity<MovimientoCaja>(entity => {
             entity.ToTable("movimientos_caja");
             entity.HasKey(m => m.Id);
 
-            // Mapeo explícito de propiedades GUID a char(36)
             entity.Property(m => m.Id)
                   .HasColumnType("char(36)");
 
@@ -130,13 +205,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(m => m.Tipo).HasMaxLength(10);
             entity.Property(m => m.Concepto).HasMaxLength(250);
 
-            // Relación con Caja
             entity.HasOne(m => m.Caja)
                   .WithMany(c => c.Movimientos)
                   .HasForeignKey(m => m.CajaId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            // Relación opcional con Sale
             entity.HasOne<Sale>()
                   .WithMany()
                   .HasForeignKey(m => m.VentaId)
@@ -168,7 +241,8 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(sd => sd.Product)
                   .WithMany()
                   .HasForeignKey(sd => sd.ProductId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .OnDelete(DeleteBehavior.Restrict)
+                  .IsRequired(false);
         });
 
         // =========================================================================
@@ -182,7 +256,6 @@ public class ApplicationDbContext : DbContext
                     .HasQueryFilter(CreateTenantFilterExpression(entityType.ClrType));
             }
         }
-
     }
 
     // Generador dinámico de expresiones Lambda para armar el "WHERE e.TenantId = actual"

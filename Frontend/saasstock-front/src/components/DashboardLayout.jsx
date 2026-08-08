@@ -11,7 +11,8 @@ import {
   LogOut, 
   ChevronUp,
   Menu,
-  X
+  X,
+  Truck
 } from 'lucide-react';
 
 export default function DashboardLayout({ children }) {
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }) {
     { name: 'Caja', href: '/caja', icon: Wallet },
     { name: 'Inventario', href: '/inventario', icon: Package },
     { name: 'Ventas', href: '/ventas', icon: ShoppingBag },
+    { name: 'Proveedores', href: '/providers', icon: Truck },
   ];
 
   const getInitials = (email) => {

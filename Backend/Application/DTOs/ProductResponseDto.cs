@@ -10,4 +10,6 @@ public class ProductResponseDto
     public int Stock { get; set; }
     public int MinimumStock { get; set; }
     public bool IsActive { get; set; }
+    public Guid? ProviderId { get; set; }
+    public string? ProviderName { get; set; }
 }

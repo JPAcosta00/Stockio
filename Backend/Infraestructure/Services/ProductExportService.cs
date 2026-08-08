@@ -41,7 +41,7 @@ namespace Infraestructure.Services
         
                 var headerRange = worksheet.Range("A1:F1");
                 headerRange.Style.Font.Bold = true;
-                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1C562A");
+                headerRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#1F4E78");
                 headerRange.Style.Font.FontColor = XLColor.White;
                 headerRange.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         
@@ -102,7 +102,7 @@ namespace Infraestructure.Services
                     // Estilos para la fila de totales
                     var totalRange = worksheet.Range(currentRow, 1, currentRow, 6);
                     totalRange.Style.Font.Bold = true;
-                    totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#E8F5E9");
+                    totalRange.Style.Fill.BackgroundColor = XLColor.FromHtml("#D9E1F2");
                     totalRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
                     totalRange.Style.Border.BottomBorder = XLBorderStyleValues.Double;
         
@@ -115,7 +115,7 @@ namespace Infraestructure.Services
                     worksheet.Cell(summaryStartRow, 2).Value = "VALOR";
                     var kpiHeader = worksheet.Range(summaryStartRow, 1, summaryStartRow, 2);
                     kpiHeader.Style.Font.Bold = true;
-                    kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#1C562A");
+                    kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#2F5597");
                     kpiHeader.Style.Font.FontColor = XLColor.White;
         
                     // Total Productos Únicos
@@ -157,18 +157,18 @@ namespace Infraestructure.Services
         {
             // Si la lista viene nula o vacía, asegura una lista vacía para evitar fallos
             products ??= Enumerable.Empty<Product>();
-
+        
             // Calcular totales para el resumen del reporte
             decimal valorTotalInventario = products.Sum(p => p.Price * p.Stock);
             int totalItems = products.Sum(p => p.Stock);
-
+        
             // Obtiene la hora de Argentina independientemente de si corre en Windows o Linux/Render
             var timeZone = TimeZoneInfo.FindSystemTimeZoneById(
                 OperatingSystem.IsWindows() ? "Argentina Standard Time" : "America/Argentina/Buenos_Aires");
             var fechaEmision = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZone);
-
+        
             var primaryColor = "#1C562A"; // Verde institucional
-
+        
             // Genera el documento PDF usando el contenedor de QuestPDF
             var document = Document.Create(container =>
             {
@@ -178,7 +178,7 @@ namespace Infraestructure.Services
                     page.Margin(1.5f, Unit.Centimetre);
                     page.PageColor(Colors.White);
                     page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
-
+        
                     // --- CABECERA DEL DOCUMENTO ---
                     page.Header().Row(row =>
                     {
@@ -186,15 +186,15 @@ namespace Infraestructure.Services
                         {
                             column.Item().Text("REPORTE DE INVENTARIO").FontSize(20).ExtraBold().FontColor(primaryColor);
                             column.Item().Text($"Fecha de Emisión: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(9).FontColor(Colors.Black);
-                            column.Item().Text("Sistema de Stock y Ventas").FontSize(9).FontColor(Colors.Grey.Medium);
+                            column.Item().Text("Todo tu stock en orden.").FontSize(9).FontColor(Colors.Grey.Medium);
                         });
-
+        
                         row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>
                         {
-                            col.Item().Border(1).BorderColor(primaryColor).Padding(5).AlignCenter().Text("SaaS Stock").Bold().FontColor(primaryColor);
+                            col.Item().Border(1).BorderColor(primaryColor).Padding(5).AlignCenter().Text("Stockio").Bold().FontColor(primaryColor);
                         });
                     });
-
+        
                     // --- CONTENIDO PRINCIPAL (TABLA) ---
                     page.Content().PaddingVertical(1, Unit.Centimetre).Column(column =>
                     {
@@ -210,7 +210,7 @@ namespace Infraestructure.Services
                                 columns.RelativeColumn(1);   // Stock
                                 columns.RelativeColumn(1.2f); // Total por Producto
                             });
-
+        
                             // Cabecera de la Tabla
                             table.Header(header =>
                             {
@@ -220,12 +220,12 @@ namespace Infraestructure.Services
                                 header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Stock").Bold().FontColor(Colors.White);
                                 header.Cell().Background(primaryColor).Padding(5).AlignRight().Text("Subtotal").Bold().FontColor(Colors.White);
                             });
-
+        
                             // Filas de la Tabla
                             foreach (var prod in products)
                             {
                                 decimal subtotal = prod.Price * prod.Stock;
-
+        
                                 table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Barcode ?? "S/N");
                                 table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(prod.Name);
                                 table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${prod.Price:N2}");
@@ -233,7 +233,7 @@ namespace Infraestructure.Services
                                 table.Cell().BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text($"${subtotal:N2}");
                             }
                         });
-
+        
                         column.Item().PaddingTop(20).AlignRight().Width(200).BorderTop(1).BorderColor(primaryColor).PaddingTop(5).Column(totalCol =>
                         {
                             totalCol.Item().Row(r =>
@@ -248,14 +248,14 @@ namespace Infraestructure.Services
                             });
                         });
                     });
-
+        
                     // --- PIE DE PÁGINA ---
                     page.Footer().Row(row =>
                     {
                         row.RelativeItem().Text("Documento confidencial generado de forma automatizada por el sistema de control de stock.")
                             .FontSize(8)
                             .FontColor(Colors.Grey.Medium);
-
+        
                         row.RelativeItem().AlignRight().Text(text =>
                         {
                             text.Span("Página ").FontSize(8).FontColor(Colors.Grey.Medium);
@@ -266,7 +266,7 @@ namespace Infraestructure.Services
                     });
                 });
             });
-
+        
             // Se compila "document" y lo pasa a byte[]
             using (var stream = new MemoryStream())
             {

@@ -97,8 +97,7 @@ namespace Infraestructure.Migrations
 
                     b.Property<string>("Barcode")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -112,12 +111,13 @@ namespace Infraestructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("varchar(150)");
+                        .HasColumnType("longtext");
 
                     b.Property<decimal>("Price")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<Guid?>("ProviderId")
+                        .HasColumnType("char(36)");
 
                     b.Property<int>("Stock")
                         .HasColumnType("int");
@@ -130,10 +130,123 @@ namespace Infraestructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "Barcode")
-                        .IsUnique();
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("products", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Provider", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("AccountBalance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ContactName")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Cuit")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId", "Name");
+
+                    b.ToTable("providers", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("InvoiceDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("ProviderId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProviderId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("purchaseinvoices", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.PurchaseInvoiceDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .UseCollation("utf8mb4_0900_ai_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("Id"), "utf8mb4");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("char(36)")
+                        .UseCollation("utf8mb4_0900_ai_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("ProductId"), "utf8mb4");
+
+                    b.Property<Guid>("PurchaseInvoiceId")
+                        .HasColumnType("char(36)")
+                        .UseCollation("utf8mb4_0900_ai_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("PurchaseInvoiceId"), "utf8mb4");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.ToTable("purchaseinvoicedetails", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Sale", b =>
@@ -307,8 +420,25 @@ namespace Infraestructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
                 {
+                    b.HasOne("Domain.Entities.Provider", "Provider")
+                        .WithMany("Products")
+                        .HasForeignKey("ProviderId");
+
                     b.HasOne("Domain.Entities.Tenant", "Tenant")
                         .WithMany("Products")
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Provider");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Provider", b =>
+                {
+                    b.HasOne("Domain.Entities.Tenant", "Tenant")
+                        .WithMany("Providers")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -316,13 +446,42 @@ namespace Infraestructure.Migrations
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Domain.Entities.SaleDetail", b =>
+            modelBuilder.Entity("Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.HasOne("Domain.Entities.Provider", "Provider")
+                        .WithMany("PurchaseInvoices")
+                        .HasForeignKey("ProviderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Provider");
+                });
+
+            modelBuilder.Entity("Domain.Entities.PurchaseInvoiceDetail", b =>
                 {
                     b.HasOne("Domain.Entities.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany("Details")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseInvoice");
+                });
+
+            modelBuilder.Entity("Domain.Entities.SaleDetail", b =>
+                {
+                    b.HasOne("Domain.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Domain.Entities.Sale", "Sale")
                         .WithMany("Details")
@@ -367,6 +526,18 @@ namespace Infraestructure.Migrations
                     b.Navigation("Movimientos");
                 });
 
+            modelBuilder.Entity("Domain.Entities.Provider", b =>
+                {
+                    b.Navigation("Products");
+
+                    b.Navigation("PurchaseInvoices");
+                });
+
+            modelBuilder.Entity("Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.Navigation("Details");
+                });
+
             modelBuilder.Entity("Domain.Entities.Sale", b =>
                 {
                     b.Navigation("Details");
@@ -375,6 +546,8 @@ namespace Infraestructure.Migrations
             modelBuilder.Entity("Domain.Entities.Tenant", b =>
                 {
                     b.Navigation("Products");
+
+                    b.Navigation("Providers");
 
                     b.Navigation("Users");
                 });

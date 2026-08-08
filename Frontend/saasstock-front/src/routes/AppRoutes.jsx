@@ -8,7 +8,7 @@ import Ventas from '../pages/Ventas';
 import Estadisticas from '../pages/Estadisticas'; 
 import Perfil from '../pages/Perfil'; 
 import Caja from '../pages/Caja'; 
-
+import Providers from '../pages/Providers'; 
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth(); 
@@ -63,6 +63,9 @@ export default function AppRoutes() {
         {/* SECCION DE VENTAS */}
         <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
         
+        {/* PROVEEDORES */}
+        <Route path="/providers" element={<PrivateRoute><Providers /></PrivateRoute>} /> 
+
         {/* PERFIL */}
         <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
 

@@ -10,4 +10,5 @@ public class Tenant
     // Relaciones
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Product> Products { get; set; } = new List<Product>();
+    public ICollection<Provider> Providers { get; set; } = new List<Provider>();
 }

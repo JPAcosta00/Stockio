@@ -1,4 +1,5 @@
 import apiClient from '../api/apiClient';
+import { useAlert } from '../context/AlertContext';
 
 // ==========================================
 // 1. IMPORTAR EXCEL (Envía el archivo crudo al backend)
@@ -38,7 +39,7 @@ export const exportarAExcel = async (filtros) => {
     window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error al exportar Excel:", error);
-    alert("No se pudo generar el archivo Excel desde el servidor.");
+    showAlert("No se pudo generar el archivo Excel desde el servidor.", "error");
   }
 };
 
@@ -63,6 +64,6 @@ export const exportarAPDF = async (filtros) => {
     window.URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Error al exportar PDF:", error);
-    alert("No se pudo generar el archivo PDF desde el servidor.");
+    showAlert("No se pudo generar el archivo PDF desde el servidor.", "error");
   }
 };

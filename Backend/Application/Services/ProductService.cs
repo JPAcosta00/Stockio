@@ -31,13 +31,15 @@ public class ProductService : IProductService
             Price = p.Price,
             Stock = p.Stock,
             MinimumStock = p.MinimumStock,
-            IsActive = p.IsActive
+            ProviderId = p.ProviderId,
+            IsActive = p.IsActive,
+            ProviderName = p.Provider?.Name
         });
     }
 
     public async Task<IEnumerable<ProductResponseDto>> GetProductsByTenantAsync(Guid tenantId)
     {
-        var products = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
+        var products = await _productRepository.GetProductsWithProviderAsync(tenantId);
 
         return products.Select(p => new ProductResponseDto
         {
@@ -48,7 +50,9 @@ public class ProductService : IProductService
             Price = p.Price,
             Stock = p.Stock,
             MinimumStock = p.MinimumStock,
-            IsActive = p.IsActive
+            ProviderId = p.ProviderId,
+            IsActive = p.IsActive,
+            ProviderName = p.Provider != null ? p.Provider.Name : null
         });
     }
 
@@ -126,6 +130,7 @@ public class ProductService : IProductService
             Price = dto.Price,
             Stock = dto.Stock,
             MinimumStock = dto.MinimumStock,
+            ProviderId = dto.ProviderId,
             IsActive = true
         };
 
@@ -147,6 +152,7 @@ public class ProductService : IProductService
             Price = newProduct.Price,
             Stock = newProduct.Stock,
             MinimumStock = newProduct.MinimumStock,
+            ProviderId = newProduct.ProviderId,
             IsActive = newProduct.IsActive
         };
     }
@@ -174,7 +180,7 @@ public class ProductService : IProductService
         if (product == null)
             throw new KeyNotFoundException("El producto especificado no existe o no tenés permisos para verlo.");
 
-        product.UpdateDetails(dto.Name, dto.Barcode, dto.Price, dto.StockActual, dto.StockMinimum, dto.Description, dto.State);
+        product.UpdateDetails(dto.Name, dto.Barcode, dto.Price, dto.StockActual, dto.StockMinimum, dto.Description, dto.State, dto.ProviderId);
 
         await _productRepository.SaveChangesAsync();
     }

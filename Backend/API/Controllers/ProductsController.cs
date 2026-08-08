@@ -198,15 +198,19 @@ public class ProductsController : ControllerBase
 
     [HttpPut("{id:guid}")]
     [Authorize]
-    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductDto dto){
-        try{
-            await _productService.UpdateProductAsync(id, dto);
+    public async Task<IActionResult> UpdateProduct(Guid id, [FromBody] UpdateProductDto dto)
+    {
+        try
+        {
+            await _productService.UpdateProductAsync(id, dto); // Llamada directa sin variable
             return Ok(new { message = "Producto actualizado con éxito." });
         }
-        catch (KeyNotFoundException ex){
-            return NotFound(new { message = ex.Message }); // 404 si no existe o es de otro tenant
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
         }
-        catch (Exception ex){
+        catch (Exception ex)
+        {
             return BadRequest(new { message = ex.Message });
         }
     }
