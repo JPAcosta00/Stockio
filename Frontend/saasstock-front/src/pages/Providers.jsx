@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Truck, Plus, Search, Edit2, Trash2, X, AlertCircle, FileText, Eye, CheckCircle2 } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
 import CreatePurchaseInvoiceModal from "../components/CreatePurchaseInvoiceModal";
+import apiClient from '../services/apiClient'; // <-- Importamos tu cliente configurado de Axios
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
@@ -32,25 +33,16 @@ export default function Providers() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedProviderForInvoice, setSelectedProviderForInvoice] = useState(null);
 
-  const token = sessionStorage.getItem('token');
-
   const fetchProviders = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/providers', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Error al cargar los proveedores');
-      
-      const data = await response.json();
-      setProviders(data);
+      // Usamos apiClient (Axios ya incluye baseURL y token por interceptor)
+      const response = await apiClient.get('/providers');
+      setProviders(response.data);
     } catch (err) {
-      setError(err.message);
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'Error al cargar los proveedores';
+      setError(errorMsg);
+      showAlert(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -79,21 +71,13 @@ export default function Providers() {
     setLoadingInvoices(true);
 
     try {
-      const response = await fetch('/api/purchaseinvoices', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('Error al cargar las facturas del proveedor');
-
-      const allInvoices = await response.json();
+      const response = await apiClient.get('/purchaseinvoices');
       // Filtramos las facturas que corresponden a este proveedor
-      const filtered = allInvoices.filter(inv => inv.providerId === provider.id);
+      const filtered = response.data.filter(inv => inv.providerId === provider.id);
       setProviderInvoices(filtered);
     } catch (err) {
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'Error al cargar las facturas del proveedor';
+      showAlert(errorMsg, 'error');
       setProviderInvoices([]);
     } finally {
       setLoadingInvoices(false);
@@ -103,25 +87,18 @@ export default function Providers() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const url = isEditing ? `/api/providers/${currentProvider.id}` : '/api/providers';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(currentProvider)
-      });
-
-      if (!response.ok) throw new Error('No se pudo guardar el proveedor');
+      if (isEditing) {
+        await apiClient.put(`/providers/${currentProvider.id}`, currentProvider);
+      } else {
+        await apiClient.post('/providers', currentProvider);
+      }
 
       setIsModalOpen(false);
       showAlert(isEditing ? 'Proveedor actualizado con éxito' : 'Proveedor creado con éxito', 'success');
       fetchProviders();
     } catch (err) {
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'No se pudo guardar el proveedor';
+      showAlert(errorMsg, 'error');
     }
   };
 
@@ -130,44 +107,29 @@ export default function Providers() {
     if (!window.confirm('¿Estás seguro de eliminar este proveedor?')) return;
 
     try {
-      const response = await fetch(`/api/providers/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('No se pudo eliminar el proveedor');
-
+      await apiClient.delete(`/providers/${id}`);
       showAlert('Proveedor eliminado correctamente', 'success');
       fetchProviders();
     } catch (err) {
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'No se pudo eliminar el proveedor';
+      showAlert(errorMsg, 'error');
     }
   };
 
   // Marcar factura como pagada
   const handleMarkAsPaid = async (invoiceId) => {
     try {
-      const response = await fetch(`/api/purchaseinvoices/${invoiceId}/pay`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) throw new Error('No se pudo actualizar el estado de la factura');
-
+      await apiClient.patch(`/purchaseinvoices/${invoiceId}/pay`);
       showAlert('Factura marcada como pagada con éxito', 'success');
       
-      // Actualizamos las facturas localmente dentro del modal y recargamos los proveedores para ver el saldo actualizado
+      // Actualizamos las facturas localmente dentro del modal y recargamos los proveedores
       if (selectedProvider) {
         handleOpenDetailModal(selectedProvider);
       }
       fetchProviders();
     } catch (err) {
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'No se pudo actualizar el estado de la factura';
+      showAlert(errorMsg, 'error');
     }
   };
 
