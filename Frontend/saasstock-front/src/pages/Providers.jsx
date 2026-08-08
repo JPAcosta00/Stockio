@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Truck, Plus, Search, Edit2, Trash2, X, AlertCircle, FileText, Eye, CheckCircle2 } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
 import CreatePurchaseInvoiceModal from "../components/CreatePurchaseInvoiceModal";
-import apiClient from '../services/apiClient'; // <-- Importamos tu cliente configurado de Axios
+import apiClient from '../api/apiClient';
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
