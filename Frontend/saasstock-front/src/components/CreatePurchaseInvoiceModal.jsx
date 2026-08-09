@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Plus, Trash2, FileText } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout';
+import apiClient from '../api/apiClient';
 
 export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceCreated, defaultProviderId = null }) {
   const [providers, setProviders] = useState([]);
@@ -26,43 +27,36 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     unitPrice: 0
   });
 
-  const token = sessionStorage.getItem('token');
-
-  // Cargar proveedores y productos al abrir el modal
+  // Cargar proveedores y productos al abrir el modal usando apiClient
   useEffect(() => {
     if (!isOpen) return;
 
     const fetchData = async () => {
       try {
         setLoadingData(true);
-        const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
         const [provRes, prodRes] = await Promise.all([
-          fetch('/api/providers', { headers }),
-          fetch('/api/products', { headers })
+          apiClient.get('/providers'),
+          apiClient.get('/products')
         ]);
 
-        if (!provRes.ok || !prodRes.ok) throw new Error('Error al cargar datos para la factura');
-
-        const provData = await provRes.json();
-        const prodData = await prodRes.json();
-
-        setProviders(provData);
-        setProducts(prodData);
+        setProviders(provRes.data);
+        setProducts(prodRes.data);
 
         // Si viene un proveedor por defecto, lo fijamos
         if (defaultProviderId) {
           setInvoiceData(prev => ({ ...prev, providerId: defaultProviderId }));
         }
       } catch (err) {
-        showAlert(err.message, 'error');
+        const errorMsg = err.response?.data?.message || err.message || 'Error al cargar datos para la factura';
+        showAlert(errorMsg, 'error');
       } finally {
         setLoadingData(false);
       }
     };
 
     fetchData();
-  }, [isOpen, defaultProviderId, token]);
+  }, [isOpen, defaultProviderId, showAlert]);
 
   // Agregar un producto a los detalles de la factura
   const handleAddDetail = () => {
@@ -119,7 +113,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     return invoiceData.details.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
   };
 
-  // Enviar factura a la API
+  // Enviar factura a la API usando apiClient
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!invoiceData.providerId) {
@@ -137,25 +131,14 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
 
     try {
       setSubmitting(true);
-      const response = await fetch('/api/purchaseinvoices', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(invoiceData)
-      });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.message || 'Error al registrar la factura');
-      }
+      await apiClient.post('/purchaseinvoices', invoiceData);
 
       showAlert('Factura de compra registrada con éxito. Stock y cuenta corriente actualizados.', 'success');
       if (onInvoiceCreated) onInvoiceCreated();
       onClose();
     } catch (err) {
-      showAlert(err.message, 'error');
+      const errorMsg = err.response?.data?.message || err.message || 'Error al registrar la factura';
+      showAlert(errorMsg, 'error');
     } finally {
       setSubmitting(false);
     }
