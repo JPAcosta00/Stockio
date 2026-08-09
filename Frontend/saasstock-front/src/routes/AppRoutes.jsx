@@ -9,6 +9,7 @@ import Estadisticas from '../pages/Estadisticas';
 import Perfil from '../pages/Perfil'; 
 import Caja from '../pages/Caja'; 
 import Providers from '../pages/Providers'; 
+import { ThemeProvider } from '../context/ThemeContext';
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth(); 
@@ -40,37 +41,39 @@ const PublicRoute = ({ children }) => {
 
 export default function AppRoutes() {
   return (
-    <AlertProvider>
-      <Routes>
-        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+    <ThemeProvider>
+      <AlertProvider>
+        <Routes>
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-        {/* INICIO */}
-        <Route 
-          path="/" 
-          element={
-            <PrivateRoute>
-              <Estadisticas />
-            </PrivateRoute>
-          } 
-        />
+          {/* INICIO */}
+          <Route 
+            path="/" 
+            element={
+              <PrivateRoute>
+                <Estadisticas />
+              </PrivateRoute>
+            } 
+          />
 
-        {/* CAJA */}
-        <Route path="/caja" element={<PrivateRoute><Caja /></PrivateRoute>} />
+          {/* CAJA */}
+          <Route path="/caja" element={<PrivateRoute><Caja /></PrivateRoute>} />
 
-        {/* INVENTARIO REAL */}
-        <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
+          {/* INVENTARIO REAL */}
+          <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
 
-        {/* SECCION DE VENTAS */}
-        <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
-        
-        {/* PROVEEDORES */}
-        <Route path="/providers" element={<PrivateRoute><Providers /></PrivateRoute>} /> 
+          {/* SECCION DE VENTAS */}
+          <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
+          
+          {/* PROVEEDORES */}
+          <Route path="/providers" element={<PrivateRoute><Providers /></PrivateRoute>} /> 
 
-        {/* PERFIL */}
-        <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
+          {/* PERFIL */}
+          <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
 
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </AlertProvider>
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </AlertProvider>
+    </ThemeProvider>
   );
 }

@@ -1,9 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { X, Calculator, CreditCard, DollarSign } from 'lucide-react';
+import { useAlert } from '../context/AlertContext';
+import { useTheme } from '../components/DashboardLayout';
 
 export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVenta, enviando }) {
   const [montoRecibido, setMontoRecibido] = useState('');
   const [medioPago, setMedioPago] = useState('EFECTIVO');
   const inputRef = useRef(null);
+  const { showAlert } = useAlert();
+  const { darkMode } = useTheme();
 
   useEffect(() => {
     if (isOpen) {
@@ -30,7 +35,10 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (pagoInsuficiente) return;
+    if (pagoInsuficiente) {
+      showAlert('El monto recibido es menor al total de la venta', 'error');
+      return;
+    }
 
     onConfirmarVenta({
       montoRecibido: esEfectivo ? recibido : totalVenta,
@@ -40,37 +48,48 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-md shadow-2xl shadow-black/50 overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+      <div className={`border rounded-2xl w-full max-w-md shadow-2xl overflow-hidden flex flex-col transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'
+      }`}>
         
         {/* Cabecera */}
-        <div className="p-5 border-b border-zinc-800 flex justify-between items-center">
-          <div>
-            <h3 className="text-base font-extrabold text-zinc-100 uppercase tracking-wider">Calculadora de Cobro</h3>
-            <p className="text-xs text-zinc-400 font-medium">Seleccioná medio de pago y calculá el vuelto</p>
+        <div className={`p-5 border-b flex justify-between items-center ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+          <div className="flex items-center gap-2.5">
+            <div className={`p-2 rounded-xl ${darkMode ? 'bg-zinc-800 text-[#5BA535]' : 'bg-slate-100 text-[#5BA535]'}`}>
+              <Calculator className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className={`text-base font-extrabold uppercase tracking-wider ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>Calculadora de Cobro</h3>
+              <p className={`text-xs font-medium ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Seleccioná medio de pago y calculá el vuelto</p>
+            </div>
           </div>
           <button
             onClick={onClose}
             disabled={enviando}
-            className="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white flex items-center justify-center transition-colors font-bold disabled:opacity-50"
+            className={`p-1.5 rounded-xl transition-colors cursor-pointer disabled:opacity-50 ${
+              darkMode ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'
+            }`}
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
           
           {/* Tarjeta de Total */}
-          <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 text-center space-y-1">
-            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Total a Cobrar</span>
-            <p className="text-3xl font-mono font-black text-[#5BA535]">
+          <div className={`border rounded-2xl p-4 text-center space-y-1 transition-colors ${
+            darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'
+          }`}>
+            <span className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Total a Cobrar</span>
+            <p className={`text-3xl font-mono font-black ${darkMode ? 'text-[#5BA535]' : 'text-emerald-600'}`}>
               ${totalVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
             </p>
           </div>
 
           {/* Selector de Medio de Pago */}
           <div>
-            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-2">Medio de Pago</label>
+            <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Medio de Pago</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'EFECTIVO', label: '💵 Efectivo' },
@@ -82,10 +101,14 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                   key={med.id}
                   type="button"
                   onClick={() => setMedioPago(med.id)}
-                  className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                     medioPago === med.id
-                      ? 'bg-zinc-800 border-[#5BA535] text-white shadow-sm border-l-2 border-l-[#5BA535]'
-                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                      ? darkMode 
+                        ? 'bg-zinc-800 border-[#5BA535] text-white shadow-sm border-l-4 border-l-[#5BA535]' 
+                        : 'bg-slate-100 border-[#5BA535] text-slate-900 shadow-sm border-l-4 border-l-[#5BA535]'
+                      : darkMode 
+                        ? 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200' 
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-slate-300 hover:text-slate-900'
                   }`}
                 >
                   {med.label}
@@ -100,9 +123,9 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
               
               {/* Input Monto Recibido */}
               <div>
-                <label className="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Paga con ($):</label>
+                <label className={`block text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Paga con ($):</label>
                 <div className="relative">
-                  <span className="absolute left-3.5 top-3 text-zinc-500 text-sm font-mono font-bold">$</span>
+                  <span className={`absolute left-3.5 top-3 text-sm font-mono font-bold ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>$</span>
                   <input
                     ref={inputRef}
                     type="number"
@@ -110,7 +133,11 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                     placeholder="0.00"
                     value={montoRecibido}
                     onChange={(e) => setMontoRecibido(e.target.value)}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-8 pr-3 py-2.5 text-lg text-zinc-100 font-mono focus:outline-none focus:border-[#5BA535] focus:ring-2 focus:ring-[#5BA535]/20 transition-all"
+                    className={`w-full border rounded-xl pl-8 pr-3 py-2.5 text-lg font-mono focus:outline-none focus:border-[#5BA535] focus:ring-2 focus:ring-[#5BA535]/20 transition-all ${
+                      darkMode 
+                        ? 'bg-zinc-950 border-zinc-800 text-zinc-100' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900'
+                    }`}
                   />
                 </div>
               </div>
@@ -120,7 +147,11 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                 <button
                   type="button"
                   onClick={handleExacto}
-                  className="px-3 py-1.5 bg-[#1C562A]/40 hover:bg-[#1C562A]/60 text-[#5BA535] border border-[#5BA535]/30 text-xs font-mono font-bold rounded-lg transition-colors"
+                  className={`px-3 py-1.5 border text-xs font-mono font-bold rounded-lg transition-colors cursor-pointer ${
+                    darkMode 
+                      ? 'bg-[#1C562A]/40 hover:bg-[#1C562A]/60 text-[#5BA535] border-[#5BA535]/30' 
+                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                  }`}
                 >
                   Exacto
                 </button>
@@ -129,7 +160,11 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                     key={monto}
                     type="button"
                     onClick={() => handleQuickAmount(monto)}
-                    className="px-2.5 py-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 text-xs font-mono font-semibold rounded-lg transition-colors"
+                    className={`px-2.5 py-1.5 border text-xs font-mono font-semibold rounded-lg transition-colors cursor-pointer ${
+                      darkMode 
+                        ? 'bg-zinc-950 hover:bg-zinc-800 border-zinc-800 text-zinc-300' 
+                        : 'bg-slate-50 hover:bg-slate-200 border-slate-200 text-slate-700'
+                    }`}
                   >
                     +${monto.toLocaleString('es-AR')}
                   </button>
@@ -140,13 +175,15 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
               <div className={`p-3.5 rounded-xl border flex justify-between items-center transition-all ${
                 pagoInsuficiente 
                   ? 'bg-red-950/30 border-red-900/50 text-red-400' 
-                  : 'bg-zinc-950 border-zinc-800 text-zinc-200'
+                  : darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-zinc-200' 
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}>
                 <span className="text-xs font-bold uppercase tracking-wider">
                   {pagoInsuficiente ? '⚠️ Falta abonar' : '💵 Vuelto a Entregar'}
                 </span>
                 <span className={`text-xl font-mono font-bold ${
-                  pagoInsuficiente ? 'text-red-400' : 'text-[#5BA535]'
+                  pagoInsuficiente ? 'text-red-400' : darkMode ? 'text-[#5BA535]' : 'text-emerald-600'
                 }`}>
                   ${Math.abs(vuelto).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </span>
@@ -155,19 +192,21 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
           )}
 
           {/* Acciones */}
-          <div className="pt-2 flex gap-3">
+          <div className={`pt-2 flex gap-3 border-t ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
             <button
               type="button"
               onClick={onClose}
               disabled={enviando}
-              className="w-1/3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50 shadow-sm"
+              className={`w-1/3 font-bold py-2.5 rounded-xl text-xs transition-colors disabled:opacity-50 cursor-pointer shadow-sm ${
+                darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
+              }`}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={enviando || pagoInsuficiente}
-              className="w-2/3 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md shadow-[#1C562A]/30 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-2/3 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md shadow-[#1C562A]/30 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {enviando ? '⏳ Finalizando...' : '⚡ Finalizar y Registrar'}
             </button>

@@ -1,27 +1,38 @@
 import React from 'react';
+import { useTheme } from '../components/DashboardLayout'; 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
 export default function SalesTimelineChart({ data = [] }) {
+  const { darkMode } = useTheme(); // <-- 2. Reemplazado el soporte estricto oscuro por el hook global
+
   if (!data || data.length === 0) {
     return (
-      <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 text-center shadow-lg">
-        <h3 className="font-bold text-zinc-100 text-base mb-2">Evolución Temporal de Ventas</h3>
-        <p className="text-zinc-500 text-sm py-8">No hay suficientes datos registrados para mostrar la tendencia en este período.</p>
+      <div className={`p-6 rounded-2xl border text-center shadow-lg transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-900'
+      }`}>
+        <h3 className={`font-bold text-base mb-2 ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>Evolución Temporal de Ventas</h3>
+        <p className={`text-sm py-8 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>No hay suficientes datos registrados para mostrar la tendencia en este período.</p>
       </div>
     );
   }
 
+  // Definición de colores dinámicos para los ejes y grillas del gráfico Recharts según el tema
+  const strokeColorGrid = darkMode ? '#27272a' : '#e2e8f0';
+  const strokeColorAxis = darkMode ? '#71717a' : '#64748b';
+
   return (
-    <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-xl space-y-4">
+    <div className={`p-6 rounded-2xl border shadow-xl space-y-4 transition-colors ${
+      darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
+    }`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30">
             <TrendingUp className="w-5 h-5 text-[#5BA535]" />
           </div>
           <div>
-            <h3 className="font-extrabold text-zinc-100 text-base tracking-tight">Evolución Temporal de Ventas</h3>
-            <p className="text-xs text-zinc-400 font-medium">Tendencia de facturación según los filtros aplicados</p>
+            <h3 className={`font-extrabold text-base tracking-tight ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>Evolución Temporal de Ventas</h3>
+            <p className={`text-xs font-medium ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Tendencia de facturación según los filtros aplicados</p>
           </div>
         </div>
       </div>
@@ -35,17 +46,17 @@ export default function SalesTimelineChart({ data = [] }) {
                 <stop offset="95%" stopColor="#1C562A" stopOpacity={0.0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={strokeColorGrid} vertical={false} />
             <XAxis 
               dataKey="date" 
-              stroke="#71717a" 
+              stroke={strokeColorAxis} 
               fontSize={11} 
               tickLine={false}
               axisLine={false}
               dy={8}
             />
             <YAxis 
-              stroke="#71717a" 
+              stroke={strokeColorAxis} 
               fontSize={11} 
               tickLine={false}
               axisLine={false}
@@ -53,7 +64,13 @@ export default function SalesTimelineChart({ data = [] }) {
               dx={-4}
             />
             <Tooltip 
-              contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', borderRadius: '12px', color: '#fff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.5)' }}
+              contentStyle={{ 
+                backgroundColor: darkMode ? '#18181b' : '#ffffff', 
+                borderColor: darkMode ? '#27272a' : '#e2e8f0', 
+                borderRadius: '12px', 
+                color: darkMode ? '#fff' : '#0f172a', 
+                boxShadow: darkMode ? '0 10px 15px -3px rgb(0 0 0 / 0.5)' : '0 10px 15px -3px rgb(0 0 0 / 0.1)' 
+              }}
               formatter={(value) => [`$${Number(value).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`, 'Total Ventas']}
               labelFormatter={(label) => `Período / Hora: ${label}`}
             />

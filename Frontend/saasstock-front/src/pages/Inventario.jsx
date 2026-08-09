@@ -5,13 +5,13 @@ import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
 import CreatePurchaseInvoiceModal from '../components/CreatePurchaseInvoiceModal';
 import { useAlert } from '../context/AlertContext';
+import { useTheme } from '../components/DashboardLayout'; 
 import {
   Package,
   Search,
   FileSpreadsheet,
   FileText,
   Upload,
-  AlertTriangle,
   Loader2,
   Plus,
   Barcode,
@@ -21,6 +21,7 @@ import {
 
 export default function Inventario() {
   const { showAlert } = useAlert();
+  const { darkMode } = useTheme(); // <-- Usamos el hook global aquí
 
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]); 
@@ -265,16 +266,16 @@ export default function Inventario() {
   const totalPaginas = Math.ceil(productos.length / productosPorPagina);
 
   return (
-    <div className="space-y-6">
+    <div className={`w-full max-w-full space-y-6 px-2 sm:px-4 lg:px-6 transition-colors duration-200 min-h-screen ${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'}`}>
      
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-sm">
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border p-6 rounded-2xl shadow-sm transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
             <Package className="w-6 h-6 text-[#5BA535]" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Control de Stock</h1>
-            <p className="text-xs text-zinc-400 mt-0.5">Gestión integral del catálogo de mercadería.</p>
+            <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>Control de Stock</h1>
+            <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Gestión integral del catálogo de mercadería.</p>
           </div>
         </div>
        
@@ -287,13 +288,13 @@ export default function Inventario() {
         </button>
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row items-end gap-4">
+      <div className={`border p-5 rounded-2xl shadow-sm space-y-4 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+        <div className="flex flex-col lg:flex-row items-end gap-4">
          
           <div className="flex-1 w-full">
-            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Buscar por Nombre</label>
+            <label className={`block text-[11px] uppercase tracking-wider mb-1.5 font-semibold ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Buscar por Nombre</label>
             <div className="relative">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="text"
                 placeholder="Ej: Amortiguador..."
@@ -304,17 +305,25 @@ export default function Inventario() {
                     handleBuscar();
                   }
                 }}
-                className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors"
+                className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-[#5BA535] transition-colors ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400'
+                }`}
               />
             </div>
           </div>
          
-          <div className="w-full md:w-56">
-            <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">Filtrar Período</label>
+          <div className="w-full lg:w-56">
+            <label className={`block text-[11px] uppercase tracking-wider mb-1.5 font-semibold ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Filtrar Período</label>
             <select
               value={filtroPeriodo}
               onChange={(e) => setFiltroPeriodo(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-[#5BA535] cursor-pointer transition-colors"
+              className={`w-full px-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-[#5BA535] cursor-pointer transition-colors ${
+                darkMode 
+                  ? 'bg-zinc-950 border-zinc-800 text-white' 
+                  : 'bg-slate-50 border-slate-200 text-slate-800'
+              }`}
             >
               <option value="">Todos los registros</option>
               <option value="critico">⚠️ Stock Crítico</option>
@@ -327,19 +336,27 @@ export default function Inventario() {
 
           <button
             onClick={handleBuscar}
-            className="w-full md:w-auto bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-6 py-2.5 rounded-xl text-xs transition-colors border border-zinc-700 cursor-pointer shadow-sm"
+            className={`w-full lg:w-auto font-semibold px-6 py-2.5 rounded-xl text-xs transition-colors border cursor-pointer shadow-sm ${
+              darkMode 
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' 
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300'
+            }`}
           >
             Buscar
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-zinc-800/80">
+        <div className={`flex flex-wrap items-center justify-between gap-3 pt-3 border-t ${darkMode ? 'border-zinc-800/80' : 'border-slate-100'}`}>
           <div className="flex flex-wrap items-center gap-2">
            
             <button
               type="button"
               onClick={() => setIsExcelFormatModalOpen(true)}
-              className={`bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`border px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                darkMode 
+                  ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+              } ${cargandoImportacion ? 'opacity-50 pointer-events-none' : ''}`}
             >
               <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
               <span>{cargandoImportacion ? 'Procesando...' : 'Importar Excel'}</span>
@@ -366,18 +383,30 @@ export default function Inventario() {
 
             <button
               onClick={() => setIsPurchaseInvoiceModalOpen(true)}
-              className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer"
+              className={`border px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                darkMode 
+                  ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+              }`}
             >
               <FileText className="w-3.5 h-3.5 text-[#5BA535]" />
               <span>Factura Proveedor</span>
             </button>
            
-            <button onClick={() => exportarAExcel({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
+            <button onClick={() => exportarAExcel({})} className={`border px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+              darkMode 
+                ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+            }`}>
               <FileSpreadsheet className="w-3.5 h-3.5 text-[#5BA535]" />
               <span>Exportar Excel</span>
             </button>
            
-            <button onClick={() => exportarAPDF({})} className="bg-zinc-950 hover:bg-zinc-800/80 border border-zinc-800 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 transition-colors flex items-center gap-2 cursor-pointer">
+            <button onClick={() => exportarAPDF({})} className={`border px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+              darkMode 
+                ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+            }`}>
               <FileText className="w-3.5 h-3.5 text-red-400" />
               <span>Exportar PDF</span>
             </button>
@@ -385,15 +414,17 @@ export default function Inventario() {
 
           {productoAEliminar && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
-                <h3 className="text-sm font-bold text-white">Confirmar eliminación</h3>
-                <p className="text-xs text-zinc-400">
-                  ¿Estás seguro de que querés eliminar el producto <span className="text-zinc-200 font-semibold">"{productoAEliminar.name}"</span>?
+              <div className={`border p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+                <h3 className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>Confirmar eliminación</h3>
+                <p className={`text-xs ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
+                  ¿Estás seguro de que querés eliminar el producto <span className={`font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-900'}`}>"{productoAEliminar.name}"</span>?
                 </p>
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     onClick={() => setProductoAEliminar(null)}
-                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
+                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                      darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
                   >
                     Cancelar
                   </button>
@@ -415,7 +446,7 @@ export default function Inventario() {
                 setFiltroPeriodo('');
                 cargarInventario();
               }}
-              className="text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer font-medium"
+              className={`text-xs transition-colors cursor-pointer font-medium ${darkMode ? 'text-zinc-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
             >
               Limpiar filtros ×
             </button>
@@ -426,56 +457,58 @@ export default function Inventario() {
       {/* Modal Guía Formato Excel */}
       {isExcelFormatModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+          <div className={`border p-6 rounded-2xl max-w-lg w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                 <Info className="w-4 h-4 text-[#5BA535]" /> Formato requerido para el archivo Excel
               </h3>
               <button 
                 onClick={() => setIsExcelFormatModalOpen(false)}
-                className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold cursor-pointer"
+                className={`text-xs font-semibold cursor-pointer ${darkMode ? 'text-zinc-500 hover:text-zinc-300' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-zinc-300">
-              <p className="text-zinc-400 leading-relaxed">
+            <div className="space-y-3 text-xs">
+              <p className={`leading-relaxed ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
                 Para que la importación funcione correctamente, asegurate de que tu archivo Excel (`.xlsx` o `.xls`) contenga las siguientes columnas en la primera fila:
               </p>
 
-              <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 space-y-2 font-mono text-[11px]">
-                <div className="flex justify-between border-b border-zinc-800/60 pb-1.5 text-zinc-400 font-semibold">
+              <div className={`border rounded-xl p-3 space-y-2 font-mono text-[11px] ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
+                <div className={`flex justify-between border-b pb-1.5 font-semibold ${darkMode ? 'border-zinc-800/60 text-zinc-400' : 'border-slate-200 text-slate-500'}`}>
                   <span>Columna / Cabecera</span>
                   <span>Descripción</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5BA535]">barcode</span>
-                  <span className="text-zinc-400">Código de barras (Texto/Núm)</span>
+                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Código de barras (Texto/Núm)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5BA535]">name</span>
-                  <span className="text-zinc-400">Nombre del producto (Obligatorio)</span>
+                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Nombre del producto (Obligatorio)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5BA535]">price</span>
-                  <span className="text-zinc-400">Precio de venta</span>
+                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Precio de venta</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5BA535]">stock</span>
-                  <span className="text-zinc-400">Cantidad actual en stock</span>
+                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Cantidad actual en stock</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-[#5BA535]">minimumStock</span>
-                  <span className="text-zinc-400">Stock mínimo de alerta</span>
+                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Stock mínimo de alerta</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800">
+            <div className={`flex justify-end gap-2 pt-3 border-t ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
               <button
                 onClick={() => setIsExcelFormatModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
+                className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                  darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
               >
                 Cancelar
               </button>
@@ -495,18 +528,18 @@ export default function Inventario() {
         </div>
       )}
 
-      {/* Modal OCR Factura (Fondo sólido corregido) */}
+      {/* Modal OCR Factura */}
       {isOcrModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+          <div className={`border p-6 rounded-2xl max-w-2xl w-full space-y-5 shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh] ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
             
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-3 shrink-0">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <div className={`flex items-center justify-between border-b pb-3 shrink-0 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+              <h3 className={`text-sm font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                 <span>🧾</span> Procesamiento Inteligente OCR 
               </h3>
               <button 
                 onClick={() => { setIsOcrModalOpen(false); setDatosOcrDetectados(null); }}
-                className="text-zinc-500 hover:text-zinc-300 text-xs font-semibold cursor-pointer"
+                className={`text-xs font-semibold cursor-pointer ${darkMode ? 'text-zinc-500 hover:text-zinc-300' : 'text-slate-400 hover:text-slate-600'}`}
               >
                 ✕
               </button>
@@ -516,18 +549,20 @@ export default function Inventario() {
               {cargandoOcr ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin text-[#5BA535]" />
-                  <p className="text-xs text-zinc-400 font-medium">Analizando imagen de la factura...</p>
+                  <p className={`text-xs font-medium ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Analizando imagen de la factura...</p>
                 </div>
               ) : datosOcrDetectados ? (
                 <div className="space-y-4">
-                  <div className="bg-zinc-950 border border-zinc-800 p-3 rounded-xl flex items-center justify-between">
-                    <span className="text-xs text-zinc-300">Margen de ganancia aplicado:</span>
+                  <div className={`border p-3 rounded-xl flex items-center justify-between ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
+                    <span className={`text-xs ${darkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Margen de ganancia aplicado:</span>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
                         value={margenGanancia}
                         onChange={(e) => setMargenGanancia(Number(e.target.value))}
-                        className="w-16 px-2 py-1 bg-zinc-900 border border-zinc-700 rounded-lg text-xs text-white text-center focus:outline-none focus:border-[#5BA535]"
+                        className={`w-16 px-2 py-1 border rounded-lg text-xs text-center focus:outline-none focus:border-[#5BA535] ${
+                          darkMode ? 'bg-zinc-900 border-zinc-700 text-white' : 'bg-white border-slate-300 text-slate-800'
+                        }`}
                       />
                       <span className="text-xs text-[#5BA535] font-bold">%</span>
                     </div>
@@ -535,24 +570,26 @@ export default function Inventario() {
 
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">
+                      <p className={`text-[11px] uppercase tracking-wider font-semibold ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
                         Productos Detectados ({datosOcrDetectados.length}):
                       </p>
-                      <span className="text-[10px] text-zinc-500">Verificá los ítems extraídos antes de guardar</span>
+                      <span className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Verificá los ítems extraídos antes de guardar</span>
                     </div>
 
                     <div className="space-y-2">
                       {datosOcrDetectados.map((item, idx) => {
                         const precioVentaCalculado = Math.round(item.price * (1 + margenGanancia / 100));
                         return (
-                          <div key={idx} className="bg-zinc-950 border border-zinc-800/80 p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                          <div key={idx} className={`border p-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs ${
+                            darkMode ? 'bg-zinc-950 border-zinc-800/80' : 'bg-slate-50 border-slate-200'
+                          }`}>
                             <div className="flex-1">
-                              <p className="text-white font-medium">{item.name}</p>
-                              <p className="text-zinc-400 text-[11px]">Costo: ${item.price} | Cantidad: {item.stock} | <span className="text-[#5BA535] font-semibold">Venta (Sugerido): ${precioVentaCalculado}</span></p>
+                              <p className={`font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>{item.name}</p>
+                              <p className={`text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>Costo: ${item.price} | Cantidad: {item.stock} | <span className="text-[#5BA535] font-semibold">Venta (Sugerido): ${precioVentaCalculado}</span></p>
                             </div>
 
                             <div className="relative min-w-[190px]">
-                              <Barcode className="w-4 h-4 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                              <Barcode className={`w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
                               <input
                                 ref={(el) => (barcodeInputsRef.current[idx] = el)}
                                 type="text"
@@ -560,7 +597,9 @@ export default function Inventario() {
                                 value={item.barcode || ''}
                                 onChange={(e) => handleOcrBarcodeChange(idx, e.target.value)}
                                 onKeyDown={(e) => handleBarcodeKeyDown(e, idx)}
-                                className="w-full pl-8 pr-2 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-white focus:outline-none focus:border-[#5BA535] placeholder-zinc-600 transition-colors"
+                                className={`w-full pl-8 pr-2 py-1.5 rounded-lg border text-xs focus:outline-none focus:border-[#5BA535] transition-colors ${
+                                  darkMode ? 'bg-zinc-900 border-zinc-700 text-white placeholder-zinc-600' : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400'
+                                }`}
                               />
                             </div>
                           </div>
@@ -573,10 +612,12 @@ export default function Inventario() {
             </div>
 
             {!cargandoOcr && datosOcrDetectados && (
-              <div className="flex justify-end gap-2 pt-3 border-t border-zinc-800 shrink-0">
+              <div className={`flex justify-end gap-2 pt-3 border-t shrink-0 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
                 <button
                   onClick={() => { setIsOcrModalOpen(false); setDatosOcrDetectados(null); }}
-                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold transition-colors cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer ${
+                    darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
                 >
                   Cancelar
                 </button>
@@ -594,13 +635,13 @@ export default function Inventario() {
       )}
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/50 border border-zinc-800 rounded-2xl">
+        <div className={`flex flex-col items-center justify-center py-20 border rounded-2xl w-full ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
           <Loader2 className="w-8 h-8 animate-spin text-[#5BA535] mb-3" />
-          <p className="text-xs font-medium text-zinc-400">Procesando consulta...</p>
+          <p className={`text-xs font-medium ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Procesando consulta...</p>
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-sm">
-          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} providers={proveedores} />
+        <div className={`border rounded-2xl overflow-hidden shadow-sm w-full ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} providers={proveedores} darkMode={darkMode} />
         </div>
       )}
 
@@ -612,6 +653,7 @@ export default function Inventario() {
         onClose={() => setIsModalOpen(false)} 
         onSubmit={handleSaveSubmit} 
         providers={proveedores}
+        darkMode={darkMode}
       />
 
       <CreatePurchaseInvoiceModal
@@ -620,22 +662,27 @@ export default function Inventario() {
         onInvoiceCreated={() => {
           cargarInventario();
         }}
+        darkMode={darkMode}
       />
       
       {totalPaginas > 1 && (
-        <div className="flex items-center justify-between bg-zinc-900 border border-zinc-800 px-4 py-3 sm:px-6 rounded-2xl shadow-sm">
+        <div className={`flex items-center justify-between border px-4 py-3 sm:px-6 rounded-2xl shadow-sm w-full ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
               disabled={paginaActual === 1}
-              className="relative inline-flex items-center rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
+              className={`relative inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-medium disabled:opacity-50 transition-colors cursor-pointer ${
+                darkMode ? 'border-zinc-800 bg-zinc-950 text-zinc-300 hover:bg-zinc-800' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+              }`}
             >
               Anterior
             </button>
             <button
               onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
               disabled={paginaActual === totalPaginas}
-              className="relative ml-3 inline-flex items-center rounded-xl border border-zinc-800 bg-zinc-950 px-3.5 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 disabled:opacity-50 transition-colors cursor-pointer"
+              className={`relative ml-3 inline-flex items-center rounded-xl border px-3.5 py-2 text-xs font-medium disabled:opacity-50 transition-colors cursor-pointer ${
+                darkMode ? 'border-zinc-800 bg-zinc-950 text-zinc-300 hover:bg-zinc-800' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+              }`}
             >
               Siguiente
             </button>
@@ -643,21 +690,23 @@ export default function Inventario() {
    
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-xs text-zinc-400">
-                Mostrando <span className="font-semibold text-zinc-200">{primerIndice + 1}</span> a{' '}
-                <span className="font-semibold text-zinc-200">
+              <p className={`text-xs ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                Mostrando <span className={`font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-900'}`}>{primerIndice + 1}</span> a{' '}
+                <span className={`font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-900'}`}>
                   {Math.min(ultimoIndice, productos.length)}
                 </span>{' '}
-                de <span className="font-semibold text-zinc-200">{productos.length}</span> productos
+                de <span className={`font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-900'}`}>{productos.length}</span> productos
               </p>
             </div>
      
             <div>
-              <nav className="isolate inline-flex -space-x-px rounded-xl shadow-sm overflow-hidden border border-zinc-800" aria-label="Pagination">
+              <nav className={`isolate inline-flex -space-x-px rounded-xl shadow-sm overflow-hidden border ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`} aria-label="Pagination">
                 <button
                   onClick={() => setPaginaActual(prev => Math.max(prev - 1, 1))}
                   disabled={paginaActual === 1}
-                  className="relative inline-flex items-center px-3 py-2 bg-zinc-950 text-zinc-400 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer"
+                  className={`relative inline-flex items-center px-3 py-2 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer ${
+                    darkMode ? 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                  }`}
                 >
                   <span className="sr-only">Anterior</span>
                   ‹
@@ -673,7 +722,9 @@ export default function Inventario() {
                       className={`relative inline-flex items-center px-3.5 py-2 text-xs font-semibold focus:z-20 transition-colors cursor-pointer ${
                         esActiva
                           ? 'z-10 bg-[#5BA535] text-white font-bold'
-                          : 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-l border-zinc-800'
+                          : darkMode
+                            ? 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border-l border-zinc-800'
+                            : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 border-l border-slate-200'
                       }`}
                     >
                       {numeroPagina}
@@ -684,7 +735,9 @@ export default function Inventario() {
                 <button
                   onClick={() => setPaginaActual(prev => Math.min(prev + 1, totalPaginas))}
                   disabled={paginaActual === totalPaginas}
-                  className="relative inline-flex items-center px-3 py-2 bg-zinc-950 text-zinc-400 hover:bg-zinc-800 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors border-l border-zinc-800 cursor-pointer"
+                  className={`relative inline-flex items-center px-3 py-2 focus:z-20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors border-l cursor-pointer ${
+                    darkMode ? 'bg-zinc-950 text-zinc-400 hover:bg-zinc-800 border-zinc-800' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border-slate-200'
+                  }`}
                 >
                   <span className="sr-only">Siguiente</span>
                   ›

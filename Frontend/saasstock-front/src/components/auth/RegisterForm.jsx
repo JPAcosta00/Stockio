@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../components/DashboardLayout';
 import { 
   User, 
   Building2, 
@@ -11,6 +12,7 @@ import {
 
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
+  const { darkMode } = useTheme();
   
   // Estados para datos personales 
   const [username, setName] = useState('');
@@ -82,17 +84,17 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
       
       {/* Encabezado */}
       <div className="text-center mb-2">
-        <h2 className="text-xl font-bold text-white tracking-tight">
+        <h2 className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
           Creá tu cuenta en Stockio
         </h2>
-        <p className="text-xs text-zinc-400 mt-0.5">
+        <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
           Gestioná tu stock y ventas en un solo lugar
         </p>
       </div>
 
       {/* Mensaje de error */}
       {error && (
-        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center font-mediumbackdrop-blur-sm animate-in fade-in">
+        <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-center font-medium backdrop-blur-sm animate-in fade-in">
           {error}
         </div>
       )}
@@ -102,56 +104,70 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
         
         {/* COLUMNA IZQUIERDA: Datos de la cuenta */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+          <h3 className={`text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b pb-1.5 flex items-center gap-1.5 ${
+            darkMode ? 'border-zinc-800/80' : 'border-slate-200'
+          }`}>
             <span>1. Datos de la Cuenta</span>
           </h3>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
+            <label className={`block text-[11px] font-semibold uppercase mb-1 tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
               Nombre Completo
             </label>
             <div className="relative">
-              <User className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <User className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="text"
                 required
                 value={username}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className={`w-full border rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                }`}
                 placeholder="Lionel Messi"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
+            <label className={`block text-[11px] font-semibold uppercase mb-1 tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
               Nombre de tu Empresa
             </label>
             <div className="relative">
-              <Building2 className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Building2 className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="text"
                 required
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className={`w-full border rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                }`}
                 placeholder="Distribuidora Messi"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
+            <label className={`block text-[11px] font-semibold uppercase mb-1 tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
               Correo Electrónico
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Mail className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className={`w-full border rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                }`}
                 placeholder="correo@empresa.com"
               />
             </div>
@@ -160,46 +176,56 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
 
         {/* COLUMNA DERECHA: Seguridad / Contraseñas */}
         <div className="space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b border-zinc-800/80 pb-1.5 flex items-center gap-1.5">
+          <h3 className={`text-xs font-bold uppercase tracking-wider text-[#5BA535] border-b pb-1.5 flex items-center gap-1.5 ${
+            darkMode ? 'border-zinc-800/80' : 'border-slate-200'
+          }`}>
             <span>2. Seguridad</span>
           </h3>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
+            <label className={`block text-[11px] font-semibold uppercase mb-1 tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
               Contraseña
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className={`w-full border rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                }`}
                 placeholder="••••••••"
               />
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+            <p className={`text-[10px] mt-1 leading-tight ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
               Mínimo 6 caracteres, combinando letras y al menos un número.
             </p>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold uppercase text-zinc-300 mb-1 tracking-wider">
+            <label className={`block text-[11px] font-semibold uppercase mb-1 tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-600'}`}>
               Confirmar Contraseña
             </label>
             <div className="relative">
-              <CheckCircle2 className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <CheckCircle2 className={`w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
               <input
                 type="password"
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 text-white rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all placeholder:text-zinc-600"
+                className={`w-full border rounded-xl pl-10 pr-3 py-2 text-sm focus:outline-none focus:border-[#5BA535] focus:ring-1 focus:ring-[#5BA535] transition-all ${
+                  darkMode 
+                    ? 'bg-zinc-950 border-zinc-800 text-white placeholder:text-zinc-600' 
+                    : 'bg-slate-50 border-slate-200 text-slate-900 placeholder:text-slate-400'
+                }`}
                 placeholder="••••••••"
               />
             </div>
-            <p className="text-[10px] text-zinc-500 mt-1 leading-tight">
+            <p className={`text-[10px] mt-1 leading-tight ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
               Repetí exactamente la clave ingresada arriba.
             </p>
           </div>
@@ -208,7 +234,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
       </div>
 
       {/* PIE DE FORMULARIO */}
-      <div className="pt-3 border-t border-zinc-800/80 space-y-3 mt-2">
+      <div className={`pt-3 border-t space-y-3 mt-2 ${darkMode ? 'border-zinc-800/80' : 'border-slate-200'}`}>
         <button
           type="submit"
           disabled={loading}
@@ -224,7 +250,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
           )}
         </button>
 
-        <p className="text-xs text-center text-zinc-400">
+        <p className={`text-xs text-center ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
           ¿Ya tenés cuenta?{' '}
           <button
             type="button"

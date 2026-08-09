@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Truck, Plus, Search, Edit2, Trash2, X, AlertCircle, FileText, Eye, CheckCircle2 } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
+import { useTheme } from '../components/DashboardLayout'; // ⚡ Tu ruta del ThemeContext
 import CreatePurchaseInvoiceModal from "../components/CreatePurchaseInvoiceModal";
 import apiClient from '../api/apiClient';
 
@@ -10,6 +11,7 @@ export default function Providers() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { showAlert } = useAlert();
+  const { darkMode } = useTheme(); // ⚡ Consumimos el estado global
 
   // Estados para el modal (Crear/Editar Proveedor)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +38,6 @@ export default function Providers() {
   const fetchProviders = async () => {
     try {
       setLoading(true);
-      // Usamos apiClient (Axios ya incluye baseURL y token por interceptor)
       const response = await apiClient.get('/providers');
       setProviders(response.data);
     } catch (err) {
@@ -64,7 +65,6 @@ export default function Providers() {
     setIsModalOpen(true);
   };
 
-  // Abrir modal de Cuenta Corriente y buscar sus facturas
   const handleOpenDetailModal = async (provider) => {
     setSelectedProvider(provider);
     setIsDetailModalOpen(true);
@@ -72,7 +72,6 @@ export default function Providers() {
 
     try {
       const response = await apiClient.get('/purchaseinvoices');
-      // Filtramos las facturas que corresponden a este proveedor
       const filtered = response.data.filter(inv => inv.providerId === provider.id);
       setProviderInvoices(filtered);
     } catch (err) {
@@ -103,7 +102,7 @@ export default function Providers() {
   };
 
   const handleDelete = async (id, e) => {
-    e.stopPropagation(); // Evita que se abra el modal al hacer click en eliminar
+    e.stopPropagation();
     if (!window.confirm('¿Estás seguro de eliminar este proveedor?')) return;
 
     try {
@@ -116,13 +115,11 @@ export default function Providers() {
     }
   };
 
-  // Marcar factura como pagada
   const handleMarkAsPaid = async (invoiceId) => {
     try {
       await apiClient.patch(`/purchaseinvoices/${invoiceId}/pay`);
       showAlert('Factura marcada como pagada con éxito', 'success');
       
-      // Actualizamos las facturas localmente dentro del modal y recargamos los proveedores
       if (selectedProvider) {
         handleOpenDetailModal(selectedProvider);
       }
@@ -140,59 +137,84 @@ export default function Providers() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
-            <Truck className="w-7 h-7 text-[#5BA535]" />
-            Proveedores
-          </h1>
-          <p className="text-sm text-zinc-400 mt-1">
-            Gestioná la libreta de proveedores, contactos y saldos de cuentas corrientes.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => {
-              setSelectedProviderForInvoice(null);
-              setIsInvoiceModalOpen(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-white font-medium px-4 py-2.5 rounded-xl border border-zinc-700 transition-all cursor-pointer"
-          >
-            <FileText className="w-4.5 h-4.5 text-[#5BA535]" />
-            Nueva Factura
-          </button>
-          <button 
-            onClick={handleOpenCreateModal}
-            className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
-          >
-            <Plus className="w-4.5 h-4.5" />
-            Nuevo Proveedor
-          </button>
+      
+      {/* Header Principal */}
+      <div className={`border p-5 sm:p-6 rounded-2xl shadow-xl transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-[#1C562A]/15 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
+              <Truck className="w-6 h-6 text-[#5BA535]" />
+            </div>
+            <div>
+              <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+                Proveedores
+              </h1>
+              <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                Gestioná la libreta de proveedores, contactos y saldos de cuentas corrientes.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                setSelectedProviderForInvoice(null);
+                setIsInvoiceModalOpen(true);
+              }}
+              className={`inline-flex items-center justify-center gap-2 font-medium px-4 py-2.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+                darkMode 
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' 
+                  : 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-200'
+              }`}
+            >
+              <FileText className="w-4.5 h-4.5 text-[#5BA535]" />
+              Nueva Factura
+            </button>
+            <button 
+              onClick={handleOpenCreateModal}
+              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
+            >
+              <Plus className="w-4.5 h-4.5" />
+              Nuevo Proveedor
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-xl px-3.5 py-2.5 max-w-md focus-within:border-[#5BA535] transition-colors">
-        <Search className="w-4.5 h-4.5 text-zinc-500 mr-2.5" />
+      {/* Barra de Búsqueda */}
+      <div className={`flex items-center border rounded-xl px-3.5 py-2.5 max-w-md transition-colors shadow-sm ${
+        darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
+      }`}>
+        <Search className={`w-4.5 h-4.5 mr-2.5 shrink-0 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`} />
         <input 
           type="text"
           placeholder="Buscar por nombre o CUIT..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="bg-transparent border-none outline-none text-sm text-zinc-100 placeholder-zinc-500 w-full"
+          className={`bg-transparent border-none outline-none text-xs w-full ${
+            darkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
+          }`}
         />
       </div>
 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-xl overflow-hidden">
+      {/* Tabla de Proveedores */}
+      <div className={`border rounded-2xl shadow-xl overflow-hidden transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+      }`}>
         {loading ? (
-          <div className="p-12 text-center text-zinc-400">Cargando proveedores...</div>
+          <div className={`p-12 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
         ) : error ? (
-          <div className="p-12 text-center text-red-400 flex items-center justify-center gap-2">
+          <div className="p-12 text-center text-red-500 dark:text-red-400 flex items-center justify-center gap-2 text-xs">
             <AlertCircle className="w-5 h-5" /> {error}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-800 text-left">
-              <thead className="bg-zinc-900/50 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
+              <thead className={`text-[10px] font-semibold uppercase tracking-wider ${
+                darkMode ? 'bg-zinc-900/50 text-zinc-400' : 'bg-zinc-50 text-zinc-500'
+              }`}>
                 <tr>
                   <th className="px-6 py-4">Nombre</th>
                   <th className="px-6 py-4">Contacto</th>
@@ -202,48 +224,58 @@ export default function Providers() {
                   <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800 text-sm text-zinc-300">
+              <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
                 {filteredProviders.map((provider) => (
                   <tr 
                     key={provider.id} 
                     onClick={() => handleOpenDetailModal(provider)}
-                    className="hover:bg-zinc-800/40 transition-colors cursor-pointer"
+                    className={`transition-colors cursor-pointer ${
+                      darkMode ? 'hover:bg-zinc-800/40' : 'hover:bg-zinc-50'
+                    }`}
                   >
-                    <td className="px-6 py-4 font-medium text-white">{provider.name}</td>
-                    <td className="px-6 py-4 text-zinc-400">{provider.contactName || '—'}</td>
-                    <td className="px-6 py-4 text-zinc-400">{provider.phone || '—'}</td>
-                    <td className="px-6 py-4 text-zinc-400">{provider.cuit || '—'}</td>
-                    <td className="px-6 py-4 font-semibold text-emerald-400">
-                      ${provider.accountBalance?.toLocaleString() ?? '0.00'}
+                    <td className={`px-6 py-4 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{provider.name}</td>
+                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.contactName || '—'}</td>
+                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.phone || '—'}</td>
+                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.cuit || '—'}</td>
+                    <td className="px-6 py-4 font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                      ${provider.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-2" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-6 py-4 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => {
                           setSelectedProviderForInvoice(provider.id);
                           setIsInvoiceModalOpen(true);
                         }}
-                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[#5BA535] hover:text-[#4d8d2c] transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer text-[#5BA535] ${
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-100 hover:bg-zinc-200'
+                        }`}
                         title="Registrar Factura de Compra"
                       >
                         <FileText className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleOpenDetailModal(provider)}
-                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-100 hover:bg-zinc-200'
+                        }`}
                         title="Ver Cuenta Corriente y Facturas"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleOpenEditModal(provider)}
-                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600'
+                        }`}
                         title="Editar"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={(e) => handleDelete(provider.id, e)}
-                        className="p-1.5 rounded-lg bg-red-950/40 hover:bg-red-900/60 text-red-400 transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
+                        }`}
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -253,7 +285,7 @@ export default function Providers() {
                 ))}
                 {filteredProviders.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan="6" className={`px-6 py-12 text-center text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                       No se encontraron proveedores registrados.
                     </td>
                   </tr>
@@ -266,78 +298,92 @@ export default function Providers() {
 
       {/* Modal Crear / Editar Proveedor */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6">
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
-              <h2 className="text-lg font-bold text-white">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className={`border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 transition-colors ${
+            darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+              <h2 className="text-sm font-bold">
                 {isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
               </h2>
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+                  darkMode ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-500 hover:text-zinc-900'
+                }`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Nombre de la Empresa / Proveedor</label>
+                <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de la Empresa / Proveedor</label>
                 <input 
                   type="text" 
                   required
                   value={currentProvider.name} 
                   onChange={(e) => setCurrentProvider({...currentProvider, name: e.target.value})}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 focus:border-[#5BA535] outline-none transition-colors"
+                  className={`w-full border rounded-xl px-3.5 py-2.5 outline-none transition-colors ${
+                    darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-[#5BA535]'
+                  }`}
                   placeholder="Ej. Distribuidora Mayorista"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Nombre de Contacto</label>
+                <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de Contacto</label>
                 <input 
                   type="text" 
                   value={currentProvider.contactName || ''} 
                   onChange={(e) => setCurrentProvider({...currentProvider, contactName: e.target.value})}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 focus:border-[#5BA535] outline-none transition-colors"
+                  className={`w-full border rounded-xl px-3.5 py-2.5 outline-none transition-colors ${
+                    darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-[#5BA535]'
+                  }`}
                   placeholder="Ej. Juan Pérez"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Teléfono</label>
+                  <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Teléfono</label>
                   <input 
                     type="text" 
                     value={currentProvider.phone || ''} 
                     onChange={(e) => setCurrentProvider({...currentProvider, phone: e.target.value})}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 focus:border-[#5BA535] outline-none transition-colors"
+                    className={`w-full border rounded-xl px-3.5 py-2.5 outline-none transition-colors ${
+                      darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-[#5BA535]'
+                    }`}
                     placeholder="11 2345 6789"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">CUIT</label>
+                  <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT</label>
                   <input 
                     type="text" 
                     value={currentProvider.cuit || ''} 
                     onChange={(e) => setCurrentProvider({...currentProvider, cuit: e.target.value})}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2.5 text-sm text-zinc-100 focus:border-[#5BA535] outline-none transition-colors"
+                    className={`w-full border rounded-xl px-3.5 py-2.5 outline-none transition-colors ${
+                      darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-[#5BA535]'
+                    }`}
                     placeholder="20-12345678-9"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-zinc-800">
+              <div className={`flex justify-end gap-3 pt-4 border-t ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition-colors cursor-pointer"
+                  className={`px-4 py-2.5 rounded-xl font-medium transition-colors cursor-pointer ${
+                    darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                  }`}
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white text-sm font-medium shadow-md transition-all cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium shadow-md transition-all cursor-pointer"
                 >
                   Guardar
                 </button>
@@ -349,55 +395,67 @@ export default function Providers() {
 
       {/* Modal Cuenta Corriente y Facturas del Proveedor */}
       {isDetailModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
+          <div className={`border rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto transition-colors ${
+            darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
+          }`}>
             
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className={`flex items-center justify-between border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
               <div>
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#5BA535]" />
+                <h2 className="text-sm font-bold flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-[#5BA535]" />
                   Cuenta Corriente — {selectedProvider?.name}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">CUIT: {selectedProvider?.cuit || 'Sin CUIT'} | Tel: {selectedProvider?.phone || 'Sin teléfono'}</p>
+                <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT: {selectedProvider?.cuit || 'Sin CUIT'} | Tel: {selectedProvider?.phone || 'Sin teléfono'}</p>
               </div>
               <button 
                 onClick={() => setIsDetailModalOpen(false)}
-                className="p-1.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer"
+                className={`p-1.5 rounded-xl transition-colors cursor-pointer ${
+                  darkMode ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-zinc-100 text-zinc-500 hover:text-zinc-900'
+                }`}
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
             {loadingInvoices ? (
-              <div className="py-12 text-center text-zinc-400">Cargando facturas de compra...</div>
+              <div className={`py-12 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando facturas de compra...</div>
             ) : (
-              <div className="space-y-4">
-                <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-4 flex justify-between items-center">
+              <div className="space-y-4 text-xs">
+                <div className={`border rounded-xl p-4 flex justify-between items-center transition-colors ${
+                  darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'
+                }`}>
                   <div>
-                    <span className="text-xs text-zinc-400 block uppercase font-semibold">Saldo Actual en Cuenta</span>
-                    <span className="text-xl font-bold text-emerald-400">${selectedProvider?.accountBalance?.toLocaleString() ?? '0.00'}</span>
+                    <span className={`text-[10px] block uppercase font-semibold ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Saldo Actual en Cuenta</span>
+                    <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                      ${selectedProvider?.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
+                    </span>
                   </div>
                   <button
                     onClick={() => {
                       setSelectedProviderForInvoice(selectedProvider.id);
                       setIsInvoiceModalOpen(true);
                     }}
-                    className="px-3 py-2 bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+                    className="px-3 py-2 bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl font-medium transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
                   >
                     <Plus className="w-4 h-4" /> Nueva Factura
                   </button>
                 </div>
 
-                <h3 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider pt-2">Historial de Facturas de Compra</h3>
+                <h3 className={`font-semibold uppercase tracking-wider pt-2 text-[10px] ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Historial de Facturas de Compra</h3>
 
                 {providerInvoices.length === 0 ? (
-                  <div className="p-8 text-center text-zinc-500 bg-zinc-950/50 rounded-xl border border-zinc-800/60">
+                  <div className={`p-8 text-center rounded-xl border ${
+                    darkMode ? 'bg-zinc-950/50 border-zinc-800/60 text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-400'
+                  }`}>
                     Este proveedor no registra facturas de compra cargadas en el sistema.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto border border-zinc-800 rounded-xl">
-                    <table className="min-w-full divide-y divide-zinc-800 text-left text-sm">
-                      <thead className="bg-zinc-950 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                  <div className={`overflow-x-auto border rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+                    <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
+                      <thead className={`text-[10px] font-semibold uppercase tracking-wider ${
+                        darkMode ? 'bg-zinc-950 text-zinc-400' : 'bg-zinc-100 text-zinc-500'
+                      }`}>
                         <tr>
                           <th className="px-4 py-3">Nro Factura</th>
                           <th className="px-4 py-3">Fecha</th>
@@ -407,20 +465,20 @@ export default function Providers() {
                           <th className="px-4 py-3 text-right">Acciones</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                      <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
                         {providerInvoices.map((inv) => (
-                          <tr key={inv.id} className="hover:bg-zinc-800/30">
-                            <td className="px-4 py-3 font-medium text-white">{inv.invoiceNumber}</td>
-                            <td className="px-4 py-3 text-zinc-400">{new Date(inv.invoiceDate).toLocaleDateString()}</td>
-                            <td className="px-4 py-3">${inv.totalAmount?.toLocaleString()}</td>
-                            <td className="px-4 py-3 text-emerald-400">${inv.paidAmount?.toLocaleString()}</td>
+                          <tr key={inv.id} className={`transition-colors ${darkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-zinc-50'}`}>
+                            <td className={`px-4 py-3 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{inv.invoiceNumber}</td>
+                            <td className={darkMode ? 'px-4 py-3 text-zinc-400' : 'px-4 py-3 text-zinc-500'}>{new Date(inv.invoiceDate).toLocaleDateString()}</td>
+                            <td className="px-4 py-3 font-mono">${inv.totalAmount?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                            <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-mono">${inv.paidAmount?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                             <td className="px-4 py-3 text-center">
                               {inv.isPaid ? (
-                                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800/50">
+                                <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/50">
                                   Pagada
                                 </span>
                               ) : (
-                                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/60 text-amber-400 border border-amber-800/50">
+                                <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800/50">
                                   Pendiente
                                 </span>
                               )}
@@ -429,7 +487,7 @@ export default function Providers() {
                               {!inv.isPaid && (
                                 <button
                                   onClick={() => handleMarkAsPaid(inv.id)}
-                                  className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
                                   title="Marcar como Pagada"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Pagar
@@ -445,11 +503,13 @@ export default function Providers() {
               </div>
             )}
 
-            <div className="flex justify-end pt-4 border-t border-zinc-800">
+            <div className={`flex justify-end pt-4 border-t ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
               <button 
                 type="button" 
                 onClick={() => setIsDetailModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium transition-colors cursor-pointer"
+                className={`px-4 py-2.5 rounded-xl font-medium text-xs transition-colors cursor-pointer ${
+                  darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                }`}
               >
                 Cerrar
               </button>

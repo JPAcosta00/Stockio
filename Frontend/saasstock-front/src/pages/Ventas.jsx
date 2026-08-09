@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
 import CobroModal from '../components/CobroModal';
+import { useTheme } from '../components/DashboardLayout'; // ⚡ Misma importación que Perfil
 import {
   ShoppingCart,
   Search,
@@ -16,7 +17,6 @@ import {
   X
 } from 'lucide-react';
 
-// Genera o recupera un ID único para la pestaña/sesión actual del navegador
 const getCartStorageKey = () => {
   try {
     const token = localStorage.getItem('token');
@@ -41,8 +41,8 @@ const getCartStorageKey = () => {
 
 export default function Ventas() {
   const cartKey = getCartStorageKey();
+  const { darkMode } = useTheme(); // ⚡ Mismo hook que Perfil
 
-  // Estados de datos
   const [carrito, setCarrito] = useState(() => {
     const carritoGuardado = localStorage.getItem(cartKey);
     return carritoGuardado ? JSON.parse(carritoGuardado) : [];
@@ -52,31 +52,25 @@ export default function Ventas() {
   const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
   const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
 
-  // Estados de UI
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [buscandoProducto, setBuscandoProducto] = useState(false);
 
-  // Sistema de Alertas UI personalizado y responsive
-  const [alerta, setAlerta] = useState(null); // { type: 'success' | 'error' | 'warning', message: '' }
+  const [alerta, setAlerta] = useState(null);
   const [mostrarConfirmarVaciar, setMostrarConfirmarVaciar] = useState(false);
 
-  // Para autocompletar el mostrador
   const [barcodeInput, setBarcodeInput] = useState('');
   const [sugerencias, setSugerencias] = useState([]);
   const [buscandoSugerencias, setBuscandoSugerencias] = useState(false);
   const [mostrarDropdown, setMostrarDropdown] = useState(false);
 
-  // Filtros en el historial de ventas
   const [busquedaHistorial, setBusquedaHistorial] = useState('');
   const [filtroTiempo, setFiltroTiempo] = useState('todos');
 
-  // Referencias UI
   const barcodeRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Función para mostrar alertas auto-dismiss o estáticas
   const mostrarAlerta = (message, type = 'error') => {
     setAlerta({ message, type });
     if (type === 'success') {
@@ -329,60 +323,62 @@ export default function Ventas() {
   return (
     <div className="space-y-6 pb-12 px-2 sm:px-0">
       
-      {/* ALERTA / NOTIFICACIÓN FLOTANTE RESPONSIVE */}
       {alerta && (
-        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs shadow-lg transition-all animate-fade-in ${
+        <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs shadow-sm transition-all animate-fade-in ${
           alerta.type === 'success' 
-            ? 'bg-emerald-950/80 border-emerald-800 text-emerald-200' 
+            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900' 
             : alerta.type === 'warning'
-            ? 'bg-amber-950/80 border-amber-800 text-amber-200'
-            : 'bg-red-950/80 border-red-800 text-red-200'
+            ? 'bg-amber-50/90 border-amber-200 text-amber-900'
+            : 'bg-red-50/90 border-red-200 text-red-900'
         }`}>
           <div className="flex items-center gap-2.5">
             {alerta.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
             )}
             <span className="font-medium">{alerta.message}</span>
           </div>
           <button 
             onClick={() => setAlerta(null)}
-            className="p-1 hover:bg-black/20 rounded-lg transition-colors cursor-pointer"
+            className="p-1 hover:bg-black/5 rounded-lg transition-colors cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* CABECERA */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-zinc-900 border border-zinc-800 p-5 sm:p-6 rounded-2xl shadow-sm">
+      {/* Header General */}
+      <div className={`border p-5 sm:p-6 rounded-2xl shadow-xl transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
-            <ShoppingCart className="w-6 h-6 text-[#5BA535]" />
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
+            <ShoppingCart className="w-6 h-6 text-emerald-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Terminal de Ventas</h1>
-            <p className="text-xs text-zinc-400 mt-0.5">Punto de venta y registro de operaciones en tiempo real.</p>
+            <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-zinc-900'}`}>Terminal de Ventas</h1>
+            <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Punto de venta y registro de operaciones en tiempo real.</p>
           </div>
         </div>
       </div>
 
-      {/* BLOQUE SUPERIOR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* INGRESO MANUAL / ESCANER CON AUTOCOMPLETE */}
-        <div className="bg-zinc-900 border border-zinc-800 p-4 sm:p-5 rounded-2xl h-fit space-y-4 relative shadow-sm" ref={dropdownRef}>
-          <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Ingreso de Artículo</h2>
+        {/* Ingreso de Artículo */}
+        <div className={`border p-4 sm:p-5 rounded-2xl h-fit space-y-4 relative shadow-xl transition-colors ${
+          darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+        }`} ref={dropdownRef}>
+          <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Ingreso de Artículo</h2>
 
           <form onSubmit={handleBarcodeSubmit} className="space-y-3">
             <div className="relative">
-              <label className="block text-[11px] uppercase tracking-wider text-zinc-400 mb-1.5 font-semibold">
+              <label className={`block text-[11px] uppercase tracking-wider mb-1.5 font-semibold ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
                 Código de Barras o Nombre:
               </label>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Barcode className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Barcode className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     ref={barcodeRef}
                     type="text"
@@ -391,43 +387,49 @@ export default function Ventas() {
                     onChange={(e) => setBarcodeInput(e.target.value)}
                     onFocus={() => sugerencias.length > 0 && setMostrarDropdown(true)}
                     disabled={enviando || buscandoProducto}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-[#5BA535] font-mono tracking-wider transition-colors"
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-xl border text-xs focus:outline-none focus:border-emerald-500 font-mono tracking-wider transition-colors ${
+                      darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 placeholder-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder-zinc-400'
+                    }`}
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={!barcodeInput.trim() || buscandoProducto || enviando}
-                  className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-30 cursor-pointer shadow-sm shrink-0"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors disabled:opacity-30 cursor-pointer shadow-lg shadow-emerald-600/15 shrink-0"
                 >
                   {buscandoProducto ? '...' : 'Añadir'}
                 </button>
               </div>
 
-              {/* SUGERENCIAS DROPDOWN */}
+              {/* Dropdown de Sugerencias */}
               {mostrarDropdown && (
-                <div className="absolute left-0 right-0 top-full mt-1.5 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-zinc-800">
+                <div className={`absolute left-0 right-0 top-full mt-1.5 border rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y transition-colors ${
+                  darkMode ? 'bg-zinc-900 border-zinc-800 divide-zinc-800' : 'bg-white border-zinc-200 divide-zinc-100'
+                }`}>
                   {buscandoSugerencias ? (
-                    <div className="p-3 text-xs text-zinc-400 text-center flex items-center justify-center gap-2">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#5BA535]" />
+                    <div className={`p-3 text-xs text-center flex items-center justify-center gap-2 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
                       <span>Buscando productos...</span>
                     </div>
                   ) : sugerencias.length === 0 ? (
-                    <div className="p-3 text-xs text-zinc-500 text-center">Sin coincidencias.</div>
+                    <div className={`p-3 text-xs text-center ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Sin coincidencias.</div>
                   ) : (
                     sugerencias.map((prod) => (
                       <button
                         key={prod.id}
                         type="button"
                         onClick={() => agregarProductoAlCarrito(prod)}
-                        className="w-full text-left p-3 hover:bg-zinc-800/80 flex justify-between items-center transition-colors group cursor-pointer"
+                        className={`w-full text-left p-3 flex justify-between items-center transition-colors group cursor-pointer ${
+                          darkMode ? 'hover:bg-zinc-800/80' : 'hover:bg-zinc-50'
+                        }`}
                       >
                         <div>
-                          <p className="text-xs font-medium text-zinc-200 group-hover:text-[#5BA535]">{prod.name}</p>
-                          <p className="text-[10px] text-zinc-500 font-mono">{prod.barcode || 'Sin código'}</p>
+                          <p className={`text-xs font-medium group-hover:text-emerald-500 ${darkMode ? 'text-zinc-200' : 'text-zinc-800'}`}>{prod.name}</p>
+                          <p className={`text-[10px] font-mono ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>{prod.barcode || 'Sin código'}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-mono font-bold text-zinc-200">${prod.price?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
-                          <span className={`text-[10px] font-medium ${prod.stock > 0 ? 'text-zinc-400' : 'text-red-400'}`}>
+                          <p className={`text-xs font-mono font-bold ${darkMode ? 'text-zinc-200' : 'text-zinc-900'}`}>${prod.price?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</p>
+                          <span className={`text-[10px] font-medium ${prod.stock > 0 ? (darkMode ? 'text-zinc-400' : 'text-zinc-600') : 'text-rose-500'}`}>
                             Stock: {prod.stock}
                           </span>
                         </div>
@@ -437,22 +439,28 @@ export default function Ventas() {
                 </div>
               )}
             </div>
-            <p className="text-[11px] text-zinc-500 italic">
+            <p className={`text-[11px] italic ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
               💡 Podés escanear con la lectora o escribir para buscar por nombre.
             </p>
           </form>
         </div>
 
-        {/* DETALLE DEL CARRITO */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 p-4 sm:p-5 rounded-2xl flex flex-col justify-between shadow-sm min-h-[280px]">
+        {/* Mostrador Actual */}
+        <div className={`lg:col-span-2 border p-4 sm:p-5 rounded-2xl flex flex-col justify-between shadow-xl min-h-[280px] transition-colors ${
+          darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+        }`}>
           <div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-300">Mostrador Actual</h2>
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Mostrador Actual</h2>
               {carrito.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setMostrarConfirmarVaciar(true)}
-                  className="text-xs bg-red-950/40 border border-red-900/50 hover:bg-red-900/60 text-red-300 font-medium py-1 px-3 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer"
+                  className={`text-xs border font-medium py-1 px-3 rounded-xl flex items-center gap-1.5 transition-all duration-200 cursor-pointer ${
+                    darkMode 
+                      ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/20' 
+                      : 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
+                  }`}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   <span>Vaciar</span>
@@ -460,20 +468,24 @@ export default function Ventas() {
               )}
             </div>
 
-            {/* MODAL DE CONFIRMACIÓN PARA VACIAR */}
+            {/* Prompt Confirmar Vaciar */}
             {mostrarConfirmarVaciar && (
-              <div className="mb-4 p-3 bg-red-950/30 border border-red-900/50 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                <span className="text-red-200 font-medium">¿Estás seguro de vaciar todo el mostrador actual?</span>
+              <div className={`mb-4 p-3 border rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs ${
+                darkMode ? 'bg-rose-950/30 border-rose-900/50 text-rose-200' : 'bg-rose-50 border-rose-200 text-rose-800'
+              }`}>
+                <span className="font-medium">¿Estás seguro de vaciar todo el mostrador actual?</span>
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button 
                     onClick={() => setMostrarConfirmarVaciar(false)}
-                    className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg font-medium transition-colors cursor-pointer"
+                    className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
+                      darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-200 hover:bg-zinc-300 text-zinc-700'
+                    }`}
                   >
                     Cancelar
                   </button>
                   <button 
                     onClick={limpiarMostrador}
-                    className="px-3 py-1.5 bg-red-800 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors cursor-pointer"
+                    className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition-colors cursor-pointer"
                   >
                     Sí, vaciar
                   </button>
@@ -482,15 +494,15 @@ export default function Ventas() {
             )}
 
             {carrito.length === 0 ? (
-              <div className="text-center py-12 text-zinc-600 text-xs flex flex-col items-center justify-center">
-                <ShoppingCart className="w-8 h-8 text-zinc-700 mb-2" />
+              <div className={`text-center py-12 text-xs flex flex-col items-center justify-center ${darkMode ? 'text-zinc-600' : 'text-zinc-400'}`}>
+                <ShoppingCart className={`w-8 h-8 mb-2 ${darkMode ? 'text-zinc-700' : 'text-zinc-300'}`} />
                 <span>Mostrador vacío.</span>
               </div>
             ) : (
               <div className="overflow-x-auto max-h-60 overflow-y-auto">
                 <table className="w-full text-left text-xs whitespace-nowrap sm:whitespace-normal">
                   <thead>
-                    <tr className="border-b border-zinc-800 text-zinc-500 font-semibold uppercase text-[10px]">
+                    <tr className={`border-b font-semibold uppercase text-[10px] ${darkMode ? 'border-zinc-800 text-zinc-500' : 'border-zinc-200 text-zinc-400'}`}>
                       <th className="pb-2.5">Detalle</th>
                       <th className="pb-2.5 text-center">Cant.</th>
                       <th className="pb-2.5 text-right">Unitario</th>
@@ -498,26 +510,28 @@ export default function Ventas() {
                       <th className="pb-2.5"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/40">
+                  <tbody className={`divide-y ${darkMode ? 'divide-zinc-800/40' : 'divide-zinc-100'}`}>
                     {carrito.map((item) => (
-                      <tr key={item.productId} className="hover:bg-zinc-950/30 transition-colors">
-                        <td className="py-2.5 font-medium text-zinc-300">
-                          {item.name} <span className="block text-[10px] text-zinc-500 font-mono">{item.barcode}</span>
+                      <tr key={item.productId} className={`transition-colors ${darkMode ? 'hover:bg-zinc-950/30' : 'hover:bg-zinc-50'}`}>
+                        <td className={`py-2.5 font-medium ${darkMode ? 'text-zinc-300' : 'text-zinc-800'}`}>
+                          {item.name} <span className={`block text-[10px] font-mono ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>{item.barcode}</span>
                         </td>
                         <td className="py-2.5 text-center">
                           <input
                             type="number"
                             value={item.quantity}
                             onChange={(e) => modificarCantidad(item.productId, parseInt(e.target.value) || 0)}
-                            className="w-14 text-center bg-zinc-950 border border-zinc-800 rounded-lg p-1.5 font-mono text-xs text-zinc-200 focus:outline-none focus:border-[#5BA535]"
+                            className={`w-14 text-center border rounded-lg p-1.5 font-mono text-xs focus:outline-none focus:border-emerald-500 ${
+                              darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200' : 'bg-zinc-50 border-zinc-200 text-zinc-800'
+                            }`}
                           />
                         </td>
-                        <td className="py-2.5 text-right font-mono text-zinc-300">${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
-                        <td className="py-2.5 text-right font-mono text-zinc-200 font-semibold">${(item.quantity * item.unitPrice).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td className={`py-2.5 text-right font-mono ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
+                        <td className={`py-2.5 text-right font-mono font-semibold ${darkMode ? 'text-zinc-200' : 'text-zinc-900'}`}>${(item.quantity * item.unitPrice).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                         <td className="py-2.5 text-center">
                           <button
                             onClick={() => quitarDelCarrito(item.productId)}
-                            className="text-red-400 hover:text-red-300 p-1.5 transition-colors cursor-pointer"
+                            className="text-rose-500 hover:text-rose-600 p-1.5 transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -530,11 +544,10 @@ export default function Ventas() {
             )}
           </div>
 
-          {/* TOTALES */}
-          <div className="mt-4 border-t border-zinc-800 pt-4 space-y-3">
+          <div className={`mt-4 border-t pt-4 space-y-3 ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
             <div className="flex justify-between items-baseline">
-              <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Total Facturado:</span>
-              <span className="text-lg font-mono font-bold text-[#5BA535]">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Total Facturado:</span>
+              <span className="text-lg font-mono font-bold text-emerald-600 dark:text-emerald-400">
                 ${totalVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </span>
             </div>
@@ -542,7 +555,7 @@ export default function Ventas() {
             <button
               onClick={() => setMostrarModalCobro(true)}
               disabled={carrito.length === 0 || enviando}
-              className="w-full bg-[#5BA535] hover:bg-[#4b8c2c] text-white font-semibold py-2.5 rounded-xl text-xs transition-colors disabled:opacity-30 cursor-pointer shadow-sm flex items-center justify-center gap-2"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs transition-all disabled:opacity-30 cursor-pointer shadow-lg shadow-emerald-600/15 flex items-center justify-center gap-2"
             >
               <CreditCard className="w-4 h-4" />
               <span>{enviando ? 'Guardando Venta...' : 'Confirmar Registro'}</span>
@@ -551,16 +564,20 @@ export default function Ventas() {
         </div>
       </div>
 
-      {/* HISTORIAL DE VENTAS (se puede refactorizar)*/} 
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
+      {/* Historial de Ventas */}
+      <div className={`border rounded-2xl p-4 sm:p-5 space-y-4 shadow-xl transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+      }`}>
         <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4">
           <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#5BA535]" />
-            <h2 className="text-xs font-bold uppercase tracking-tight text-zinc-300">Registro Histórico de Ventas</h2>
+            <FileText className="w-4 h-4 text-emerald-500" />
+            <h2 className={`text-xs font-bold uppercase tracking-tight ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Registro Histórico de Ventas</h2>
           </div>
 
           <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
-            <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-xl overflow-x-auto">
+            <div className={`border p-1 rounded-xl overflow-x-auto flex ${
+              darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'
+            }`}>
               {[
                 { id: 'todos', label: 'Todos' },
                 { id: 'hoy', label: 'Hoy' },
@@ -572,8 +589,8 @@ export default function Ventas() {
                   onClick={() => setFiltroTiempo(item.id)}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer shrink-0 ${
                     filtroTiempo === item.id
-                      ? 'bg-[#5BA535] text-white font-semibold shadow-sm'
-                      : 'text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-emerald-600 text-white font-semibold shadow-sm'
+                      : darkMode ? 'text-zinc-400 hover:text-zinc-200' : 'text-zinc-600 hover:text-zinc-900'
                   }`}
                 >
                   {item.label}
@@ -582,13 +599,15 @@ export default function Ventas() {
             </div>
 
             <div className="relative w-full sm:w-60">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Buscar por ID o Código..."
                 value={busquedaHistorial}
                 onChange={(e) => setBusquedaHistorial(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-9 pr-3 py-2 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#5BA535] font-mono transition-colors"
+                className={`w-full border rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-emerald-500 font-mono transition-colors ${
+                  darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200 placeholder-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder-zinc-400'
+                }`}
               />
             </div>
           </div>
@@ -596,37 +615,41 @@ export default function Ventas() {
 
         {loadingHistorial ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-[#5BA535] mb-2" />
-            <p className="text-xs text-zinc-400">Cargando historial...</p>
+            <Loader2 className="w-6 h-6 animate-spin text-emerald-500 mb-2" />
+            <p className={`text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando historial...</p>
           </div>
         ) : historialFiltrado.length === 0 ? (
-          <div className="text-center py-12 text-zinc-600 text-xs">
+          <div className={`text-center py-12 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-500'}`}>
             {busquedaHistorial || filtroTiempo !== 'todos'
               ? 'No se encontraron ventas para los filtros seleccionados.'
               : 'No se registran transacciones previas.'}
           </div>
         ) : (
           <div className="overflow-x-auto max-h-72 overflow-y-auto">
-            <table className="w-full text-left text-xs divide-y divide-zinc-800 whitespace-nowrap sm:whitespace-normal">
+            <table className={`w-full text-left text-xs divide-y whitespace-nowrap sm:whitespace-normal ${
+              darkMode ? 'divide-zinc-800' : 'divide-zinc-200'
+            }`}>
               <thead>
-                <tr className="text-zinc-500 font-semibold uppercase text-[10px]">
+                <tr className={`font-semibold uppercase text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                   <th className="pb-3">ID de venta</th>
                   <th className="pb-3">Fecha y Hora</th>
                   <th className="pb-3 text-right">Monto Total</th>
                   <th className="pb-3 text-center">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/50">
+              <tbody className={`divide-y ${darkMode ? 'divide-zinc-800/50' : 'divide-zinc-100'}`}>
                 {historialFiltrado.map((v) => (
                   <tr
                     key={v.id}
                     onClick={() => abrirDetalleVenta(v)}
-                    className="hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+                    className={`transition-colors cursor-pointer group ${
+                      darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'
+                    }`}
                   >
-                    <td className="py-3 font-mono text-[#5BA535] text-[11px] group-hover:underline font-semibold">
+                    <td className="py-3 font-mono text-emerald-600 dark:text-emerald-400 text-[11px] group-hover:underline font-semibold">
                       #{v.id}
                     </td>
-                    <td className="py-3 text-zinc-300">
+                    <td className={`py-3 ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
                       {new Date(v.createdAt).toLocaleString('es-AR', {
                         day: '2-digit',
                         month: '2-digit',
@@ -636,11 +659,13 @@ export default function Ventas() {
                       })}{' '}
                       hs.
                     </td>
-                    <td className="py-3 text-right font-mono text-zinc-100 font-bold text-xs">
+                    <td className={`py-3 text-right font-mono font-bold text-xs ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
                       ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3 text-center text-xs text-zinc-400 group-hover:text-white flex items-center justify-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5 text-[#5BA535]" />
+                    <td className={`py-3 text-center text-xs flex items-center justify-center gap-1.5 ${
+                      darkMode ? 'text-zinc-400 group-hover:text-white' : 'text-zinc-500 group-hover:text-zinc-900'
+                    }`}>
+                      <Eye className="w-3.5 h-3.5 text-emerald-500" />
                       <span>Ver Detalle</span>
                     </td>
                   </tr>
@@ -651,14 +676,12 @@ export default function Ventas() {
         )}
       </div>
 
-      {/* MODAL DE DETALLE DE VENTA */}
       <VentaDetalleModal
         venta={ventaSeleccionada}
         loading={loadingDetalle}
         onClose={() => setVentaSeleccionada(null)}
       />
 
-      {/* MODAL DE COBRO Y CALCULADORA DE VUELTO */}
       <CobroModal
         isOpen={mostrarModalCobro}
         onClose={() => setMostrarModalCobro(false)}
