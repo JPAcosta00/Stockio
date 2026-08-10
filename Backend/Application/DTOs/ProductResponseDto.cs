@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.DTOs;
 
 public class ProductResponseDto
@@ -9,6 +11,7 @@ public class ProductResponseDto
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public int MinimumStock { get; set; }
+    public ProductCategory Categoria { get; set; }
     public bool IsActive { get; set; }
     public Guid? ProviderId { get; set; }
     public string? ProviderName { get; set; }

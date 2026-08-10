@@ -3,9 +3,27 @@ import { useTheme } from '../components/DashboardLayout';
 import { X } from 'lucide-react';
 
 export default function ProductModal({ isOpen, mode, formData, setFormData, onClose, onSubmit, providers = [] }) {
-  const { darkMode } = useTheme(); // <-- 2. Reemplazado el soporte estricto oscuro por el hook global
+  const { darkMode } = useTheme();
 
   if (!isOpen) return null;
+
+  // Función para traducir el valor numérico (de la API) a string (para el select)
+  const obtenerNombreCategoria = (valor) => {
+    const mapa = {
+      0: 'Bebida',
+      1: 'FrutaVerdura',
+      2: 'Lacteo',
+      3: 'SnackDulce',
+      4: 'GranoCereal',
+      5: 'EnlatadoConserva',
+      6: 'Panaderia',
+      7: 'Limpieza',
+      8: 'CuidadoPersonal',
+      9: 'Otros'
+    };
+    // Si viene un número o un string válido, lo mapea; si no, por defecto 'Otros'
+    return mapa[valor] !== undefined ? mapa[valor] : (valor || 'Otros');
+  };
 
   return (
     <div 
@@ -72,18 +90,45 @@ export default function ProductModal({ isOpen, mode, formData, setFormData, onCl
             </div>
           </div>
 
-          <div>
-            <label className={`block text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Nombre</label>
-            <input
-              type="text"
-              disabled={mode === 'view'}
-              value={formData.name || ''}
-              onChange={(e) => setFormData({...formData, name: e.target.value})}
-              className={`w-full border rounded-xl p-2.5 text-sm transition-all focus:outline-none focus:border-[#5BA535] focus:ring-2 focus:ring-[#5BA535]/20 disabled:opacity-50 ${
-                darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 disabled:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-900 disabled:bg-slate-100'
-              }`}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Nombre</label>
+              <input
+                type="text"
+                disabled={mode === 'view'}
+                value={formData.name || ''}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                className={`w-full border rounded-xl p-2.5 text-sm transition-all focus:outline-none focus:border-[#5BA535] focus:ring-2 focus:ring-[#5BA535]/20 disabled:opacity-50 ${
+                  darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 disabled:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-900 disabled:bg-slate-100'
+                }`}
+                required
+              />
+            </div>
+
+            {/* Selector de Categoría Corregido */}
+            <div>
+              <label className={`block text-xs font-bold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Categoría</label>
+              <select
+                disabled={mode === 'view'}
+                value={obtenerNombreCategoria(formData.categoria)}
+                onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                className={`w-full border rounded-xl p-2.5 text-sm transition-all cursor-pointer focus:outline-none focus:border-[#5BA535] focus:ring-2 focus:ring-[#5BA535]/20 disabled:opacity-50 ${
+                  darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 disabled:bg-zinc-900' : 'bg-slate-50 border-slate-200 text-slate-900 disabled:bg-slate-100'
+                }`}
+                required
+              >
+                <option value="Bebida">Bebida</option>
+                <option value="FrutaVerdura">Fruta/Verdura</option>
+                <option value="Lacteo">Lácteo</option>
+                <option value="SnackDulce">Snack/Dulce</option>
+                <option value="GranoCereal">Grano/Cereal</option>
+                <option value="EnlatadoConserva">Enlatado/Conserva</option>
+                <option value="Panaderia">Panadería</option>
+                <option value="Limpieza">Limpieza</option>
+                <option value="CuidadoPersonal">Cuidado Personal</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
           </div>
 
           <div>

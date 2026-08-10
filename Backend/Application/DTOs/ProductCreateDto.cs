@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.DTOs;
 
 public class ProductCreateDto
@@ -7,6 +9,7 @@ public class ProductCreateDto
     public string Description { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public int Stock { get; set; }
+    public ProductCategory Categoria { get; set; }
     public int MinimumStock { get; set; }
     public Guid? ProviderId { get; set; }
 }

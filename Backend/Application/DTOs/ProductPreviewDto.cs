@@ -1,3 +1,5 @@
+using Domain.Enums;
+
 namespace Application.DTOs;
 
 public class ProductPreviewDto
@@ -8,6 +10,8 @@ public class ProductPreviewDto
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public int MinimumStock { get; set; }
+    public ProductCategory Categoria { get; set; }
+    public bool MissingCategoryInExcel { get; set; }
     public bool IsExisting { get; set; } // True si ya existe en la BD para este Tenant
     public DateTime? UpdatedAt { get; set; }
 }

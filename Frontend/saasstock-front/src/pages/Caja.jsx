@@ -6,7 +6,7 @@ import { Loader2, PlusCircle, MinusCircle, FileText, DollarSign, TrendingUp, Cre
 
 export default function Caja() {
   const { showAlert } = useAlert();
-  const { darkMode } = useTheme(); // <-- 2. Reemplazado el estado local y el observer manual por el hook global
+  const { darkMode } = useTheme();
 
   // Estado general de la caja
   const [cajaActiva, setCajaActiva] = useState(null);
@@ -193,6 +193,10 @@ export default function Caja() {
   const efectivoEsperado = cajaActiva?.efectivoEsperado || 0;
   const diferenciaEfectivo = (Number(efectivoRealContado) || 0) - efectivoEsperado;
 
+  // Mapeo correcto directo desde el JSON que devuelve el backend
+  const ingresosExtraVal = cajaActiva?.montoIngresosExtra ?? 0;
+  const egresosExtraVal = cajaActiva?.montoEgresosExtra ?? 0;
+
   return (
     <div className={`min-h-screen w-full transition-colors duration-200 p-4 sm:p-6 md:p-8 space-y-8 max-w-7xl mx-auto ${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'}`}>
 
@@ -269,40 +273,41 @@ export default function Caja() {
             <StatCard title="Tarjetas" value={cajaActiva.ventasTarjeta} icon={CreditCard} color="text-purple-400" darkMode={darkMode} />
           </div>
 
-          <div className={`border rounded-2xl p-8 shadow-sm transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+          <div className={`border rounded-2xl p-4 sm:p-8 shadow-sm transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
             <div className={`flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 border-b pb-6 ${darkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <h3 className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>Arqueo de Efectivo en Cajón</h3>
 
               <button
                 onClick={() => setMostrarModalMovimiento(true)}
-                className="bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
               >
-                <MinusCircle className="w-4 h-4" />
-                Registrar Gasto / Retiro / Ingreso Extra
+                <MinusCircle className="w-4 h-4 shrink-0" />
+                <span>Registrar Gasto / Retiro / Ingreso Extra</span>
               </button>
             </div>
 
-            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-mono p-6 rounded-xl border mb-8 ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-mono p-4 sm:p-6 rounded-xl border mb-8 ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
               <MiniStat label="Monto Inicial" value={cajaActiva.montoInicial} color={darkMode ? "text-zinc-400" : "text-slate-600"} darkMode={darkMode} />
               <MiniStat label="Ventas Efectivo" value={cajaActiva.ventasEfectivo} color="text-emerald-500" darkMode={darkMode} />
-              <MiniStat label="Ingresos Extra" value={cajaActiva.ventasIngresosExtra} color="text-emerald-500" darkMode={darkMode} />
-              <MiniStat label="Egresos/Gastos" value={cajaActiva.ventasEgresosExtra} color="text-rose-500" negative darkMode={darkMode} />
+              <MiniStat label="Ingresos Extra" value={ingresosExtraVal} color="text-emerald-500" darkMode={darkMode} />
+              <MiniStat label="Egresos/Gastos" value={egresosExtraVal} color="text-rose-500" negative darkMode={darkMode} />
             </div>
 
-            <div className={`flex flex-col sm:flex-row justify-between items-center border p-6 rounded-2xl transition-colors ${darkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-slate-50 border-slate-200'}`}>
-              <div>
+            {/* SECCIÓN INFERIOR CON RESPONSIVE OPTIMIZADO PARA EL BOTÓN DE ARQUEO */}
+            <div className={`flex flex-col lg:flex-row justify-between items-stretch lg:items-center border p-5 sm:p-6 rounded-2xl gap-6 transition-colors ${darkMode ? 'bg-zinc-800/50 border-zinc-700' : 'bg-slate-50 border-slate-200'}`}>
+              <div className="text-center lg:text-left">
                 <span className="text-xs font-semibold text-emerald-500 uppercase tracking-wider">Efectivo Esperado en Cajón</span>
-                <p className={`text-4xl font-extrabold font-mono tracking-tight mt-1 ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                <p className={`text-3xl sm:text-4xl font-extrabold font-mono tracking-tight mt-1 ${darkMode ? 'text-emerald-300' : 'text-emerald-700'}`}>
                   ${cajaActiva.efectivoEsperado?.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </p>
               </div>
 
               <button
                 onClick={() => setMostrarModalCierre(true)}
-                className="mt-6 sm:mt-0 bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-bold px-8 py-4 rounded-xl transition-all shadow-lg shadow-red-900/40 text-lg flex items-center gap-2 cursor-pointer"
+                className="w-full lg:w-auto bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition-all shadow-lg shadow-red-900/40 text-base sm:text-lg flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Loader2 className="w-5 h-5" />
-                Realizar Arqueo y Cerrar Caja
+                <Loader2 className="w-5 h-5 shrink-0" />
+                <span>Realizar Arqueo y Cerrar Caja</span>
               </button>
             </div>
           </div>
@@ -317,7 +322,7 @@ export default function Caja() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`border rounded-2xl w-full max-w-md p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
+            className={`border rounded-2xl w-full max-w-md p-6 sm:p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
           >
             <div className={`flex justify-between items-center border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <h3 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -381,7 +386,7 @@ export default function Caja() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`border rounded-2xl w-full max-w-lg p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
+            className={`border rounded-2xl w-full max-w-lg p-6 sm:p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
           >
             <div className={`flex justify-between items-center border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>Registrar Movimiento Extra</h3>
@@ -467,7 +472,7 @@ export default function Caja() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className={`border rounded-2xl w-full max-w-lg p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
+            className={`border rounded-2xl w-full max-w-lg p-6 sm:p-8 relative shadow-2xl space-y-6 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}
           >
             <div className={`flex justify-between items-center border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-slate-100'}`}>
               <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -601,6 +606,17 @@ function StatCard({ title, value, icon: Icon, color, darkMode }) {
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${darkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-slate-100 border-slate-200'}`}>
         <Icon className={`w-6 h-6 ${color}`} />
       </div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, color, negative, darkMode }) {
+  return (
+    <div className={`p-4 rounded-xl border flex flex-col justify-between ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+      <span className={`text-[11px] font-semibold uppercase tracking-wider ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{label}</span>
+      <p className={`text-lg font-bold font-mono mt-2 ${color}`}>
+        {negative && value > 0 ? '-' : ''}${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </p>
     </div>
   );
 }

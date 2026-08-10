@@ -34,7 +34,9 @@ public class ProductService : IProductService
             MinimumStock = p.MinimumStock,
             ProviderId = p.ProviderId,
             IsActive = p.IsActive,
-            ProviderName = p.Provider?.Name
+            ProviderName = p.Provider?.Name,
+            Categoria = p.Categoria,
+            UpdatedAt = p.UpdatedAt
         });
     }
 
@@ -53,10 +55,11 @@ public class ProductService : IProductService
             MinimumStock = p.MinimumStock,
             ProviderId = p.ProviderId,
             IsActive = p.IsActive,
-            ProviderName = p.Provider != null ? p.Provider.Name : null
+            ProviderName = p.Provider != null ? p.Provider.Name : null,
+            Categoria = p.Categoria,
+            UpdatedAt = p.UpdatedAt
         });
     }
-
     public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId)
     {
         var rawProducts = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
@@ -111,19 +114,19 @@ public class ProductService : IProductService
     {
         // Valida que el código de barras no exista dentro del mismo Tenant
         var existenProductos = await _productRepository.GetAllAsync(p => p.Barcode == dto.Barcode && p.TenantId == tenantId && p.IsActive);
-    
+
         if (existenProductos.Any())
         {
             var failures = new List<FluentValidation.Results.ValidationFailure>
             {
                 new FluentValidation.Results.ValidationFailure("Barcode", "El código de barras ya se encuentra registrado en tu inventario.")
             };
-    
+
             throw new ValidationException(failures);
         }
-    
+
         var now = DateTime.UtcNow;
-    
+
         var newProduct = new Product
         {
             TenantId = tenantId,
@@ -134,19 +137,20 @@ public class ProductService : IProductService
             Stock = dto.Stock,
             MinimumStock = dto.MinimumStock,
             ProviderId = dto.ProviderId,
+            Categoria = dto.Categoria, 
             IsActive = true,
-            UpdatedAt = now    // <--- Se guarda en la BD
+            UpdatedAt = now
         };
-    
+
         var validationResult = await _validator.ValidateAsync(newProduct);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
-    
+
         await _productRepository.AddAsync(newProduct);
         await _productRepository.SaveChangesAsync();
-    
+
         return new ProductResponseDto
         {
             Id = newProduct.Id,
@@ -158,8 +162,9 @@ public class ProductService : IProductService
             MinimumStock = newProduct.MinimumStock,
             IsActive = newProduct.IsActive,
             ProviderId = newProduct.ProviderId,
-            ProviderName = newProduct.Provider?.Name, // O como obtengas el nombre del proveedor
-            UpdatedAt = newProduct.UpdatedAt          // <--- Se envía al frontend para la tabla y filtros
+            ProviderName = newProduct.Provider?.Name,
+            Categoria = newProduct.Categoria,
+            UpdatedAt = newProduct.UpdatedAt
         };
     }
     public async Task<bool> DeleteProductAsync(Guid id, Guid tenantId)
@@ -186,7 +191,7 @@ public class ProductService : IProductService
         if (product == null)
             throw new KeyNotFoundException("El producto especificado no existe o no tenés permisos para verlo.");
 
-        product.UpdateDetails(dto.Name, dto.Barcode, dto.Price, dto.StockActual, dto.StockMinimum, dto.Description, dto.State, dto.ProviderId);
+        product.UpdateDetails(dto.Name, dto.Barcode, dto.Price, dto.StockActual, dto.StockMinimum, dto.Description, dto.State, dto.ProviderId, dto.Categoria);
 
         await _productRepository.SaveChangesAsync();
     }

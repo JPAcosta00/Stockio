@@ -191,7 +191,7 @@ export default function Providers() {
           placeholder="Buscar por nombre o CUIT..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={`bg-transparent border-none outline-none text-xs w-full ${
+          className={`bg-transparent border-none outline-none text-sm w-full ${
             darkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
           }`}
         />
@@ -202,11 +202,11 @@ export default function Providers() {
         darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
       }`}>
         {loading ? (
-          <div className={`p-12 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
+          <div className={`p-12 text-center text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
-              <thead className={`text-[10px] font-semibold uppercase tracking-wider ${
+              <thead className={`text-xs font-semibold uppercase tracking-wider ${
                 darkMode ? 'bg-zinc-900/50 text-zinc-400' : 'bg-zinc-50 text-zinc-500'
               }`}>
                 <tr>
@@ -218,7 +218,7 @@ export default function Providers() {
                   <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
+              <tbody className={`divide-y text-sm ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
                 {filteredProviders.map((provider) => (
                   <tr 
                     key={provider.id} 
@@ -279,7 +279,7 @@ export default function Providers() {
                 ))}
                 {filteredProviders.length === 0 && (
                   <tr>
-                    <td colSpan="6" className={`px-6 py-12 text-center text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    <td colSpan="6" className={`px-6 py-12 text-center text-sm ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
                       No se encontraron proveedores registrados.
                     </td>
                   </tr>
@@ -297,7 +297,7 @@ export default function Providers() {
             darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
           }`}>
             <div className={`flex items-center justify-between border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
-              <h2 className="text-sm font-bold">
+              <h2 className="text-base font-bold">
                 {isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
               </h2>
               <button 
@@ -310,9 +310,9 @@ export default function Providers() {
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-sm">
               <div>
-                <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de la Empresa / Proveedor</label>
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de la Empresa / Proveedor</label>
                 <input 
                   type="text" 
                   required
@@ -326,7 +326,7 @@ export default function Providers() {
               </div>
 
               <div>
-                <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de Contacto</label>
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nombre de Contacto</label>
                 <input 
                   type="text" 
                   value={currentProvider.contactName || ''} 
@@ -340,7 +340,7 @@ export default function Providers() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Teléfono</label>
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Teléfono</label>
                   <input 
                     type="text" 
                     value={currentProvider.phone || ''} 
@@ -352,7 +352,7 @@ export default function Providers() {
                   />
                 </div>
                 <div>
-                  <label className={`block font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT</label>
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT</label>
                   <input 
                     type="text" 
                     value={currentProvider.cuit || ''} 
@@ -396,11 +396,11 @@ export default function Providers() {
             
             <div className={`flex items-center justify-between border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
               <div>
-                <h2 className="text-sm font-bold flex items-center gap-2">
+                <h2 className="text-base font-bold flex items-center gap-2">
                   <FileText className="w-4 h-4 text-[#5BA535]" />
                   Cuenta Corriente — {selectedProvider?.name}
                 </h2>
-                <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT: {selectedProvider?.cuit || 'Sin CUIT'} | Tel: {selectedProvider?.phone || 'Sin teléfono'}</p>
+                <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT: {selectedProvider?.cuit || 'Sin CUIT'} | Tel: {selectedProvider?.phone || 'Sin teléfono'}</p>
               </div>
               <button 
                 onClick={() => setIsDetailModalOpen(false)}
@@ -413,15 +413,15 @@ export default function Providers() {
             </div>
 
             {loadingInvoices ? (
-              <div className={`py-12 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando facturas de compra...</div>
+              <div className={`py-12 text-center text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando facturas de compra...</div>
             ) : (
-              <div className="space-y-4 text-xs">
+              <div className="space-y-4 text-sm">
                 <div className={`border rounded-xl p-4 flex justify-between items-center transition-colors ${
                   darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'
                 }`}>
                   <div>
-                    <span className={`text-[10px] block uppercase font-semibold ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Saldo Actual en Cuenta</span>
-                    <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                    <span className={`text-xs block uppercase font-semibold ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Saldo Actual en Cuenta</span>
+                    <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                       ${selectedProvider?.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
                     </span>
                   </div>
@@ -430,16 +430,16 @@ export default function Providers() {
                       setSelectedProviderForInvoice(selectedProvider.id);
                       setIsInvoiceModalOpen(true);
                     }}
-                    className="px-3 py-2 bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl font-medium transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    className="px-3 py-2 bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl font-medium transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm text-sm"
                   >
                     <Plus className="w-4 h-4" /> Nueva Factura
                   </button>
                 </div>
 
-                <h3 className={`font-semibold uppercase tracking-wider pt-2 text-[10px] ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Historial de Facturas de Compra</h3>
+                <h3 className={`font-semibold uppercase tracking-wider pt-2 text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Historial de Facturas de Compra</h3>
 
                 {providerInvoices.length === 0 ? (
-                  <div className={`p-8 text-center rounded-xl border ${
+                  <div className={`p-8 text-center rounded-xl border text-sm ${
                     darkMode ? 'bg-zinc-950/50 border-zinc-800/60 text-zinc-500' : 'bg-zinc-50 border-zinc-200 text-zinc-400'
                   }`}>
                     Este proveedor no registra facturas de compra cargadas en el sistema.
@@ -447,7 +447,7 @@ export default function Providers() {
                 ) : (
                   <div className={`overflow-x-auto border rounded-xl ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
                     <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
-                      <thead className={`text-[10px] font-semibold uppercase tracking-wider ${
+                      <thead className={`text-xs font-semibold uppercase tracking-wider ${
                         darkMode ? 'bg-zinc-950 text-zinc-400' : 'bg-zinc-100 text-zinc-500'
                       }`}>
                         <tr>
@@ -459,7 +459,7 @@ export default function Providers() {
                           <th className="px-4 py-3 text-right">Acciones</th>
                         </tr>
                       </thead>
-                      <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
+                      <tbody className={`divide-y text-sm ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
                         {providerInvoices.map((inv) => (
                           <tr key={inv.id} className={`transition-colors ${darkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-zinc-50'}`}>
                             <td className={`px-4 py-3 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{inv.invoiceNumber}</td>
@@ -468,11 +468,11 @@ export default function Providers() {
                             <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-mono">${inv.paidAmount?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                             <td className="px-4 py-3 text-center">
                               {inv.isPaid ? (
-                                <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/50">
+                                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800/50">
                                   Pagada
                                 </span>
                               ) : (
-                                <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800/50">
+                                <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800/50">
                                   Pendiente
                                 </span>
                               )}
@@ -481,7 +481,7 @@ export default function Providers() {
                               {!inv.isPaid && (
                                 <button
                                   onClick={() => handleMarkAsPaid(inv.id)}
-                                  className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer"
+                                  className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg font-medium transition-colors cursor-pointer text-xs"
                                   title="Marcar como Pagada"
                                 >
                                   <CheckCircle2 className="w-3.5 h-3.5" /> Pagar
@@ -501,7 +501,7 @@ export default function Providers() {
               <button 
                 type="button" 
                 onClick={() => setIsDetailModalOpen(false)}
-                className={`px-4 py-2.5 rounded-xl font-medium text-xs transition-colors cursor-pointer ${
+                className={`px-4 py-2.5 rounded-xl font-medium text-sm transition-colors cursor-pointer ${
                   darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
                 }`}
               >

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Domain.Enums;
 
 namespace Application.DTOs
 {
@@ -12,6 +13,7 @@ namespace Application.DTOs
         public int StockActual {get; set;}
         
         public Guid? ProviderId { get; set; }
+        public ProductCategory Categoria { get; set; }
         
         [JsonPropertyName("minimumStock")]
         public int StockMinimum { get; set; }

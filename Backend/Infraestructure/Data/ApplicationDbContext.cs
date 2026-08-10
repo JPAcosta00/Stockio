@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -87,6 +88,13 @@ public class ApplicationDbContext : DbContext
                   .WithMany(t => t.Products)
                   .HasForeignKey(p => p.TenantId)
                   .OnDelete(DeleteBehavior.Cascade);
+            
+            // Configuracion de la categoria
+            entity.Property(p => p.Categoria)
+                  .HasConversion<string>()
+                  .HasMaxLength(50)
+                  .HasDefaultValue(ProductCategory.Otros)
+                  .IsRequired();
         });
 
         // Provider

@@ -20,15 +20,27 @@ namespace Application.Services
             _cajaService = cajaService;
         }
 
-        // --- 1. HISTORIAL DE VENTAS ---
+        // --- 1. HISTORIAL DE VENTAS CON DETALLES ---
         public async Task<IEnumerable<SaleHistoryDto>> GetSalesHistoryAsync(Guid tenantId){
-            var sales = await _saleRepository.GetByTenantAsync(tenantId);
+            var sales = await _saleRepository.GetSalesWithDetailsAsync(tenantId, new DateTime(2000, 1, 1));
             var argentinaZone = TimeZoneInfo.FindSystemTimeZoneById("America/Argentina/Buenos_Aires");
-
-            return sales.Select(s => new SaleHistoryDto{
-                Id = s.Id,
-                CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(s.CreatedAt, argentinaZone),
-                Total = s.Total
+        
+            return sales.Select(sale => {
+                var utcDate = DateTime.SpecifyKind(sale.CreatedAt, DateTimeKind.Utc);
+                return new SaleHistoryDto{
+                    Id = sale.Id,
+                    CreatedAt = TimeZoneInfo.ConvertTimeFromUtc(utcDate, argentinaZone),
+                    Total = sale.Total,
+                    Items = sale.Details.Select(d => new SaleDetailDto{
+                        Id = d.Id,
+                        ProductId = d.ProductId,
+                        ProductName = d.Product?.Name ?? "Producto no disponible",
+                        ProductBarcode = d.Product?.Barcode ?? string.Empty,
+                        CategoryName = d.Product != null ? d.Product.Categoria.ToString() : "Otros", // <--- Mapeo del Enum
+                        Quantity = d.Quantity,
+                        UnitPrice = d.UnitPrice
+                    }).ToList()
+                };
             }).ToList();
         }
 
