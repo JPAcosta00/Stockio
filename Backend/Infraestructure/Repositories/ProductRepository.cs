@@ -1,4 +1,5 @@
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Infraestructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +12,14 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     public ProductRepository(ApplicationDbContext context) : base(context)
     {
     }
-    public async Task<IEnumerable<Product>> SearchByBarcodeOrNameAsync(string? query, Guid tenantId, Guid? providerId = null, string? period = null, bool isCriticalStock = false)
+    public async Task<IEnumerable<Product>> SearchByBarcodeOrNameAsync(string? query, Guid tenantId, Guid? providerId = null, string? period = null, bool isCriticalStock = false,ProductCategory? categoria = null) 
     {
         var cleanQuery = query?.Trim().ToLower() ?? string.Empty;
-
+    
         var dbQuery = _context.Products
             .Include(p => p.Provider)
             .Where(p => p.TenantId == tenantId && p.IsActive);
-
+    
         // 1. Filtro por texto (Nombre o Código)
         if (!string.IsNullOrEmpty(cleanQuery))
         {
@@ -27,24 +28,30 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
                 (p.Name != null && p.Name.ToLower().Contains(cleanQuery))
             );
         }
-
+    
         // 2. Filtro por Proveedor
         if (providerId.HasValue && providerId.Value != Guid.Empty)
         {
             dbQuery = dbQuery.Where(p => p.ProviderId == providerId.Value);
         }
-
-        // 3. Filtro por Stock Crítico (Stock menor o igual al mínimo)
+    
+        // 3. Filtro por Categoría <--- NUEVO BLOQUE
+        if (categoria.HasValue)
+        {
+            dbQuery = dbQuery.Where(p => p.Categoria == categoria.Value);
+        }
+    
+        // 4. Filtro por Stock Crítico (Stock menor o igual al mínimo)
         if (isCriticalStock)
         {
             dbQuery = dbQuery.Where(p => p.Stock <= p.MinimumStock);
         }
-
-        // 4. Filtro por Período usando UpdatedAt
+    
+        // 5. Filtro por Período usando UpdatedAt
         if (!string.IsNullOrEmpty(period))
         {
             var hoy = DateTime.UtcNow.Date;
-
+    
             if (period == "hoy")
             {
                 dbQuery = dbQuery.Where(p => p.UpdatedAt.Date == hoy);
@@ -63,10 +70,9 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
                 dbQuery = dbQuery.Where(p => p.UpdatedAt.Year == hoy.Year);
             }
         }
-
+    
         return await dbQuery.ToListAsync();
     }
-
     public async Task<Product?> GetByBarcodeAndTenantAsync(string barcode, Guid tenantId)
     {
         return await _context.Products
@@ -79,7 +85,6 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
             .Include(p => p.Provider) // <--- ¡Aquí está la magia de EF Core!
             .ToListAsync();
     }
-
     public async new Task<Product?> GetByIdAsync(Guid id){
         return await _context.Products.Include(p => p.Provider).FirstOrDefaultAsync(p => p.Id == id);
     }

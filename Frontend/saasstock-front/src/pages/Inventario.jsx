@@ -32,11 +32,13 @@ export default function Inventario() {
   const [filtroPeriodo, setFiltroPeriodo] = useState('');
   const [filtroProveedor, setFiltroProveedor] = useState('');
   const [filtroCategoria, setFiltroCategoria] = useState('');
+  
   const [filtrosActivos, setFiltrosActivos] = useState({ 
     Name: '', 
     Period: '',
     IsCriticalStock: false,
-    ProviderId: ''
+    ProviderId: '',
+    Category: '' 
   });
 
   const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
@@ -59,7 +61,15 @@ export default function Inventario() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('view');
   const [formData, setFormData] = useState({
-    id: '', barcode: '', name: '', description: '', price: 0, stock: 0, minimumStock: 0, providerId: ''
+    id: '', 
+    barcode: '', 
+    name: '', 
+    description: '', 
+    price: 0, 
+    stock: 0, 
+    minimumStock: 0, 
+    providerId: '',
+    categoria: '' 
   });
 
   const cargarInventario = async () => {
@@ -90,14 +100,13 @@ export default function Inventario() {
   }, []);
 
 
-  // para filtrar en tiempo real (con debounce de 400ms)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       handleBuscar();
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [filtroNombre, filtroProveedor, filtroPeriodo]);
+  }, [filtroNombre, filtroProveedor, filtroPeriodo, filtroCategoria]); 
 
   const handleBuscar = async (e) => {
     if (e) e.preventDefault();
@@ -105,7 +114,6 @@ export default function Inventario() {
       setLoading(true);
       setPaginaActual(1);
       
-      // Declaramos la variable que faltaba basada en tu filtro de período
       const esStockCritico = filtroPeriodo === 'critico';
 
       const params = {};
@@ -116,6 +124,11 @@ export default function Inventario() {
       
       if (filtroProveedor && filtroProveedor !== "") {
         params.providerId = filtroProveedor;
+      }
+
+      // 2. Agregamos el parámetro de categoría si está seleccionado
+      if (filtroCategoria && filtroCategoria !== "") {
+        params.category = filtroCategoria;
       }
 
       if (esStockCritico) {

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useTheme } from '../../components/DashboardLayout';
 import { 
   User, 
   Building2, 
@@ -12,7 +11,9 @@ import {
 
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
-  const { darkMode } = useTheme();
+  
+  // Definimos darkMode de forma estática o segura para evitar errores fuera del dashboard
+  const darkMode = false; 
   
   // Estados para datos personales 
   const [username, setName] = useState('');
@@ -83,11 +84,11 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     <form onSubmit={handleSubmit} className="w-full space-y-4">
       
       {/* Encabezado */}
-      <div className="text-center mb-2">
-        <h2 className={`text-xl font-bold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+      <div className="text-center mb-6">
+        <h1 className="text-xl font-bold text-zinc-900 dark:text-white tracking-tight">
           Creá tu cuenta en Stockio
-        </h2>
-        <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+        </h1>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
           Gestioná tu stock y ventas en un solo lugar
         </p>
       </div>

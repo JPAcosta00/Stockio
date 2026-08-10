@@ -2,6 +2,7 @@ using Application.DTOs;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,13 +53,9 @@ public class ProductsController : ControllerBase
         return Ok(productos);
     }
 
-   [HttpGet("search")]
+    [HttpGet("search")]
     [Authorize]
-    public async Task<IActionResult> SearchProducts(
-        [FromQuery] string? query, 
-        [FromQuery] string? providerId,
-        [FromQuery] string? period,
-        [FromQuery] bool? isCriticalStock)
+    public async Task<IActionResult> SearchProducts([FromQuery] string? query, [FromQuery] string? providerId,[FromQuery] string? period,[FromQuery] bool? isCriticalStock,[FromQuery] ProductCategory? category) 
     {
         var tenantClaim = User.FindFirst("TenantId")?.Value;
 
@@ -73,8 +70,14 @@ public class ProductsController : ControllerBase
             parsedProviderId = validGuid;
         }
 
-        // Llamamos al servicio pasando todos los filtros
-        var products = await _productService.SearchProductsAsync(query, tenantId, parsedProviderId, period, isCriticalStock ?? false);
+        var products = await _productService.SearchProductsAsync(
+            query, 
+            tenantId, 
+            parsedProviderId, 
+            period, 
+            isCriticalStock ?? false, 
+            category?.ToString()
+        );
 
         return Ok(products);
     }

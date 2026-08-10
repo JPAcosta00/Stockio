@@ -3,6 +3,7 @@ using Domain.Interfaces;
 using Application.DTOs;
 using Application.Interfaces;
 using FluentValidation;
+using Domain.Enums;
 
 namespace Application.Services;
 
@@ -17,11 +18,26 @@ public class ProductService : IProductService
         _validator = validator;
     }
 
-    // Búsqueda unificada por código de barras o nombre filtrada por tenantId
-    public async Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(string? query, Guid tenantId, Guid? providerId = null, string? period = null, bool isCriticalStock = false)
+    // Búsqueda unificada por código de barras o nombre filtrada por tenantId, proveedor, período, stock y categoría
+    public async Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(
+        string? query, 
+        Guid tenantId, 
+        Guid? providerId = null, 
+        string? period = null, 
+        bool isCriticalStock = false, 
+        string? categoriaStr = null)
     {
-        // Le pasamos todo al repositorio
-        var products = await _productRepository.SearchByBarcodeOrNameAsync(query, tenantId, providerId, period, isCriticalStock);
+        ProductCategory? categoriaEnum = null;
+
+        if (!string.IsNullOrWhiteSpace(categoriaStr) && Enum.TryParse<ProductCategory>(categoriaStr, true, out var parsedCategory))
+        {
+            categoriaEnum = parsedCategory;
+        }
+
+        // Le pasamos el ENUM parseado al repositorio (NO el string crudo)
+        var products = await _productRepository.SearchByBarcodeOrNameAsync(
+            query, tenantId, providerId, period, isCriticalStock, categoriaEnum
+        );
 
         return products.Select(p => new ProductResponseDto
         {
@@ -39,7 +55,6 @@ public class ProductService : IProductService
             UpdatedAt = p.UpdatedAt
         });
     }
-
     public async Task<IEnumerable<ProductResponseDto>> GetProductsByTenantAsync(Guid tenantId)
     {
         var products = await _productRepository.GetProductsWithProviderAsync(tenantId);
@@ -60,6 +75,7 @@ public class ProductService : IProductService
             UpdatedAt = p.UpdatedAt
         });
     }
+
     public async Task<IEnumerable<Product>> GetFilteredProductsAsync(ProductReportFilterDto filter, Guid tenantId)
     {
         var rawProducts = await _productRepository.GetAllAsync(p => p.TenantId == tenantId && p.IsActive);
@@ -72,13 +88,19 @@ public class ProductService : IProductService
         if (!string.IsNullOrWhiteSpace(filter.Name))
         {
             products = products.Where(p => p.Name != null &&
-                                           p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
+                                          p.Name.Contains(filter.Name, StringComparison.OrdinalIgnoreCase));
         }
 
         // Filtro por Stock Crítico
         if (filter.IsCriticalStock.GetValueOrDefault())
         {
             products = products.Where(p => p.Stock <= p.MinimumStock);
+        }
+
+        // Filtro por Categoría usando el Enum directamente
+        if (filter.Category.HasValue)
+        {
+            products = products.Where(p => p.Categoria == filter.Category.Value);
         }
 
         // Filtro de Período
@@ -167,6 +189,7 @@ public class ProductService : IProductService
             UpdatedAt = newProduct.UpdatedAt
         };
     }
+
     public async Task<bool> DeleteProductAsync(Guid id, Guid tenantId)
     {
         var product = await _productRepository.GetByIdAsync(id);
@@ -174,14 +197,19 @@ public class ProductService : IProductService
         // Validamos que exista Y que pertenezca al tenant del usuario actual
         if (product == null || product.TenantId != tenantId)
         {
-            return false; // O podés lanzar una KeyNotFoundException
+            return false; 
         }
     
-        // Baja lógica
+        // 1. Baja lógica
         product.IsActive = false;
-        //product.Barcode = "-----";
     
+        // 2. Liberar el barcode para poder reutilizarlo
+        product.Barcode = $"{product.Barcode}_del_{product.Id.ToString().Substring(0, 8)}";
+    
+        // 3. Actualizamos y guardamos
+        _productRepository.Update(product);
         await _productRepository.SaveChangesAsync();
+        
         return true;
     }
 
