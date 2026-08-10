@@ -11,19 +11,67 @@ public class ProductRepository : GenericRepository<Product>, IProductRepository
     public ProductRepository(ApplicationDbContext context) : base(context)
     {
     }
-    // Busca por código de barras O por nombre filtrando estrictamente por TenantId
-    public async Task<IEnumerable<Product>> SearchByBarcodeOrNameAsync(string query, Guid tenantId)
+    public async Task<IEnumerable<Product>> SearchByBarcodeOrNameAsync(string? query, Guid tenantId, Guid? providerId = null, string? period = null, bool isCriticalStock = false)
     {
-        var cleanQuery = query.Trim().ToLower();
+        var cleanQuery = query?.Trim().ToLower() ?? string.Empty;
 
-        return await _context.Products
-            .Where(p => p.TenantId == tenantId 
-                     && p.IsActive 
-                     && (p.Barcode.ToLower() == cleanQuery || p.Name.ToLower().Contains(cleanQuery)))
+        var dbQuery = _context.Products
             .Include(p => p.Provider)
-            .ToListAsync();
+            .Where(p => p.TenantId == tenantId && p.IsActive);
+
+        // 1. Filtro por texto (Nombre o Código)
+        if (!string.IsNullOrEmpty(cleanQuery))
+        {
+            dbQuery = dbQuery.Where(p => 
+                (p.Barcode != null && p.Barcode.ToLower() == cleanQuery) || 
+                (p.Name != null && p.Name.ToLower().Contains(cleanQuery))
+            );
+        }
+
+        // 2. Filtro por Proveedor
+        if (providerId.HasValue && providerId.Value != Guid.Empty)
+        {
+            dbQuery = dbQuery.Where(p => p.ProviderId == providerId.Value);
+        }
+
+        // 3. Filtro por Stock Crítico (Stock menor o igual al mínimo)
+        if (isCriticalStock)
+        {
+            dbQuery = dbQuery.Where(p => p.Stock <= p.MinimumStock);
+        }
+
+        // 4. Filtro por Período usando UpdatedAt
+        if (!string.IsNullOrEmpty(period))
+        {
+            var hoy = DateTime.UtcNow.Date;
+
+            if (period == "hoy")
+            {
+                dbQuery = dbQuery.Where(p => p.UpdatedAt.Date == hoy);
+            }
+            else if (period == "semana")
+            {
+                var inicioSemana = hoy.AddDays(-(int)hoy.DayOfWeek);
+                dbQuery = dbQuery.Where(p => p.UpdatedAt.Date >= inicioSemana);
+            }
+            else if (period == "mes")
+            {
+                dbQuery = dbQuery.Where(p => p.UpdatedAt.Year == hoy.Year && p.UpdatedAt.Month == hoy.Month);
+            }
+            else if (period == "anio")
+            {
+                dbQuery = dbQuery.Where(p => p.UpdatedAt.Year == hoy.Year);
+            }
+        }
+
+        return await dbQuery.ToListAsync();
     }
 
+    public async Task<Product?> GetByBarcodeAndTenantAsync(string barcode, Guid tenantId)
+    {
+        return await _context.Products
+            .FirstOrDefaultAsync(p => p.Barcode == barcode && p.TenantId == tenantId);
+    }
     public async Task<IEnumerable<Product>> GetProductsWithProviderAsync(Guid tenantId)
     {
         return await _context.Products

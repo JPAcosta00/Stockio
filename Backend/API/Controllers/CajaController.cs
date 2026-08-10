@@ -31,7 +31,7 @@ public class CajaController : ControllerBase
         var cajaActiva = await _cajaService.ObtenerCajaActivaAsync(tenantId);
         
         if (cajaActiva == null)
-            return NotFound(new { mensaje = "No hay una caja abierta actualmente." });
+          return Ok(null);
 
         return Ok(cajaActiva);
     }

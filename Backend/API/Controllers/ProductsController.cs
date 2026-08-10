@@ -52,9 +52,13 @@ public class ProductsController : ControllerBase
         return Ok(productos);
     }
 
-    [HttpGet("search")]
+   [HttpGet("search")]
     [Authorize]
-    public async Task<IActionResult> SearchProducts([FromQuery] string query)
+    public async Task<IActionResult> SearchProducts(
+        [FromQuery] string? query, 
+        [FromQuery] string? providerId,
+        [FromQuery] string? period,
+        [FromQuery] bool? isCriticalStock)
     {
         var tenantClaim = User.FindFirst("TenantId")?.Value;
 
@@ -63,12 +67,14 @@ public class ProductsController : ControllerBase
             return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
         }
 
-        if (string.IsNullOrWhiteSpace(query))
+        Guid? parsedProviderId = null;
+        if (!string.IsNullOrEmpty(providerId) && Guid.TryParse(providerId, out Guid validGuid))
         {
-            return BadRequest("El término de búsqueda no puede estar vacío.");
+            parsedProviderId = validGuid;
         }
 
-        var products = await _productService.SearchProductsAsync(query, tenantId);
+        // Llamamos al servicio pasando todos los filtros
+        var products = await _productService.SearchProductsAsync(query, tenantId, parsedProviderId, period, isCriticalStock ?? false);
 
         return Ok(products);
     }
@@ -111,45 +117,76 @@ public class ProductsController : ControllerBase
     
         return NoContent();
     }
-    //importar productos desde un archivo excel 
-    [HttpPost("import")]
-    [Authorize] 
-    public async Task<IActionResult> Import(IFormFile file){
-         // Valido que se este mandando un archivo
-        if (file == null || file.Length == 0){
+
+    // Endpoint para previsualizar el Excel antes de guardarlo definitivamente
+    [HttpPost("preview-excel")]
+    [Authorize]
+    public async Task<IActionResult> PreviewExcel(IFormFile file)
+    {
+        var tenantClaim = User.FindFirst("TenantId")?.Value;
+
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
+        }
+
+        if (file == null || file.Length == 0)
+        {
             return BadRequest("Por favor, seleccione un archivo de Excel válido.");
         }
 
-        // Valido la extensión  (.xlsx)
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        if (extension != ".xlsx"){
+        if (extension != ".xlsx")
+        {
             return BadRequest("Formato no soportado. Debe subir un archivo de Excel con extensión .xlsx");
         }
 
-        try{
-            // Se invoca al motor que procesa el Excel
-            var report = await _productImportService.ImportFromExcelAsync(file);
-
-            // Si hubo errores en algunas filas pero otras se guardaron, se devuelve 200 con el reporte
-            if (report.FailedRows > 0){
-                return Ok(new { 
-                    Message = "Importación finalizada con observaciones. Algunos registros fallaron.", 
-                    Report = report 
-                });
-            }
-
-            // Si todo salió  perfecto
-            return Ok(new { 
-                Message = "¡Todos los productos se importaron con éxito total!", 
-                Report = report 
-            });
+        try
+        {
+            // Pasamos el archivo y el tenantId requerido
+            var previewList = await _productImportService.PreviewExcelAsync(file, tenantId);
+            return Ok(previewList);
         }
-        catch (ArgumentException ex){
-            //  error si el Excel está vacío o es inválido
+        catch (ArgumentException ex)
+        {
             return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error al procesar el archivo: {ex.Message}");
         }
     }
 
+    // POST: api/products/import
+    [HttpPost("import")]
+    [Authorize]
+    public async Task<IActionResult> ImportProducts([FromForm] IFormFile file, [FromForm] bool updateExisting)
+    {
+        var tenantClaim = User.FindFirst("TenantId")?.Value;
+
+        if (string.IsNullOrEmpty(tenantClaim) || !Guid.TryParse(tenantClaim, out Guid tenantId))
+        {
+            return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("Por favor, seleccione un archivo de Excel válido.");
+        }
+
+        try
+        {
+            // Llamamos al nombre correcto del método: ImportFromExcelAsync
+            var importResult = await _productImportService.ImportFromExcelAsync(file, tenantId, updateExisting);
+            
+            return Ok(new { Message = "¡Importación masiva procesada con éxito!", result = importResult });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"Error al procesar la importación: {ex.Message}");
+        }
+    }
+    
     [HttpGet("export-excel")]
     [Authorize]
     public async Task<IActionResult> ExportExcel([FromQuery] ProductReportFilterDto filters){

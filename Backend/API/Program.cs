@@ -104,7 +104,6 @@ builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository
 builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
 
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<IOcrService, OcrService>();
 
 // --- ROBUSTEZ Y VALIDACIONES ---
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();

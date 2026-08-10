@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useTheme } from '../context/ThemeContext'; // ⚡ Importamos el hook global de tema
+import { useTheme } from '../context/ThemeContext';
 import apiClient from '../api/apiClient';
 import RegisterForm from '../components/auth/RegisterForm';
 import { 
@@ -11,7 +11,10 @@ import {
   Eye, 
   EyeOff, 
   Loader2,
-  ArrowRight
+  ArrowRight,
+  AlertCircle,
+  CheckCircle2,
+  X
 } from 'lucide-react';
 
 export default function Login() {
@@ -30,7 +33,7 @@ export default function Login() {
   const [view, setView] = useState('login');
 
   const { login } = useAuth();
-  const { darkMode } = useTheme(); // ⚡ Consumimos el estado global del tema por si se requiere lógica condicional
+  const { darkMode } = useTheme();
 
   const switchView = (newView) => {
     setError('');
@@ -87,7 +90,7 @@ export default function Login() {
         token,
         newPassword
       });
-      alert('¡Contraseña actualizada correctamente! Ya podés iniciar sesión.');
+      setSuccessMsg('¡Contraseña actualizada correctamente! Ya podés iniciar sesión.');
       setToken('');
       setNewPassword('');
       switchView('login');
@@ -102,25 +105,41 @@ export default function Login() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4 md:p-8 relative overflow-hidden text-zinc-900 dark:text-zinc-100 selection:bg-[#5BA535] selection:text-white transition-colors duration-300">
       
-      {/* DETALLES DE FONDO: Luces ambientales suaves en verde tranquilo */}
+      {/* DETALLES DE FONDO */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#5BA535]/10 rounded-full blur-[140px] pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-[#1C562A]/15 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#5BA535]/10 rounded-full blur-[120px] pointer-events-none" />
 
-      {/* CONTENEDOR CENTRAL DEL MODAL */}
+      {/* CONTENEDOR CENTRAL */}
       <div className={`w-full ${view === 'register' ? 'max-w-2xl' : 'max-w-md'} bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 md:p-10 shadow-2xl relative z-10 transition-all duration-300`}>
         
-        {/* Banner de Errores */}
+        {/* Banner de Errores Mejorado con Botón de Cierre */}
         {error && (
-          <div className="mb-5 p-3.5 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 text-xs font-medium rounded-xl text-center backdrop-blur-md animate-in fade-in">
-            {error}
+          <div className="mb-5 p-3.5 bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800/60 text-red-600 dark:text-red-400 text-xs font-medium rounded-xl flex items-start gap-2.5 backdrop-blur-md animate-in fade-in shadow-sm">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 leading-relaxed">{error}</div>
+            <button 
+              onClick={() => setError('')} 
+              className="text-red-500 hover:text-red-700 dark:hover:text-red-300 transition-colors p-0.5 cursor-pointer"
+              title="Cerrar alerta"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
-        {/* Banner de Éxito */}
+        {/* Banner de Éxito Mejorado con Botón de Cierre */}
         {successMsg && (
-          <div className="mb-5 p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded-xl text-center backdrop-blur-md animate-in fade-in">
-            {successMsg}
+          <div className="mb-5 p-3.5 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded-xl flex items-start gap-2.5 backdrop-blur-md animate-in fade-in shadow-sm">
+            <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 leading-relaxed">{successMsg}</div>
+            <button 
+              onClick={() => setSuccessMsg('')} 
+              className="text-emerald-600 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors p-0.5 cursor-pointer"
+              title="Cerrar alerta"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
@@ -354,7 +373,7 @@ export default function Login() {
           <RegisterForm
             onSwitchToLogin={() => switchView('login')}
             onSuccess={() => {
-              alert('¡Cuenta creada con éxito! Ya podés iniciar sesión.');
+              setSuccessMsg('¡Cuenta creada con éxito! Ya podés iniciar sesión.');
               switchView('login');
             }}
           />

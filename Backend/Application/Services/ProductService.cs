@@ -18,9 +18,10 @@ public class ProductService : IProductService
     }
 
     // Búsqueda unificada por código de barras o nombre filtrada por tenantId
-    public async Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(string query, Guid tenantId)
+    public async Task<IEnumerable<ProductResponseDto>> SearchProductsAsync(string? query, Guid tenantId, Guid? providerId = null, string? period = null, bool isCriticalStock = false)
     {
-        var products = await _productRepository.SearchByBarcodeOrNameAsync(query, tenantId);
+        // Le pasamos todo al repositorio
+        var products = await _productRepository.SearchByBarcodeOrNameAsync(query, tenantId, providerId, period, isCriticalStock);
 
         return products.Select(p => new ProductResponseDto
         {
@@ -110,20 +111,22 @@ public class ProductService : IProductService
     {
         // Valida que el código de barras no exista dentro del mismo Tenant
         var existenProductos = await _productRepository.GetAllAsync(p => p.Barcode == dto.Barcode && p.TenantId == tenantId && p.IsActive);
-
+    
         if (existenProductos.Any())
         {
             var failures = new List<FluentValidation.Results.ValidationFailure>
             {
                 new FluentValidation.Results.ValidationFailure("Barcode", "El código de barras ya se encuentra registrado en tu inventario.")
             };
-
+    
             throw new ValidationException(failures);
         }
-
+    
+        var now = DateTime.UtcNow;
+    
         var newProduct = new Product
         {
-            TenantId = tenantId, // Asigna el tenant logueado
+            TenantId = tenantId,
             Barcode = dto.Barcode,
             Name = dto.Name,
             Description = dto.Description,
@@ -131,18 +134,19 @@ public class ProductService : IProductService
             Stock = dto.Stock,
             MinimumStock = dto.MinimumStock,
             ProviderId = dto.ProviderId,
-            IsActive = true
+            IsActive = true,
+            UpdatedAt = now    // <--- Se guarda en la BD
         };
-
+    
         var validationResult = await _validator.ValidateAsync(newProduct);
         if (!validationResult.IsValid)
         {
             throw new ValidationException(validationResult.Errors);
         }
-
+    
         await _productRepository.AddAsync(newProduct);
         await _productRepository.SaveChangesAsync();
-
+    
         return new ProductResponseDto
         {
             Id = newProduct.Id,
@@ -152,11 +156,12 @@ public class ProductService : IProductService
             Price = newProduct.Price,
             Stock = newProduct.Stock,
             MinimumStock = newProduct.MinimumStock,
+            IsActive = newProduct.IsActive,
             ProviderId = newProduct.ProviderId,
-            IsActive = newProduct.IsActive
+            ProviderName = newProduct.Provider?.Name, // O como obtengas el nombre del proveedor
+            UpdatedAt = newProduct.UpdatedAt          // <--- Se envía al frontend para la tabla y filtros
         };
     }
-
     public async Task<bool> DeleteProductAsync(Guid id, Guid tenantId)
     {
         var product = await _productRepository.GetByIdAsync(id);
@@ -169,6 +174,7 @@ public class ProductService : IProductService
     
         // Baja lógica
         product.IsActive = false;
+        //product.Barcode = "-----";
     
         await _productRepository.SaveChangesAsync();
         return true;

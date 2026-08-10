@@ -19,7 +19,56 @@ public class ProductImportService : IProductImportService
         _productValidator = productValidator;
     }
 
-    public async Task<ProductImportResultDto> ImportFromExcelAsync(IFormFile file)
+    // 1. Método exclusivo para la PREVISUALIZACIÓN (No guarda en base de datos)
+    public async Task<IEnumerable<ProductPreviewDto>> PreviewExcelAsync(IFormFile file, Guid tenantId)
+    {
+        var previewList = new List<ProductPreviewDto>();
+
+        if (file == null || file.Length == 0)
+            throw new ArgumentException("El archivo de Excel está vacío o es inválido.");
+
+        using var stream = file.OpenReadStream();
+        using var workbook = new XLWorkbook(stream);
+        var worksheet = workbook.Worksheets.First();
+
+        var usedRange = worksheet.RangeUsed();
+        if (usedRange == null)
+        {
+            throw new ArgumentException("La planilla de Excel no contiene datos.");
+        }
+
+        var rows = usedRange.RowsUsed().Skip(1);
+
+        foreach (var row in rows)
+        {
+            string barcode = row.Cell(1).GetValue<string>().Trim();
+            string name = row.Cell(2).GetValue<string>().Trim();
+            string description = row.Cell(3).GetValue<string>().Trim();
+            decimal price = row.Cell(4).GetValue<decimal>();
+            int stock = row.Cell(5).GetValue<int>();
+            int minimumStock = row.Cell(6).GetValue<int>();
+
+            // Verificamos si ya existe en la base de datos para este tenant
+            var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
+
+            previewList.Add(new ProductPreviewDto
+            {
+                Barcode = barcode,
+                Name = name,
+                Description = description,
+                Price = price,
+                Stock = stock,
+                MinimumStock = minimumStock,
+                IsExisting = existingProduct != null,
+                UpdatedAt = existingProduct?.UpdatedAt
+            });
+        }
+
+        return previewList;
+    }
+
+    // 2. Método de importación final (Guarda en base de datos - tu lógica actual intacta)
+    public async Task<ProductImportResultDto> ImportFromExcelAsync(IFormFile file, Guid tenantId, bool updateExisting)
     {
         var result = new ProductImportResultDto();
         var productsToInsert = new List<Product>();
@@ -27,37 +76,59 @@ public class ProductImportService : IProductImportService
         if (file == null || file.Length == 0)
             throw new ArgumentException("El archivo de Excel está vacío o es inválido.");
 
-        // Se lee el archivo directamente desde el Stream de memoria
         using var stream = file.OpenReadStream();
         using var workbook = new XLWorkbook(stream);
         var worksheet = workbook.Worksheets.First();
 
-        // Valido si la hoja tiene celdas usadas
         var usedRange = worksheet.RangeUsed();
         if (usedRange == null){
             throw new ArgumentException("La planilla de Excel no contiene datos.");
         }
 
         var rows = usedRange.RowsUsed().Skip(1); 
-
         int currentRowIndex = 1;
 
-        //recorre el el archivo fila por fila, arma los productos temporales y los carga en una lista 
         foreach (var row in rows){
             currentRowIndex++;
             result.TotalRows++;
 
-            // extrae las celdas
             string barcode = row.Cell(1).GetValue<string>().Trim();
             string name = row.Cell(2).GetValue<string>().Trim();
             string description = row.Cell(3).GetValue<string>().Trim();
             decimal price = row.Cell(4).GetValue<decimal>();
             int stock = row.Cell(5).GetValue<int>();
-            int minimumStock = row.Cell(5).GetValue<int>();
+            int minimumStock = row.Cell(6).GetValue<int>();
 
-            // Se arma el producto temporal
+            // Verificamos si el producto ya existe para este Tenant
+            var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
+
+            if (existingProduct != null)
+            {
+                if (updateExisting)
+                {
+                    // Actualizamos los datos del producto existente
+                    existingProduct.Name = name;
+                    existingProduct.Description = description;
+                    existingProduct.Price = price;
+                    existingProduct.Stock = stock;
+                    existingProduct.MinimumStock = minimumStock;
+                    existingProduct.UpdatedAt = DateTime.Now;
+
+                    _productRepository.Update(existingProduct);
+                    result.SuccessfulRows++;
+                }
+                else
+                {
+                    // Si decidió no actualizar, se omite
+                    result.SuccessfulRows++; // O puedes contarlo como ignorado si prefieres
+                }
+                continue;
+            }
+
+            // Si no existe, creamos uno nuevo asignándole su TenantId
             var product = new Product
             {
+                TenantId = tenantId,
                 Barcode = barcode,
                 Name = name,
                 Description = description,
@@ -66,7 +137,6 @@ public class ProductImportService : IProductImportService
                 MinimumStock = minimumStock,
                 IsActive = true,
                 UpdatedAt = DateTime.Now
-                // El TenantId se va a inyectar solo en el DbContext 
             };
 
             var validationResult = await _productValidator.ValidateAsync(product);
@@ -87,15 +157,13 @@ public class ProductImportService : IProductImportService
             result.SuccessfulRows++;
         }
 
-        // recorre la lista de productos para cargar en el inventario
         if (productsToInsert.Any()){
-             foreach (var product in productsToInsert) {
+            foreach (var product in productsToInsert) {
                 await _productRepository.AddAsync(product); 
             }
-    
-            //se hace una sola vez, xq EF junta toda la informacion y la guarda de una 
-            await _productRepository.SaveChangesAsync();
         }
+
+        await _productRepository.SaveChangesAsync();
 
         return result;
     }

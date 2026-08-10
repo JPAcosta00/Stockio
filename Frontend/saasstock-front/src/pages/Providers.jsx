@@ -1,17 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Truck, Plus, Search, Edit2, Trash2, X, AlertCircle, FileText, Eye, CheckCircle2 } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
-import { useTheme } from '../components/DashboardLayout'; // ⚡ Tu ruta del ThemeContext
+import { useTheme } from '../components/DashboardLayout'; 
 import CreatePurchaseInvoiceModal from "../components/CreatePurchaseInvoiceModal";
 import apiClient from '../api/apiClient';
 
 export default function Providers() {
   const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { showAlert } = useAlert();
-  const { darkMode } = useTheme(); // ⚡ Consumimos el estado global
+  const { darkMode } = useTheme(); 
 
   // Estados para el modal (Crear/Editar Proveedor)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -42,7 +41,6 @@ export default function Providers() {
       setProviders(response.data);
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.message || 'Error al cargar los proveedores';
-      setError(errorMsg);
       showAlert(errorMsg, 'error');
     } finally {
       setLoading(false);
@@ -205,10 +203,6 @@ export default function Providers() {
       }`}>
         {loading ? (
           <div className={`p-12 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
-        ) : error ? (
-          <div className="p-12 text-center text-red-500 dark:text-red-400 flex items-center justify-center gap-2 text-xs">
-            <AlertCircle className="w-5 h-5" /> {error}
-          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
