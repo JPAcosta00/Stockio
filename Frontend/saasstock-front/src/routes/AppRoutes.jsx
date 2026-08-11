@@ -27,7 +27,7 @@ const PrivateRoute = ({ children }) => {
   return isAuthenticated ? <DashboardLayout>{children}</DashboardLayout> : <Navigate to="/login" />;
 };
 
-//  Ruta protegida por roles (bloquea a empleados si es solo para admins)
+// Ruta protegida por roles (bloquea a empleados si es solo para admins/empresa)
 const RoleRoute = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, loading } = useAuth();
 
@@ -78,7 +78,7 @@ export default function AppRoutes() {
         <Routes>
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-          {/* INICIO: Si es empleado va directo a /inventario, si es admin ve Estadísticas */}
+          {/* INICIO: Si es empleado va directo a /inventario, si es admin/empresa ve Estadísticas */}
           <Route 
             path="/" 
             element={
@@ -88,36 +88,36 @@ export default function AppRoutes() {
             } 
           />
 
-          {/* CAJA (Permitido para todos o ajusta según necesites) */}
+          {/* CAJA */}
           <Route path="/caja" element={<PrivateRoute><Caja /></PrivateRoute>} />
 
-          {/* INVENTARIO (Acceso libre para Admin y Empleado) */}
+          {/* INVENTARIO */}
           <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
 
-          {/* SECCION DE VENTAS */}
+          {/* VENTAS */}
           <Route path="/ventas" element={<PrivateRoute><Ventas /></PrivateRoute>} />
           
-          {/* PROVEEDORES (Solo ADMIN) */}
+          {/* PROVEEDORES (Permite ADMIN y EMPRESA) */}
           <Route 
             path="/providers" 
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'ADMINISTRADOR']}>
+              <RoleRoute allowedRoles={['ADMIN', 'ADMINISTRADOR', 'EMPRESA', 'COMPANY']}>
                 <Providers />
               </RoleRoute>
             } 
           /> 
 
-          {/* EMPLEADOS (Solo ADMIN) */}
+          {/* EMPLEADOS (Permite ADMIN y EMPRESA) */}
           <Route 
             path="/empleados" 
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'ADMINISTRADOR']}>
+              <RoleRoute allowedRoles={['ADMIN', 'ADMINISTRADOR', 'EMPRESA', 'COMPANY']}>
                 <Empleados />
               </RoleRoute>
             } 
           />
 
-          {/* PERFIL (Disponible para todos) */}
+          {/* PERFIL */}
           <Route path="/perfil" element={<PrivateRoute><Perfil /></PrivateRoute>} />
 
           <Route path="*" element={<Navigate to="/" />} />
