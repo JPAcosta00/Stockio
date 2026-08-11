@@ -102,14 +102,15 @@ public class CajaController : ControllerBase
     }
 
     [HttpGet("reporte-pdf")]
-    public async Task<IActionResult> GenerarReporteCaja()
+    public async Task<IActionResult> GenerarReporteCaja([FromQuery] DateTime? fecha)
     {
         var tenantId = ObtenerTenantId();
-    
-        byte[] pdfBuffer = await _cajaService.GenerarReporteCajaPdfAsync(tenantId);
-    
+        
+        // Pasamos la fecha opcional al servicio
+        byte[] pdfBuffer = await _cajaService.GenerarReporteCajaPdfAsync(tenantId, fecha);
+        
         string nombreArchivo = $"Reporte_Caja_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-    
+        
         return File(pdfBuffer, "application/pdf", nombreArchivo);
     }
 

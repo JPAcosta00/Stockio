@@ -8,7 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    //se lee el token de la sesion
+    // Se lee el token de la sesión
     const token = sessionStorage.getItem('token');
   
     if (token) {
@@ -17,11 +17,11 @@ export const AuthProvider = ({ children }) => {
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
         const payload = JSON.parse(window.atob(base64));
       
-        //  VALIDACIÓN DE EXPIRACIÓN
+        // VALIDACIÓN DE EXPIRACIÓN
         const currentTime = Math.floor(Date.now() / 1000); // Tiempo actual en segundos
       
         if (payload.exp && payload.exp < currentTime) {
-          // el token ya expiro de tiempo
+          // El token ya expiró de tiempo
           console.warn("El token ha expirado. Cerrando sesión...");
           sessionStorage.removeItem('token');
           setUser(null);
@@ -31,7 +31,8 @@ export const AuthProvider = ({ children }) => {
             token,
             email: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || payload.email,
             role: payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role,
-            tenantId: payload.TenantId
+            tenantId: payload.TenantId,
+            companyName: payload.CompanyName || "MI NEGOCIO" 
           });
         }
       } catch (error) {
@@ -54,7 +55,8 @@ export const AuthProvider = ({ children }) => {
       token,
       email: payload["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || payload.email,
       role: payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || payload.role,
-      tenantId: payload.TenantId
+      tenantId: payload.TenantId,
+      companyName: payload.CompanyName || "MI NEGOCIO" // 👈 AQUÍ TAMBIÉN LO LEEMOS AL LOGUEARSE
     });
   };
 
@@ -65,10 +67,9 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/login';
   };
 
-  //metodo para el registro
+  // Método para el registro
   const register = async (username, email, password, companyName) => {
     try {
-      // Llama al controlador del cliente, que seria AuthController en el metood post (osea crear)
       const response = await apiClient.post('/auth/register', {
         username,
         email,
@@ -76,35 +77,30 @@ export const AuthProvider = ({ children }) => {
         companyName
       });
     
-      // si sale todo bien, retorna
       return { success: true, data: response.data };
-
     } catch (error) {
       console.error("Error atrapado en AuthContext.register:", error);
-    
-      // si sale mal, se maneja en el backend y devuelve un objeto
       return { 
         success: false, 
         error: error.response?.data?.message || 'No se pudo completar el registro en el servidor.' 
       };
     }
-};
+  };
 
   return (
-  <AuthContext.Provider 
-    value={{ 
-      user, 
-      login, 
-      logout, 
-      register, 
-      isAuthenticated: !!user, 
-      loading 
-    }}
-  >
-    {!loading && children}
-  </AuthContext.Provider>
-);
-
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        login, 
+        logout, 
+        register, 
+        isAuthenticated: !!user, 
+        loading 
+      }}
+    >
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,8 +9,13 @@ namespace Infraestructure.Security;
 
 public class JwtTokenBuilder : IJwtTokenBuilder
 {
-    private readonly string _key = "TuClaveSecretaSuperLargaYSeguraQueDebesCambiarEnProduccion"; 
+    private readonly IConfiguration _configuration;
     private readonly List<Claim> _claims = new();
+
+    public JwtTokenBuilder(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
 
     public IJwtTokenBuilder WithUserId(Guid userId)
     {
@@ -35,19 +41,33 @@ public class JwtTokenBuilder : IJwtTokenBuilder
         return this;
     }
 
+    public IJwtTokenBuilder WithCompanyName(string companyName)
+    {
+        _claims.Add(new Claim("CompanyName", companyName));
+        return this;
+    }
+
     public string Build()
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        try
+        {
+            var secretKey = _configuration["JwtSettings:Secret"] ?? "LlavePorDefectoMuyLargaYSeguraParaEvitarErrores123!";
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var token = new JwtSecurityToken(
-            issuer: "SaaSStockAPI",
-            audience: "SaaSStockReactClient",
-            claims: _claims,
-            expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: creds
-        );
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JwtSettings:Issuer"] ?? "SaaSStockAPI",
+                audience: _configuration["JwtSettings:Audience"] ?? "SaaSStockReactClient",
+                claims: _claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds
+            );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        finally
+        {
+            _claims.Clear();
+        }
     }
 }

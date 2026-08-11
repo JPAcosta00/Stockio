@@ -63,6 +63,8 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -70,10 +72,10 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = "SaaSStockAPI", 
-        ValidAudience = "SaaSStockReactClient",
+        ValidIssuer = jwtSettings["Issuer"] ?? "SaaSStockAPI", 
+        ValidAudience = jwtSettings["Audience"] ?? "SaaSStockReactClient",
         IssuerSigningKey = new SymmetricSecurityKey(
-            System.Text.Encoding.UTF8.GetBytes("TuClaveSecretaSuperLargaYSeguraQueDebesCambiarEnProduccion"))
+            System.Text.Encoding.UTF8.GetBytes(jwtSettings["Secret"]!))
     };
 });
 builder.Services.AddControllers();
@@ -88,7 +90,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IJwtTokenBuilder, JwtTokenBuilder>();
+builder.Services.AddTransient<IJwtTokenBuilder, JwtTokenBuilder>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductImportService, ProductImportService>();
 builder.Services.AddScoped<IProductExportService, ProductExportService>();

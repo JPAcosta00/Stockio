@@ -177,25 +177,13 @@ public class CajaService : ICajaService
         };
     }
 
-    public async Task<byte[]> GenerarReporteCajaPdfAsync(Guid tenantId)
+    public async Task<byte[]> GenerarReporteCajaPdfAsync(Guid tenantId, DateTime? fechaFiltro)
     {
         QuestPDF.Settings.License = LicenseType.Community;
 
         // 1. Obtener la caja activa desde la BD
-        var cajaActual = await _cajaRepository.GetCajaActivaWithMovimientosAsync(tenantId);
-
-        // Mapeo seguro de Entidad a DTO
-        var movimientos = cajaActual?.Movimientos?
-            .Select(m => new MovimientoCajaDto
-            {
-                Fecha = m.Fecha,
-                Concepto = m.Concepto,
-                Tipo = m.Tipo?.ToString() ?? string.Empty,
-                Monto = m.Monto
-            })
-            .ToList() ?? new List<MovimientoCajaDto>();
-
-        // Ajuste de Hora Local
+        var cajaActual = await _cajaRepository.GetCajaPorFechaOActivaAsync(tenantId, fechaFiltro);
+        // Ajuste de Hora Local (Definido al principio para usarlo en todo el reporte)
         TimeZoneInfo timeZoneInfo;
         try
         {
@@ -207,7 +195,18 @@ public class CajaService : ICajaService
         }
         var fechaImpresionLocal = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneInfo);
 
-        // 2. Cálculos de Totales
+        // Mapeo seguro de Entidad a DTO convirtiendo la fecha de UTC a hora local de Argentina
+        var movimientos = cajaActual?.Movimientos?
+            .Select(m => new MovimientoCajaDto
+            {
+                // 👈 AQUÍ CONVERTIMOS CADA FECHA DE MOVIMIENTO A HORA ARGENTINA
+                Fecha = TimeZoneInfo.ConvertTimeFromUtc(m.Fecha, timeZoneInfo),
+                Concepto = m.Concepto,
+                Tipo = m.Tipo?.ToString() ?? string.Empty,
+                Monto = m.Monto
+            })
+            .ToList() ?? new List<MovimientoCajaDto>();
+
         decimal ingresos = movimientos
             .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase))
             .Sum(m => m.Monto);
@@ -219,7 +218,6 @@ public class CajaService : ICajaService
         decimal saldoInicial = cajaActual?.MontoInicial ?? 0m;
         decimal saldoFinal = saldoInicial + ingresos - egresos;
 
-        // Extracción exacta del medio de pago entre paréntesis "(MedioPago)"
         string ExtraerMedioPago(string concepto)
         {
             if (string.IsNullOrWhiteSpace(concepto)) return "Efectivo / Otro";
@@ -227,13 +225,12 @@ public class CajaService : ICajaService
             var match = Regex.Match(concepto, @"\(([^)]+)\)");
             if (match.Success)
             {
-                return match.Groups[1].Value.Trim(); // Extrae "TarjetaDebito", "Efectivo", etc.
+                return match.Groups[1].Value.Trim();
             }
 
             return "Efectivo / Otro";
         }
 
-        // Desglose de Ingresos agrupado por el valor extraído del paréntesis
         var ingresosPorMedioPago = movimientos
             .Where(m => string.Equals(m.Tipo, "Ingreso", StringComparison.OrdinalIgnoreCase))
             .GroupBy(m => ExtraerMedioPago(m.Concepto))
@@ -241,7 +238,7 @@ public class CajaService : ICajaService
             .OrderByDescending(x => x.Monto)
             .ToList();
 
-        // 3. Generación del Documento PDF
+        // 3. Generación del Documento PDF (El resto sigue igual...)
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -282,7 +279,6 @@ public class CajaService : ICajaService
                 {
                     col.Spacing(18);
 
-                    // Cuadro Resumen de Totales
                     col.Item().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
@@ -322,7 +318,6 @@ public class CajaService : ICajaService
                             });
                     });
 
-                    // Desglose de Ingresos por Medio de Pago
                     if (ingresosPorMedioPago.Any())
                     {
                         col.Item().Column(c =>
@@ -352,7 +347,6 @@ public class CajaService : ICajaService
                         });
                     }
 
-                    // Detalle de Movimientos
                     col.Item().Column(c =>
                     {
                         c.Item().Text("Detalle de Movimientos")
@@ -364,10 +358,10 @@ public class CajaService : ICajaService
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.ConstantColumn(50);  // Hora
-                                columns.RelativeColumn(4);   // Concepto
-                                columns.RelativeColumn(1);   // Tipo
-                                columns.RelativeColumn(1.5f);// Monto
+                                columns.ConstantColumn(50);
+                                columns.RelativeColumn(4);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1.5f);
                             });
 
                             table.Header(header =>
@@ -412,7 +406,6 @@ public class CajaService : ICajaService
                     });
                 });
 
-                // Pie de Página
                 page.Footer().Column(col =>
                 {
                     col.Item().LineHorizontal(1).LineColor("#e2e8f0");

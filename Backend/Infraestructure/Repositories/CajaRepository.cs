@@ -28,6 +28,35 @@ public class CajaRepository : GenericRepository<Caja>, ICajaRepository
                 .FirstOrDefaultAsync(c => c.Id == cajaId && c.TenantId == tenantId);
         }
 
+        public async Task<Caja?> GetCajaPorFechaOActivaAsync(Guid tenantId, DateTime? fechaFiltro)
+        {
+            // 1. Si el usuario envió una fecha específica desde el frontend
+            if (fechaFiltro.HasValue)
+            {
+                var inicioDia = fechaFiltro.Value.Date; // 00:00:00 del día seleccionado
+                var finDia = inicioDia.AddDays(1).AddTicks(-1); // 23:59:59.999 del día seleccionado
+        
+                // Buscamos una caja cuya fecha de apertura coincida con ese día
+                var cajaPorFecha = await _context.Cajas
+                    .Include(c => c.Movimientos)
+                    .Where(c => c.TenantId == tenantId && c.FechaApertura >= inicioDia && c.FechaApertura <= finDia)
+                    .FirstOrDefaultAsync();
+        
+                if (cajaPorFecha != null)
+                {
+                    return cajaPorFecha;
+                }
+            }
+        
+            // 2. Si no se seleccionó fecha (o no hay caja en esa fecha exacta),
+            // devolvemos la caja que esté abierta actualmente (IsOpen == true)
+            return await _context.Cajas
+                .Include(c => c.Movimientos)
+                .Where(c => c.TenantId == tenantId && c.IsOpen)
+                .OrderByDescending(c => c.FechaApertura)
+                .FirstOrDefaultAsync();
+        }
+
         ///Para el reporte 
         public async Task<Caja?> GetCajaActivaWithMovimientosAsync(Guid tenantId)
         {

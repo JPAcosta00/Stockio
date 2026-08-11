@@ -63,34 +63,32 @@ public class AuthService : IAuthService
         return nuevoTenantId;
     }
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto){
-
-        // Buscar al usuario por Email
         var user = await _userRepository.GetByEmailAsync(dto.Email);
-    
-        // Si no existe o está inactivo
         if (user == null || !user.IsActive) return null;
 
-        // Verifica que la contraseña ingresada sea la misma que la registrada para el mail ingresado
         bool isPasswordValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+        if (!isPasswordValid) return null;
 
-        if (!isPasswordValid) 
-            return null;
-
-        // Uso el builder para el token 
+        // Opcional: Si necesitas buscar el nombre del Tenant desde la entidad Tenant
+        var tenant = await _tenantRepository.GetByIdAsync(user.TenantId);
+        string businessName = !string.IsNullOrWhiteSpace(tenant?.Name) ? tenant.Name : "Mi Negocio";
+        
+        // Uso el builder para el token (añade el claim de la empresa si tu builder lo soporta)
         var token = _tokenBuilder
             .WithUserId(user.Id)
             .WithTenantId(user.TenantId)
             .WithUsername(user.Username)
             .WithEmail(user.Email)
+            .WithCompanyName(businessName) 
             .Build();
 
-        // Respuesta armada para el Frontend
         return new AuthResponseDto
         {
             Token = token,
             Username = user.Username,
             Email = user.Email,
-            TenantId = user.TenantId
+            TenantId = user.TenantId,
+            BusinessName = businessName 
         };
     }    
     private static readonly Guid SuperAdminId = Guid.Parse("11111111-1111-1111-1111-111111111111");

@@ -6,5 +6,6 @@ public interface IJwtTokenBuilder
     IJwtTokenBuilder WithTenantId(Guid tenantId);
     IJwtTokenBuilder WithUsername(string username);
     IJwtTokenBuilder WithEmail(string email);
+    IJwtTokenBuilder WithCompanyName(string companyName);
     string Build();
 }

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
 import VentaDetalleModal from '../components/VentaDetalleModal';
 import CobroModal from '../components/CobroModal';
-import GraficoVentasPorCategoria from '../components/GraficoVentasPorCategoria'; // <-- Importamos el componente
+import GraficoVentasPorCategoria from '../components/GraficoVentasPorCategoria';
+import TicketModal from '../components/TicketModal';
 import { useTheme } from '../components/DashboardLayout';
 import {
   ShoppingCart,
@@ -13,6 +14,7 @@ import {
   FileText,
   Loader2,
   Eye,
+  Printer,
   AlertCircle,
   CheckCircle2,
   X,
@@ -54,6 +56,7 @@ export default function Ventas() {
   const [historialVentas, setHistorialVentas] = useState([]);
   const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
   const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
+  const [ventaParaTicket, setVentaParaTicket] = useState(null);
 
   const [loadingHistorial, setLoadingHistorial] = useState(false);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
@@ -274,10 +277,36 @@ export default function Ventas() {
         changeAmount: Number(datosCobro?.vuelto || 0),
       };
 
-      await apiClient.post('/sales', payload);
+      const response = await apiClient.post('/sales', payload);
+
+      // 🛡️ Normalizamos los ítems del carrito para garantizar que el TicketModal los lea bien
+      const itemsNormalizados = carrito.map(item => ({
+        name: item.name || item.productName || item.descripcion || 'Producto',
+        quantity: Number(item.quantity || item.cantidad || 1),
+        unitPrice: Number(item.unitPrice || item.price || item.precio || 0)
+      }));
+
+      // Obtenemos los datos del backend o usamos los del payload local de respaldo
+      const dataBackend = response.data?.sale || response.data || {};
+
+      const ventaCreada = {
+        id: dataBackend.id || dataBackend.saleId || 'N/D',
+        createdAt: dataBackend.createdAt || new Date(),
+        // Forzamos el uso de los ítems normalizados del carrito actual para que nunca falle
+        items: itemsNormalizados, 
+        total: dataBackend.total || dataBackend.montoTotal || totalVenta,
+        paymentMethod: datosCobro?.medioPago,
+        receivedAmount: datosCobro?.montoRecibido,
+        changeAmount: datosCobro?.vuelto
+      };
+
       mostrarAlerta('¡Venta registrada con éxito!', 'success');
       setCarrito([]);
       setMostrarModalCobro(false);
+
+      // Abrir modal de ticket automáticamente con la estructura garantizada
+      setVentaParaTicket(ventaCreada);
+
       await obtenerHistorialVentas();
     } catch (error) {
       console.error('Error al registrar venta:', error);
@@ -599,9 +628,9 @@ export default function Ventas() {
         </div>
       </div>
 
-      {/* SECCIÓN INFERIOR DIVIDIDA: HISTORIAL (IZQ) Y GRÁFICO POR CATEGORÍA (DER) */}
+     {/* SECCIÓN INFERIOR DIVIDIDA: HISTORIAL (IZQ) Y GRÁFICO POR CATEGORÍA (DER) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* Mitad Izquierda: Historial de Ventas */}
         <div className={`border rounded-2xl p-5 space-y-4 shadow-xl transition-colors flex flex-col justify-between ${
           darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
@@ -617,7 +646,7 @@ export default function Ventas() {
                   <p className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Transacciones registradas.</p>
                 </div>
               </div>
-
+      
               <div className="relative w-full sm:w-48">
                 <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
@@ -631,7 +660,7 @@ export default function Ventas() {
                 />
               </div>
             </div>
-
+                
             {/* Filtros rápidos compactos */}
             <div className={`border p-1 rounded-xl flex mb-3 overflow-x-auto ${
               darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-zinc-200'
@@ -655,7 +684,7 @@ export default function Ventas() {
                 </button>
               ))}
             </div>
-
+            
             {loadingHistorial ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <Loader2 className="w-5 h-5 animate-spin text-emerald-500 mb-2" />
@@ -679,7 +708,7 @@ export default function Ventas() {
                       <th className="pb-2.5 px-2">ID</th>
                       <th className="pb-2.5 px-2">Fecha / Hora</th>
                       <th className="pb-2.5 px-2 text-right">Total</th>
-                      <th className="pb-2.5 px-2 text-center">Acción</th>
+                      <th className="pb-2.5 px-2 text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className={`divide-y ${darkMode ? 'divide-zinc-800/50' : 'divide-zinc-100'}`}>
@@ -706,9 +735,43 @@ export default function Ventas() {
                           ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-2.5 px-2 text-center">
-                          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-500 font-medium">
-                            <Eye className="w-3 h-3" /> Ver
-                          </span>
+                          <div className="flex items-center justify-center gap-2">
+                            {/* Botón Ver Detalle */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                abrirDetalleVenta(v);
+                              }}
+                              title="Ver detalle"
+                              className="inline-flex items-center gap-1 text-[11px] text-emerald-500 hover:text-emerald-600 font-medium p-1 rounded hover:bg-emerald-500/10 transition-colors"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            
+                           {/* Botón Imprimir Ticket Rápido */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Mapeamos los items para asegurar que el nombre y precio tengan los nombres correctos
+                                const itemsNormalizados = (v.items || v.saleItems || []).map(item => ({
+                                  ...item,
+                                  name: item.name || item.productName || item.descripcion || 'Producto sin nombre',
+                                  quantity: item.quantity || item.cantidad || 1,
+                                  unitPrice: item.unitPrice || item.price || item.precioUnitario || 0
+                                }));
+                              
+                                setVentaParaTicket({
+                                  ...v,
+                                  items: itemsNormalizados,
+                                  total: v.total || v.montoTotal || 0
+                                });
+                              }}
+                              title="Imprimir Ticket"
+                              className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-emerald-500 font-medium p-1 rounded hover:bg-zinc-500/10 transition-colors"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -719,8 +782,9 @@ export default function Ventas() {
           </div>
         </div>
 
-        {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
-        <GraficoVentasPorCategoria ventasHoy={ventasHoy} />
+
+      {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
+      <GraficoVentasPorCategoria ventasHoy={ventasHoy} />
 
       </div>
 
@@ -737,6 +801,14 @@ export default function Ventas() {
         onConfirmarVenta={confirmarVenta}
         enviando={enviando}
       />
+
+      {/* 🎫 MODAL DE TICKET / COMPROBANTE */}
+      {ventaParaTicket && (
+        <TicketModal 
+          venta={ventaParaTicket} 
+          onClose={() => setVentaParaTicket(null)} 
+        />
+      )}
     </div>
   );
 }
