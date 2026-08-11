@@ -30,7 +30,6 @@ export default function DashboardLayout({ children }) {
   const { user, logout }  = useAuth();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // --- ESTADO DE TEMA (CLARO / OSCURO) SINCRONIZADO ---
   const [darkMode, setDarkMode] = useState(() => {
@@ -50,19 +49,21 @@ export default function DashboardLayout({ children }) {
 
   // Validar rol del usuario actual (normalizamos a minúsculas por seguridad)
   const userRole = user?.role?.toLowerCase() || '';
-  const isAdmin = userRole === 'admin';
+  
+  // Acepta tanto 'admin' como 'empresa' o 'company'
+  const isAdmin = userRole === 'admin' || userRole === 'empresa' || userRole === 'company';
 
   // Definir todas las rutas posibles
   const allNavigationLinks = [
-    { name: 'Inicio', href: '/', icon: Home, adminOnly: true },          // Solo Dueño/Admin (Ya que incluye estadísticas)
+    { name: 'Inicio', href: '/', icon: Home, adminOnly: true },          // Solo Dueño/Admin/Empresa
     { name: 'Caja', href: '/caja', icon: Wallet, adminOnly: false },
     { name: 'Inventario', href: '/inventario', icon: Package, adminOnly: false },
     { name: 'Ventas', href: '/ventas', icon: ShoppingBag, adminOnly: false },
-    { name: 'Proveedores', href: '/providers', icon: Truck, adminOnly: true }, // Solo Dueño/Admin
-    { name: 'Empleados', href: '/empleados', icon: Users, adminOnly: true },     // Solo Dueño/Admin
+    { name: 'Proveedores', href: '/providers', icon: Truck, adminOnly: true }, // Solo Dueño/Admin/Empresa
+    { name: 'Empleados', href: '/empleados', icon: Users, adminOnly: true },     // Solo Dueño/Admin/Empresa
   ];
 
-  // Filtrar enlaces según el rol: Si no es admin, se ocultan Inicio, Proveedores y Empleados (quedando Caja, Inventario y Ventas)
+  // Filtrar enlaces según el rol
   const navigationLinks = allNavigationLinks.filter(link => {
     if (link.adminOnly && !isAdmin) {
       return false;
