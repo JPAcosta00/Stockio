@@ -70,25 +70,34 @@ public class UserController : ControllerBase
     [HttpGet("employees")]
     public async Task<IActionResult> GetEmployees()
     {
-        // 1. Obtenemos el rol del usuario desde el token JWT (soporta ClaimTypes.Role o "role")
-        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
-
-        // 2. Si el usuario es ADMIN, devolvemos TODOS los usuarios del sistema
-        if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            var allUsers = await _userService.GetAllUsersAsync();
-            return Ok(allUsers);
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+    
+            if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+            {
+                var allUsers = await _userService.GetAllUsersAsync();
+                return Ok(allUsers);
+            }
+    
+            var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
+            if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+            {
+                return Unauthorized(new { message = "Tenant no identificado en el token." });
+            }
+    
+            var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
+            return Ok(employees);
         }
-
-        // 3. Si es EMPRESA, filtramos únicamente por su TenantId
-        var tenantIdStr = User.FindFirst("TenantId")?.Value;
-        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+        catch (Exception ex)
         {
-            return Unauthorized(new { message = "Tenant no identificado en el token." });
+            // ESTO RETORNARÁ EL ERROR REAL AL INSPECTOR DE TU NAVEGADOR (Pestaña Network -> Response)
+            return StatusCode(500, new { 
+                error = ex.Message, 
+                innerError = ex.InnerException?.Message,
+                stackTrace = ex.StackTrace 
+            });
         }
-
-        var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
-        return Ok(employees);
     }
 
     [HttpPost("employees")]
