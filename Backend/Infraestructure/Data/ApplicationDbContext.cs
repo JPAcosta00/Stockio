@@ -33,6 +33,18 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            foreach (var property in entityType.GetProperties())
+            {
+                if (property.ClrType == typeof(Guid) || property.ClrType == typeof(Guid?))
+                {
+                    property.SetColumnType("char(36)"); // O el tipo correspondiente en MySQL
+                    // Opcional: configurar un conversor si en la BD son VARCHAR de texto plano
+                }
+            }
+        }
+
         // Tenant
         modelBuilder.Entity<Tenant>(entity =>
         {
@@ -223,17 +235,20 @@ public class ApplicationDbContext : DbContext
     private LambdaExpression CreateTenantFilterExpression(Type entityType)
     {
         var parameter = Expression.Parameter(entityType, "e");
-        var property = Expression.Property(parameter, "TenantId");
-        var dbContextInstance = Expression.Constant(this);
-        var tenantIdProperty = Expression.Property(dbContextInstance, nameof(CurrentTenantId));
-        
-        Expression convertedProperty = property;
-        if (property.Type != tenantIdProperty.Type)
+
+        // Obtener TenantId del usuario logueado
+        var currentTenantId = CurrentTenantId;
+
+        var adminTenantId = Guid.Parse("77777777-7777-7777-7777-777777777777");
+
+        if (currentTenantId == null || currentTenantId == adminTenantId)
         {
-            convertedProperty = Expression.Convert(property, tenantIdProperty.Type);
+            // Retorna "true", es decir: "Traer todo" (no filtra)
+            return Expression.Lambda(Expression.Constant(true), parameter);
         }
 
-        var body = Expression.Equal(convertedProperty, tenantIdProperty);
+        var property = Expression.Property(parameter, "TenantId");
+        var body = Expression.Equal(property, Expression.Constant(currentTenantId));
 
         return Expression.Lambda(body, parameter);
     }
