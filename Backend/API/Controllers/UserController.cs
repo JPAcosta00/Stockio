@@ -67,38 +67,41 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("employees")]
-    public async Task<IActionResult> GetEmployees()
+   [HttpGet("employees")]
+public async Task<IActionResult> GetEmployees()
+{
+    try
     {
-        try
+        // Tu código actual dentro del endpoint...
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+
+        if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
         {
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
-    
-            if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
-            {
-                var allUsers = await _userService.GetAllUsersAsync();
-                return Ok(allUsers);
-            }
-    
-            var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
-            if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
-            {
-                return Unauthorized(new { message = "Tenant no identificado en el token." });
-            }
-    
-            var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
-            return Ok(employees);
+            var allUsers = await _userService.GetAllUsersAsync();
+            return Ok(allUsers);
         }
-        catch (Exception ex)
+
+        var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
         {
-            // ESTO RETORNARÁ EL ERROR REAL AL INSPECTOR DE TU NAVEGADOR (Pestaña Network -> Response)
-            return StatusCode(500, new { 
-                error = ex.Message, 
-                innerError = ex.InnerException?.Message,
-                stackTrace = ex.StackTrace 
-            });
+            return Unauthorized(new { message = "Tenant no identificado en el token." });
         }
+
+        var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
+        return Ok(employees);
     }
+    catch (Exception ex)
+    {
+        // Esto bypasserá cualquier middleware genérico de errores y te dará el detalle completo
+        var fullError = $"EXCEPCIÓN: {ex.Message} \n\nSTACKTRACE: {ex.StackTrace}";
+        if (ex.InnerException != null)
+        {
+            fullError += $" \n\nINNER EXCEPTION: {ex.InnerException.Message}";
+        }
+        
+        return Content(fullError, "text/plain");
+    }
+}
 
     [HttpPost("employees")]
     public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto)
