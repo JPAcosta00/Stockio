@@ -227,8 +227,6 @@ public class ApplicationDbContext : DbContext
         var dbContextInstance = Expression.Constant(this);
         var tenantIdProperty = Expression.Property(dbContextInstance, nameof(CurrentTenantId));
         
-        // Si la propiedad de la entidad es Guid y el TenantId del contexto es Guid?, 
-        // convertimos la propiedad de la entidad a Guid? para que ambos sean compatibles.
         Expression convertedProperty = property;
         if (property.Type != tenantIdProperty.Type)
         {
