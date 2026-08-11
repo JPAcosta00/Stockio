@@ -161,20 +161,20 @@ export default function Providers() {
                 setSelectedProviderForInvoice(null);
                 setIsInvoiceModalOpen(true);
               }}
-              className={`inline-flex items-center justify-center gap-2 font-medium px-4 py-2.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+              className={`inline-flex items-center justify-center gap-2 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-sm ${
                 darkMode 
                   ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' 
                   : 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-200'
               }`}
             >
-              <FileText className="w-4.5 h-4.5 text-[#5BA535]" />
+              <FileText className="w-4 h-4 text-[#5BA535]" />
               Nueva Factura
             </button>
             <button 
               onClick={handleOpenCreateModal}
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 text-xs bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-3.5 py-2 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
             >
-              <Plus className="w-4.5 h-4.5" />
+              <Plus className="w-4 h-4" />
               Nuevo Proveedor
             </button>
           </div>
@@ -198,50 +198,52 @@ export default function Providers() {
       </div>
 
       {/* Tabla de Proveedores */}
-      <div className={`border rounded-2xl shadow-xl overflow-hidden transition-colors ${
-        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+      <div className={`border rounded-xl overflow-hidden shadow-xl transition-colors ${
+        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
       }`}>
         {loading ? (
           <div className={`p-12 text-center text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-zinc-200 dark:divide-zinc-800 text-left">
-              <thead className={`text-xs font-semibold uppercase tracking-wider ${
-                darkMode ? 'bg-zinc-900/50 text-zinc-400' : 'bg-zinc-50 text-zinc-500'
-              }`}>
-                <tr>
-                  <th className="px-6 py-4">Nombre</th>
-                  <th className="px-6 py-4">Contacto</th>
-                  <th className="px-6 py-4">Teléfono</th>
-                  <th className="px-6 py-4">CUIT</th>
-                  <th className="px-6 py-4">Cuenta Corriente</th>
-                  <th className="px-6 py-4 text-right">Acciones</th>
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className={`border-b font-semibold uppercase tracking-wider whitespace-nowrap ${
+                  darkMode ? 'border-zinc-800 bg-zinc-900/50 text-zinc-400' : 'border-slate-200 bg-slate-50 text-slate-500'
+                }`}>
+                  <th className="py-3 px-3.5">Nombre</th>
+                  <th className="py-3 px-3.5">Contacto</th>
+                  <th className="py-3 px-3.5">Teléfono</th>
+                  <th className="py-3 px-3.5">CUIT</th>
+                  <th className="py-3 px-3.5">Cuenta Corriente</th>
+                  <th className="py-3 px-3.5 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className={`divide-y text-sm ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-zinc-200 text-zinc-700'}`}>
+              <tbody className={`divide-y text-xs ${
+                darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-slate-200 text-slate-700'
+              }`}>
                 {filteredProviders.map((provider) => (
                   <tr 
                     key={provider.id} 
                     onClick={() => handleOpenDetailModal(provider)}
-                    className={`transition-colors cursor-pointer ${
-                      darkMode ? 'hover:bg-zinc-800/40' : 'hover:bg-zinc-50'
+                    className={`transition-colors whitespace-nowrap cursor-pointer ${
+                      darkMode ? 'hover:bg-zinc-800/20' : 'hover:bg-slate-50'
                     }`}
                   >
-                    <td className={`px-6 py-4 font-medium ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{provider.name}</td>
-                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.contactName || '—'}</td>
-                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.phone || '—'}</td>
-                    <td className={darkMode ? 'px-6 py-4 text-zinc-400' : 'px-6 py-4 text-zinc-500'}>{provider.cuit || '—'}</td>
-                    <td className="px-6 py-4 font-semibold text-emerald-600 dark:text-emerald-400 font-mono">
+                    <td className={`py-3 px-3.5 font-medium max-w-[180px] truncate whitespace-normal ${darkMode ? 'text-white' : 'text-slate-900'}`}>{provider.name}</td>
+                    <td className={`py-3 px-3.5 truncate max-w-[120px] ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.contactName || '—'}</td>
+                    <td className={`py-3 px-3.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.phone || '—'}</td>
+                    <td className={`py-3 px-3.5 font-mono text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.cuit || '—'}</td>
+                    <td className={`py-3 px-3.5 font-semibold font-mono ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                       ${provider.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
                     </td>
-                    <td className="px-6 py-4 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-3 px-3.5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => {
                           setSelectedProviderForInvoice(provider.id);
                           setIsInvoiceModalOpen(true);
                         }}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer text-[#5BA535] ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-100 hover:bg-zinc-200'
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
                         }`}
                         title="Registrar Factura de Compra"
                       >
@@ -250,7 +252,7 @@ export default function Providers() {
                       <button 
                         onClick={() => handleOpenDetailModal(provider)}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-100 hover:bg-zinc-200'
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
                         }`}
                         title="Ver Cuenta Corriente y Facturas"
                       >
@@ -259,7 +261,7 @@ export default function Providers() {
                       <button 
                         onClick={() => handleOpenEditModal(provider)}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600'
+                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                         }`}
                         title="Editar"
                       >
@@ -279,7 +281,7 @@ export default function Providers() {
                 ))}
                 {filteredProviders.length === 0 && (
                   <tr>
-                    <td colSpan="6" className={`px-6 py-12 text-center text-sm ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                    <td colSpan="6" className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
                       No se encontraron proveedores registrados.
                     </td>
                   </tr>
