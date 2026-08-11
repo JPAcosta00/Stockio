@@ -68,7 +68,8 @@ public class UserService : IUserService
                 Email = u.Email,
                 Role = u.Role,
                 IsActive = u.IsActive
-            });
+            })
+            .ToList(); 
     }
 
     public async Task<Guid> CreateEmployeeAsync(Guid tenantId, CreateEmployeeDto dto)

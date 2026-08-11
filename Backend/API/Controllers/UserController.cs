@@ -67,41 +67,40 @@ public class UserController : ControllerBase
         }
     }
 
-   [HttpGet("employees")]
-public async Task<IActionResult> GetEmployees()
-{
-    try
+    [HttpGet("employees")]
+    public async Task<IActionResult> GetEmployees()
     {
-        // Tu código actual dentro del endpoint...
-        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
-
-        if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+        try
         {
-            var allUsers = await _userService.GetAllUsersAsync();
-            return Ok(allUsers);
-        }
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
 
-        var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
-        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+            if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+            {
+                var allUsers = await _userService.GetAllUsersAsync();
+                return Ok(allUsers);
+            }
+
+            var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
+            if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+            {
+                return Unauthorized(new { message = "Tenant no identificado en el token." });
+            }
+
+            var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
+            return Ok(employees);
+        }
+        catch (Exception ex)
         {
-            return Unauthorized(new { message = "Tenant no identificado en el token." });
-        }
+            // Esto bypasserá cualquier middleware genérico de errores y te dará el detalle completo
+            var fullError = $"EXCEPCIÓN: {ex.Message} \n\nSTACKTRACE: {ex.StackTrace}";
+            if (ex.InnerException != null)
+            {
+                fullError += $" \n\nINNER EXCEPTION: {ex.InnerException.Message}";
+            }
 
-        var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
-        return Ok(employees);
+            return Content(fullError, "text/plain");
+        }
     }
-    catch (Exception ex)
-    {
-        // Esto bypasserá cualquier middleware genérico de errores y te dará el detalle completo
-        var fullError = $"EXCEPCIÓN: {ex.Message} \n\nSTACKTRACE: {ex.StackTrace}";
-        if (ex.InnerException != null)
-        {
-            fullError += $" \n\nINNER EXCEPTION: {ex.InnerException.Message}";
-        }
-        
-        return Content(fullError, "text/plain");
-    }
-}
 
     [HttpPost("employees")]
     public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto)
