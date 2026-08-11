@@ -33,36 +33,6 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // =========================================================================
-        // CONVENCIÓN GLOBAL DE TIPOS (Versión Segura)
-        // =========================================================================
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
-            foreach (var property in entityType.GetProperties())
-            {
-                // 1. Verificar si es propiedad simple (no navegación/colección)
-                // 2. Solo actuar sobre Guid o Guid?
-                if (property.ClrType == typeof(Guid) || property.ClrType == typeof(Guid?))
-                {
-                    property.SetColumnType("char(36)");
-        
-                    if (property.ClrType == typeof(Guid))
-                    {
-                        property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Guid, string>(
-                            v => v.ToString(),
-                            v => string.IsNullOrWhiteSpace(v) || v == "0" || v.Length < 36 ? Guid.Empty : Guid.Parse(v)
-                        ));
-                    }
-                    else
-                    {
-                        property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Guid?, string?>(
-                            v => v.HasValue ? v.Value.ToString() : null,
-                            v => string.IsNullOrWhiteSpace(v) || v == "0" || v.Length < 36 ? (Guid?)null : Guid.Parse(v)
-                        ));
-                    }
-                }
-            }
-        }
-        // =========================================================================
         // 2. CONFIGURACIÓN Y MAPEO DE ENTIDADES 
         // =========================================================================
 
