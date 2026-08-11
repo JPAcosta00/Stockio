@@ -12,12 +12,23 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Infraestructure.Services;
-using QuestPDF.Infrastructure;                  //"infrastructure" xq en la libreria se llama asi
+using QuestPDF.Infrastructure;         //"infrastructure" xq en la libreria se llama asi
 
+// 👈 Solución para el error de inotify en Render (desactiva el monitoreo de cambios en archivos)
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    ContentRootPath = Directory.GetCurrentDirectory()
+});
 
-var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.Sources.Clear();
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables();
 
-// Obtener la cadena de conexión desde appsettings.json
+// Obtener la cadena de conexión desde appsettings.json o variables de entorno
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
