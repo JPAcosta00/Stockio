@@ -227,8 +227,15 @@ public class ApplicationDbContext : DbContext
         var dbContextInstance = Expression.Constant(this);
         var tenantIdProperty = Expression.Property(dbContextInstance, nameof(CurrentTenantId));
         
-        // Comparación segura con el Guid? del provider
-        var body = Expression.Equal(property, tenantIdProperty);
+        // Si la propiedad de la entidad es Guid y el TenantId del contexto es Guid?, 
+        // convertimos la propiedad de la entidad a Guid? para que ambos sean compatibles.
+        Expression convertedProperty = property;
+        if (property.Type != tenantIdProperty.Type)
+        {
+            convertedProperty = Expression.Convert(property, tenantIdProperty.Type);
+        }
+
+        var body = Expression.Equal(convertedProperty, tenantIdProperty);
 
         return Expression.Lambda(body, parameter);
     }
