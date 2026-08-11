@@ -67,38 +67,36 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("employees")]
+   [HttpGet("employees")]
     public async Task<IActionResult> GetEmployees()
     {
         try
         {
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
-
+    
             if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
             {
                 var allUsers = await _userService.GetAllUsersAsync();
-                return Ok(allUsers);
+                // Aseguramos que si es null, devuelva un array vacío [] en vez de null o un objeto suelto
+                return Ok(allUsers ?? Enumerable.Empty<EmployeeResponseDto>());
             }
-
+    
             var tenantIdStr = User.FindFirst("TenantId")?.Value ?? User.FindFirst("tenantId")?.Value;
             if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
             {
                 return Unauthorized(new { message = "Tenant no identificado en el token." });
             }
-
+    
             var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
-            return Ok(employees);
+            
+            // ¡Garantía total de que siempre se retorna un array JSON [...]!
+            return Ok(employees ?? Enumerable.Empty<EmployeeResponseDto>());
         }
         catch (Exception ex)
         {
-            // Esto bypasserá cualquier middleware genérico de errores y te dará el detalle completo
-            var fullError = $"EXCEPCIÓN: {ex.Message} \n\nSTACKTRACE: {ex.StackTrace}";
-            if (ex.InnerException != null)
-            {
-                fullError += $" \n\nINNER EXCEPTION: {ex.InnerException.Message}";
-            }
-
-            return Content(fullError, "text/plain");
+            // En lugar de devolver un texto plano que rompe el .filter(), 
+            // devolvemos un JSON limpio con el error pero asegurando formato
+            return StatusCode(500, new { message = "Error interno al cargar empleados", details = ex.Message });
         }
     }
 
