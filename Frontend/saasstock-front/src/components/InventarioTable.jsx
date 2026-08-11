@@ -1,13 +1,12 @@
 import React from 'react';
 import { useTheme } from '../components/DashboardLayout'; 
 
-export default function InventarioTable({ productos, onOpenRow, onDelete, providers = [] }) {
+export default function InventarioTable({ productos, onOpenRow, onDelete, providers = [], isEmpleado = false }) {
   const { darkMode } = useTheme();
 
   const formatearFecha = (fechaRaw) => {
     if (!fechaRaw) return '-';
     const fecha = new Date(fechaRaw);
-    // Validar si la fecha es inválida
     if (isNaN(fecha.getTime())) return '-';
     return fecha.toLocaleDateString('es-AR', {
       day: '2-digit', month: '2-digit', year: 'numeric'
@@ -17,7 +16,6 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
   const obtenerTextoCategoria = (cat) => {
     if (cat === null || cat === undefined) return 'Sin categoría';
 
-    // Si C# serializa el enum como número (0, 1, 2...)
     const mapaNumerico = {
       0: 'Bebida',
       1: 'Fruta/Verdura',
@@ -35,7 +33,6 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
       return mapaNumerico[Number(cat)] || 'Sin categoría';
     }
 
-    // Si C# serializa el enum como string ("Bebida", "FrutaVerdura", etc.)
     const mapaString = {
       'Bebida': 'Bebida',
       'FrutaVerdura': 'Fruta/Verdura',
@@ -51,6 +48,8 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
 
     return mapaString[cat] || cat;
   };
+
+  const totalColumnas = isEmpleado ? 9 : 10;
 
   return (
     <div className={`border rounded-xl overflow-hidden shadow-xl transition-colors ${
@@ -71,7 +70,7 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
               <th className="py-3 px-3.5 text-center">Stock</th>
               <th className="py-3 px-3.5 text-center">Mín.</th>
               <th className="py-3 px-3.5 text-right">Modificación</th>
-              <th className="py-3 px-3.5 text-center">Acciones</th>
+              {!isEmpleado && <th className="py-3 px-3.5 text-center">Acciones</th>}
             </tr>
           </thead>
           <tbody className={`divide-y text-xs ${
@@ -79,7 +78,7 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
           }`}>
             {productos.length === 0 ? (
               <tr>
-                <td colSpan={10} className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                <td colSpan={totalColumnas} className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
                   No se encontraron productos cargados.
                 </td>
               </tr>
@@ -103,7 +102,6 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
                 const stock = prod.stock ?? prod.Stock ?? 0;
                 const minimumStock = prod.minimumStock ?? prod.MinimumStock ?? 0;
                 
-                // Buscamos la fecha en cualquiera de los formatos comunes enviados por C#
                 const rawDate = prod.updatedAt || prod.UpdatedAt || prod.updated_at || prod.lastModified || prod.LastModified;
 
                 return (
@@ -151,24 +149,26 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
                     <td className={`py-3 px-3.5 text-center font-medium ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{minimumStock}</td>
                     <td className={`py-3 px-3.5 text-right text-[11px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{formatearFecha(rawDate)}</td>
                     
-                    <td className="py-3 px-3.5 text-center space-x-2">
-                      <button
-                        onClick={() => onOpenRow(prod, 'edit')}
-                        className="text-white bg-[#5BA535] hover:bg-[#1C562A] font-medium text-[11px] px-2.5 py-1.5 rounded-md shadow transition-colors cursor-pointer"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => onDelete(prod.id || prod.Id, name)}
-                        className={`font-medium text-[11px] px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${
-                          darkMode 
-                            ? 'text-zinc-400 hover:text-red-400 bg-zinc-800 hover:bg-zinc-700' 
-                            : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
-                        }`}
-                      >
-                        Borrar
-                      </button>
-                    </td>
+                    {!isEmpleado && (
+                      <td className="py-3 px-3.5 text-center space-x-2">
+                        <button
+                          onClick={() => onOpenRow(prod, 'edit')}
+                          className="text-white bg-[#5BA535] hover:bg-[#1C562A] font-medium text-[11px] px-2.5 py-1.5 rounded-md shadow transition-colors cursor-pointer"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => onDelete(prod.id || prod.Id, name)}
+                          className={`font-medium text-[11px] px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${
+                            darkMode 
+                              ? 'text-zinc-400 hover:text-red-400 bg-zinc-800 hover:bg-zinc-700' 
+                              : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                          }`}
+                        >
+                          Borrar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })

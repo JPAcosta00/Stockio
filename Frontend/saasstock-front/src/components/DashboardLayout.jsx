@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useLocation } from 'react-router-dom';
 import useAutoLogout from '../hooks/useAutoLogout';
@@ -8,6 +8,7 @@ import {
   Package, 
   ShoppingBag, 
   User, 
+  Users, 
   LogOut, 
   ChevronUp,
   Menu,
@@ -26,7 +27,7 @@ export function useTheme() {
 
 export default function DashboardLayout({ children }) {
   useAutoLogout();
-  const { user, logout } = useAuth();
+  const { user, logout }  = useAuth();
   const location = useLocation();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -47,13 +48,27 @@ export default function DashboardLayout({ children }) {
     }
   }, [darkMode]);
 
-  const navigationLinks = [
-    { name: 'Inicio', href: '/', icon: Home },
-    { name: 'Caja', href: '/caja', icon: Wallet },
-    { name: 'Inventario', href: '/inventario', icon: Package },
-    { name: 'Ventas', href: '/ventas', icon: ShoppingBag },
-    { name: 'Proveedores', href: '/providers', icon: Truck },
+  // Validar rol del usuario actual (normalizamos a minúsculas por seguridad)
+  const userRole = user?.role?.toLowerCase() || '';
+  const isAdmin = userRole === 'admin';
+
+  // Definir todas las rutas posibles
+  const allNavigationLinks = [
+    { name: 'Inicio', href: '/', icon: Home, adminOnly: true },          // Solo Dueño/Admin (Ya que incluye estadísticas)
+    { name: 'Caja', href: '/caja', icon: Wallet, adminOnly: false },
+    { name: 'Inventario', href: '/inventario', icon: Package, adminOnly: false },
+    { name: 'Ventas', href: '/ventas', icon: ShoppingBag, adminOnly: false },
+    { name: 'Proveedores', href: '/providers', icon: Truck, adminOnly: true }, // Solo Dueño/Admin
+    { name: 'Empleados', href: '/empleados', icon: Users, adminOnly: true },     // Solo Dueño/Admin
   ];
+
+  // Filtrar enlaces según el rol: Si no es admin, se ocultan Inicio, Proveedores y Empleados (quedando Caja, Inventario y Ventas)
+  const navigationLinks = allNavigationLinks.filter(link => {
+    if (link.adminOnly && !isAdmin) {
+      return false;
+    }
+    return true;
+  });
 
   const getInitials = (email) => {
     if (!email) return 'ST';
@@ -85,7 +100,7 @@ export default function DashboardLayout({ children }) {
             </div>
           </button>
 
-          {/* MENÚ DESPLEGABLE DE PERFIL MÓVIL (DESDE ARRIBA) */}
+          {/* MENÚ DESPLEGABLE DE PERFIL MÓVIL */}
           {showProfileMenu && (
             <div className={`absolute top-full left-0 right-0 border-b shadow-xl p-2 space-y-1 z-30 ${
               darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
@@ -138,7 +153,7 @@ export default function DashboardLayout({ children }) {
           )}
         </div>
         
-        {/* BARRA INFERIOR MÓVIL (ESTILO INSTAGRAM / X) */}
+        {/* BARRA INFERIOR MÓVIL */}
         <div className={`md:hidden fixed bottom-0 left-0 right-0 border-t z-30 flex items-center justify-around py-2 transition-colors ${
           darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
         }`}>
@@ -183,7 +198,7 @@ export default function DashboardLayout({ children }) {
               </div>
             </div>
 
-            {/* Menú de Navegación */}
+            {/* Menú de Navegación Dinámico */}
             <nav className="space-y-1">
               {navigationLinks.map((item) => {
                 const isActive = location.pathname === item.href;
@@ -228,7 +243,6 @@ export default function DashboardLayout({ children }) {
                   <span>Ver Mi Perfil</span>
                 </Link>
 
-                {/* OPCIÓN DE CAMBIO DE APARIENCIA */}
                 <button
                   onClick={() => {
                     setDarkMode(!darkMode);
@@ -272,7 +286,6 @@ export default function DashboardLayout({ children }) {
                   <div className="w-9 h-9 rounded-xl bg-[#1C562A]/40 border border-[#5BA535]/30 flex items-center justify-center font-bold text-xs text-[#5BA535]">
                     {getInitials(user?.email)}
                   </div>
-                  {/* Indicador de estado online */}
                   <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 rounded-full ${
                     darkMode ? 'border-zinc-900' : 'border-white'
                   }`}></span>

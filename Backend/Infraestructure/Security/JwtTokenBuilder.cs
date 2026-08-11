@@ -35,6 +35,12 @@ public class JwtTokenBuilder : IJwtTokenBuilder
         return this;
     }
 
+    public IJwtTokenBuilder WithRole(string role)
+    {
+        _claims.Add(new Claim(ClaimTypes.Role, role));
+        return this;
+    }
+
     public IJwtTokenBuilder WithEmail(string email)
     {
         _claims.Add(new Claim(ClaimTypes.Email, email));

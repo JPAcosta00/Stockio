@@ -5,7 +5,7 @@ namespace Domain.Interfaces;
 public interface IGenericRepository<T> where T : class
 {
     // Obtener todos los registros, pero filtrados por el Tenant actual
-    Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
+    Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false);
     
     // Obtener un registro específico por su ID
     Task<T?> GetByIdAsync(Guid id);

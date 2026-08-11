@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { exportarAExcel, exportarAPDF, importarArchivoExcel } from '../utils/excelPdfUtils';
+import { exportarAExcel, exportarAPDF } from '../utils/excelPdfUtils';
 import apiClient from '../api/apiClient';
 import InventarioTable from '../components/InventarioTable';
 import ProductModal from '../components/ProductModal';
 import CreatePurchaseInvoiceModal from '../components/CreatePurchaseInvoiceModal';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout'; 
+import { useAuth } from '../context/AuthContext';
 import {
   Package,
   Search,
@@ -23,11 +24,16 @@ import {
 export default function Inventario() {
   const { showAlert } = useAlert();
   const { darkMode } = useTheme(); 
+  const { user } = useAuth();
 
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]); 
   const [loading, setLoading] = useState(true);
   
+  // Detección única y centralizada del rol de empleado desde el JWT
+  const userRole = user?.role ? String(user.role).toUpperCase().trim() : '';
+  const isEmpleado = userRole === 'EMPLEADO' || userRole === 'EMPLOYEE';
+
   const [filtroNombre, setFiltroNombre] = useState('');
   const [filtroPeriodo, setFiltroPeriodo] = useState('');
   const [filtroProveedor, setFiltroProveedor] = useState('');
@@ -46,7 +52,6 @@ export default function Inventario() {
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
   const [importando, setImportando] = useState(false);
   
-  const [cargandoImportacion, setCargandoImportacion] = useState(false);
   const [isExcelFormatModalOpen, setIsExcelFormatModalOpen] = useState(false);
   const [actualizarExistentes, setActualizarExistentes] = useState(false);
   const [isPurchaseInvoiceModalOpen, setIsPurchaseInvoiceModalOpen] = useState(false);
@@ -99,7 +104,6 @@ export default function Inventario() {
     cargarProveedores();
   }, []);
 
-
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       handleBuscar();
@@ -115,7 +119,6 @@ export default function Inventario() {
       setPaginaActual(1);
       
       const esStockCritico = filtroPeriodo === 'critico';
-
       const params = {};
       
       if (filtroNombre && filtroNombre.trim() !== "") {
@@ -126,7 +129,6 @@ export default function Inventario() {
         params.providerId = filtroProveedor;
       }
 
-      // 2. Agregamos el parámetro de categoría si está seleccionado
       if (filtroCategoria && filtroCategoria !== "") {
         params.category = filtroCategoria;
       }
@@ -150,20 +152,22 @@ export default function Inventario() {
   };
 
   const handleOpenCreate = () => {
+    if (isEmpleado) return;
     setModalMode('create');
-    setFormData({ id: '', barcode: '', name: '', description: '', price: 0, stock: 0, minimumStock: 0, providerId: '',categoria: 'Otros' });
+    setFormData({ id: '', barcode: '', name: '', description: '', price: 0, stock: 0, minimumStock: 0, providerId: '', categoria: 'Otros' });
     setIsModalOpen(true);
   };
 
   const handleOpenRow = (prod, mode = 'view') => {
-    // Mapa de número a nombre (debe coincidir con los values de tu <select> en el modal)
+    const effectiveMode = isEmpleado ? 'view' : mode;
+
     const mapaCategorias = {
       0: 'Bebida', 1: 'FrutaVerdura', 2: 'Lacteo', 3: 'SnackDulce',
       4: 'GranoCereal', 5: 'EnlatadoConserva', 6: 'Panaderia',
       7: 'Limpieza', 8: 'CuidadoPersonal', 9: 'Otros'
     };
   
-    setModalMode(mode);
+    setModalMode(effectiveMode);
     setFormData({
       id: prod.id || '', 
       barcode: prod.barcode || '', 
@@ -173,7 +177,6 @@ export default function Inventario() {
       stock: prod.stock ?? 0, 
       minimumStock: prod.minimumStock ?? 0,
       providerId: prod.providerId || '',
-      // Si prod.categoria es un número, usamos el mapa. Si ya es string, usamos ese.
       categoria: typeof prod.categoria === 'number' 
         ? (mapaCategorias[prod.categoria] || 'Otros') 
         : (prod.categoria || 'Otros')
@@ -182,11 +185,12 @@ export default function Inventario() {
   };
 
   const handleDelete = (id, name) => {
+    if (isEmpleado) return;
     setProductoAEliminar({ id, name });
   };
 
   const confirmarEliminacion = async () => {
-    if (!productoAEliminar) return;
+    if (!productoAEliminar || isEmpleado) return;
     try {
       await apiClient.delete(`/products/${productoAEliminar.id}`);
       showAlert(`Producto "${productoAEliminar.name}" eliminado con éxito`, "success");
@@ -201,6 +205,8 @@ export default function Inventario() {
 
   const handleSaveSubmit = async (e) => {
     e.preventDefault();
+    if (isEmpleado) return;
+
     try {
       const mapaEnumNumerico = {
         'Bebida': 0, 'FrutaVerdura': 1, 'Lacteo': 2, 'SnackDulce': 3, 
@@ -208,13 +214,12 @@ export default function Inventario() {
         'Limpieza': 7, 'CuidadoPersonal': 8, 'Otros': 9
       };
     
-      // Objeto alineado a [JsonPropertyName] de C#
       const datosParaEnviar = {
         name: formData.name || '',
         barcode: formData.barcode || '',
         price: Number(formData.price) || 0,
-        stock: Number(formData.stock) || 0,           // clave "stock"
-        minimumStock: Number(formData.minimumStock) || 0, // clave "minimumStock"
+        stock: Number(formData.stock) || 0,         
+        minimumStock: Number(formData.minimumStock) || 0, 
         providerId: formData.providerId || null,
         categoria: typeof formData.categoria === 'string' && mapaEnumNumerico[formData.categoria] !== undefined
           ? mapaEnumNumerico[formData.categoria]
@@ -239,6 +244,7 @@ export default function Inventario() {
   };
 
   const handleArchivoSeleccionado = async (e) => {
+    if (isEmpleado) return;
     const file = e.target.files[0];
     if (!file) return;
 
@@ -252,41 +258,14 @@ export default function Inventario() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      setProductosPreview(response.data); // Llena la lista para el modal
-      setModalImportarAbierto(true);      // Abre el modal de confirmación
+      setProductosPreview(response.data); 
+      setModalImportarAbierto(true);      
     } catch (error) {
       console.error("Error al previsualizar el Excel:", error);
       showAlert("El archivo Excel tiene un formato inválido o está vacío.", "error");
     } finally {
       setLoading(false);
-      e.target.value = null; // Limpia el input para permitir re-subir el archivo si es necesario
-    }
-  };
-
-  const confirmarImportacionMasiva = async () => {
-    try {
-      setImportando(true);
-      const formData = new FormData();
-      formData.append("file", archivoSeleccionado);
-      // Enviamos la preferencia del usuario exactamente con el nombre que espera el C# ([FromForm] bool updateExisting)
-      formData.append("updateExisting", actualizarExistentes);
-
-      // Apuntamos al endpoint POST api/products/import que creamos recién
-      const response = await apiClient.post('/products/import', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      showAlert(response.data.Message || "¡Importación procesada con éxito!", "success");
-      
-      setModalImportarAbierto(false);
-      setProductosPreview([]);
-      setArchivoSeleccionado(null);
-      cargarInventario(); // Recarga la tabla de productos
-    } catch (error) {
-      console.error("Error al importar:", error);
-      showAlert(error.response?.data || "Hubo un error al procesar la importación.", "error");
-    } finally {
-      setImportando(false);
+      e.target.value = null; 
     }
   };
 
@@ -309,13 +288,15 @@ export default function Inventario() {
           </div>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-3.5 py-2 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Nuevo Producto</span>
-        </button>
+        {!isEmpleado && (
+          <button
+            onClick={handleOpenCreate}
+            className="bg-[#5BA535] hover:bg-[#4b8c2c] text-white px-3.5 py-2 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Nuevo Producto</span>
+          </button>
+        )}
       </div>
 
       <div className={`border p-4 sm:p-5 rounded-2xl shadow-sm space-y-3.5 transition-colors ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
@@ -433,39 +414,43 @@ export default function Inventario() {
         <div className={`flex flex-wrap items-center justify-between gap-2.5 pt-2.5 border-t ${darkMode ? 'border-zinc-800/80' : 'border-slate-100'}`}>
           <div className="flex flex-wrap items-center gap-2">
           
-           <button
-             type="button"
-             onClick={() => setIsExcelFormatModalOpen(true)}
-             className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-               darkMode 
-                 ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
-                 : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-             } ${importando ? 'opacity-50 pointer-events-none' : ''}`}
-           >
-             <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
-             <span>{importando ? 'Procesando...' : 'Importar Excel'}</span>
-           </button>
-             
-            <input 
-              type="file" 
-              ref={excelInputRef}
-              accept=".xlsx, .xls" 
-              onChange={handleArchivoSeleccionado} 
-              className="hidden" 
-              disabled={importando} 
-            />
+            {!isEmpleado && (
+              <>
+                <button
+                 type="button"
+                 onClick={() => setIsExcelFormatModalOpen(true)}
+                 className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                   darkMode 
+                     ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                 } ${importando ? 'opacity-50 pointer-events-none' : ''}`}
+                >
+                 <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
+                 <span>{importando ? 'Procesando...' : 'Importar Excel'}</span>
+                </button>
+                 
+                <input 
+                  type="file" 
+                  ref={excelInputRef}
+                  accept=".xlsx, .xls" 
+                  onChange={handleArchivoSeleccionado} 
+                  className="hidden" 
+                  disabled={importando} 
+                />
 
-            <button
-              onClick={() => setIsPurchaseInvoiceModalOpen(true)}
-              className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                darkMode 
-                  ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
-                  : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5 text-[#5BA535]" />
-              <span>Factura Proveedor</span>
-            </button>
+                <button
+                  onClick={() => setIsPurchaseInvoiceModalOpen(true)}
+                  className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    darkMode 
+                      ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-[#5BA535]" />
+                  <span>Factura Proveedor</span>
+                </button>
+              </>
+            )}
             
             <button onClick={() => exportarAExcel({})} className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
               darkMode 
@@ -486,7 +471,7 @@ export default function Inventario() {
             </button>
           </div>
 
-          {productoAEliminar && (
+          {productoAEliminar && !isEmpleado && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className={`border p-5 rounded-2xl max-w-sm w-full space-y-3.5 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
                 <h3 className={`text-xs font-bold ${darkMode ? 'text-white' : 'text-slate-900'}`}>Confirmar eliminación</h3>
@@ -530,84 +515,6 @@ export default function Inventario() {
         </div>
       </div>
 
-      {/* MODAL 1: Formato requerido para el Excel */}
-      {isExcelFormatModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-950/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className={`border p-5 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-            <div className={`flex items-center justify-between border-b pb-2.5 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-              <h3 className={`text-xs font-bold flex items-center gap-1.5 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                <Info className="w-3.5 h-3.5 text-[#5BA535]" /> Formato requerido para el archivo Excel
-              </h3>
-              <button 
-                onClick={() => setIsExcelFormatModalOpen(false)}
-                className={`text-xs font-semibold cursor-pointer ${darkMode ? 'text-zinc-500 hover:text-zinc-300' : 'text-slate-400 hover:text-slate-600'}`}
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <div className="space-y-2.5 text-[11px]">
-              <p className={`leading-relaxed ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
-                Para que la importación funcione correctamente, asegurate de que tu archivo Excel (`.xlsx` o `.xls`) contenga las siguientes columnas en la primera fila:
-              </p>
-
-              <div className={`border rounded-xl p-2.5 space-y-1.5 font-mono text-[10px] ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
-                <div className={`flex justify-between border-b pb-1 font-semibold ${darkMode ? 'border-zinc-800/60 text-zinc-400' : 'border-slate-200 text-slate-500'}`}>
-                  <span>Columna / Cabecera</span>
-                  <span>Descripción</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">barcode</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Código de barras (Texto/Núm)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">name</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Nombre del producto (Obligatorio)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">categoria</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Categoría del producto</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">price</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Precio de venta</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">stock</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Cantidad actual en stock</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#5BA535]">minimumStock</span>
-                  <span className={darkMode ? 'text-zinc-400' : 'text-slate-600'}>Stock mínimo de alerta</span>
-                </div>
-              </div>
-            </div>
-
-            <div className={`flex justify-end gap-2 pt-2.5 border-t ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-              <button
-                onClick={() => setIsExcelFormatModalOpen(false)}
-                className={`px-3.5 py-1.5 rounded-xl text-[11px] font-semibold transition-colors cursor-pointer ${
-                  darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                }`}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  setIsExcelFormatModalOpen(false);
-                  if (excelInputRef.current) {
-                    excelInputRef.current.click();
-                  }
-                }}
-                className="px-3.5 py-1.5 rounded-xl bg-[#5BA535] hover:bg-[#4b8c2c] text-white text-[11px] font-semibold transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
-              >
-                <span>Continuar y seleccionar archivo</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {loading ? (
         <div className={`flex flex-col items-center justify-center py-16 border rounded-2xl w-full ${darkMode ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-slate-200'}`}>
           <Loader2 className="w-7 h-7 animate-spin text-[#5BA535] mb-2.5" />
@@ -615,7 +522,14 @@ export default function Inventario() {
         </div>
       ) : (
         <div className={`border rounded-2xl overflow-hidden shadow-sm w-full ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-          <InventarioTable productos={productosPaginados} onOpenRow={handleOpenRow} onDelete={handleDelete} providers={proveedores} darkMode={darkMode} />
+          <InventarioTable 
+            productos={productosPaginados} 
+            onOpenRow={handleOpenRow} 
+            onDelete={isEmpleado ? null : handleDelete} 
+            providers={proveedores} 
+            darkMode={darkMode} 
+            isEmpleado={isEmpleado}
+          />
         </div>
       )}
 
@@ -628,21 +542,22 @@ export default function Inventario() {
         onSubmit={handleSaveSubmit} 
         providers={proveedores}
         darkMode={darkMode}
+        isEmpleado={isEmpleado}
       />
 
-      <CreatePurchaseInvoiceModal
-        isOpen={isPurchaseInvoiceModalOpen}
-        onClose={() => setIsPurchaseInvoiceModalOpen(false)}
-        onInvoiceCreated={() => {
-          cargarInventario();
-        }}
-        darkMode={darkMode}
-      />
+      {!isEmpleado && (
+        <CreatePurchaseInvoiceModal
+          isOpen={isPurchaseInvoiceModalOpen}
+          onClose={() => setIsPurchaseInvoiceModalOpen(false)}
+          onInvoiceCreated={() => {
+            cargarInventario();
+          }}
+          darkMode={darkMode}
+        />
+      )}
 
-      {/* Paginación con índice numérico interactivo y responsiva */}
       {totalPaginas > 1 && (
         <div className={`flex flex-col sm:flex-row items-center justify-between gap-3 border px-3 py-2.5 sm:px-5 rounded-2xl shadow-sm w-full ${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-
           <div className={`text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-600'} sm:hidden`}>
             Página <strong className={darkMode ? 'text-white' : 'text-slate-900'}>{paginaActual}</strong> de <strong className={darkMode ? 'text-white' : 'text-slate-900'}>{totalPaginas}</strong>
           </div>
@@ -691,102 +606,8 @@ export default function Inventario() {
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-
         </div>
       )}
-
-      {/* MODAL 2: Previsualización de productos antes de confirmar importación */}
-      {modalImportarAbierto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className={`w-full max-w-2xl rounded-2xl border p-5 shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-slate-200 text-slate-800'}`}>
-
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-sm font-bold">Confirmar Importación Masiva</h3>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${darkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-slate-100 text-slate-600'}`}>
-                Total en archivo: {productosPreview.length} productos
-              </span>
-            </div>
-
-            <p className={`text-[11px] mb-3 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
-              Revisa los datos obtenidos del archivo. Algunos productos pueden ya encontrarse registrados en tu inventario.
-            </p>
-
-            {/* Opción para actualizar existentes */}
-            <div className={`flex items-center gap-2.5 p-3 rounded-xl border mb-3 ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
-              <input
-                type="checkbox"
-                id="chkActualizar"
-                checked={actualizarExistentes}
-                onChange={(e) => setActualizarExistentes(e.target.checked)}
-                className="w-3.5 h-3.5 rounded border-zinc-700 text-[#5BA535] focus:ring-[#5BA535] cursor-pointer"
-              />
-              <label htmlFor="chkActualizar" className="text-[11px] font-medium cursor-pointer select-none">
-                <strong>Actualizar productos existentes:</strong> Si el código de barras ya figura en el sistema, se sobrescribirán sus datos.
-              </label>
-            </div>
-
-            <div className={`max-h-52 overflow-y-auto rounded-xl border mb-4 ${darkMode ? 'border-zinc-800 bg-zinc-950' : 'border-slate-200 bg-slate-50'}`}>
-              <table className="w-full text-left text-[11px]">
-                <thead className={`sticky top-0 ${darkMode ? 'bg-zinc-900 text-zinc-400' : 'bg-slate-100 text-slate-600'}`}>
-                  <tr>
-                    <th className="p-2.5">Código</th>
-                    <th className="p-2.5">Nombre</th>
-                    <th className="p-2.5">Precio</th>
-                    <th className="p-2.5">Stock</th>
-                    <th className="p-2.5">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800/50">
-                  {productosPreview.map((prod, index) => (
-                    <tr key={index} className={darkMode ? 'hover:bg-zinc-900/50' : 'hover:bg-slate-100/50'}>
-                      <td className="p-2.5 font-mono">{prod.barcode || '-'}</td>
-                      <td className="p-2.5 font-medium">{prod.name}</td>
-                      <td className="p-2.5">${prod.price}</td>
-                      <td className="p-2.5">{prod.stock}</td>
-                      <td className="p-2.5">
-                        {prod.isExisting ? (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                            Ya existe
-                          </span>
-                        ) : (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#5BA535]/10 text-[#5BA535] border border-[#5BA535]/20">
-                            Nuevo
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-                
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalImportarAbierto(false);
-                  setProductosPreview([]);
-                  setArchivoSeleccionado(null);
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-[11px] font-semibold border transition-colors cursor-pointer ${darkMode ? 'border-zinc-700 hover:bg-zinc-800 text-zinc-300' : 'border-slate-300 hover:bg-slate-100 text-slate-700'}`}
-              >
-                Cancelar
-              </button>
-              
-              <button
-                type="button"
-                disabled={importando}
-                onClick={confirmarImportacionMasiva}
-                className="px-4 py-1.5 rounded-xl text-[11px] font-semibold bg-[#5BA535] hover:bg-[#4d8d2d] text-white transition-colors flex items-center gap-1.5 cursor-pointer"
-              >
-                {importando ? "Guardando..." : "Confirmar e Importar"}
-              </button>
-            </div>
-              
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

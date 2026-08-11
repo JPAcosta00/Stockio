@@ -16,9 +16,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         _dbSet = _context.Set<T>();
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate){
-        // Retorna la lista filtrada por la condición 
+    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate = null, bool ignoreQueryFilters = false)
+    {
         IQueryable<T> query = _dbSet;
+
+        // Si se solicita, saltamos los filtros globales de EF Core (como el del TenantId)
+        if (ignoreQueryFilters)
+        {
+            query = query.IgnoreQueryFilters();
+        }
 
         if (predicate != null){
             query = query.Where(predicate);

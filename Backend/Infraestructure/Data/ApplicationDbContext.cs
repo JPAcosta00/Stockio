@@ -33,15 +33,31 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         // =========================================================================
-        // 1. CONVENCIÓN GLOBAL DE TIPOS (Mapeo automático de Guid a char(36))
+        // 1. CONVENCIÓN GLOBAL DE TIPOS (Mapeo automático de Guid a char(36) con Conversión Segura)
         // =========================================================================
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             foreach (var property in entityType.GetProperties())
             {
-                if (property.ClrType == typeof(Guid) || property.ClrType == typeof(Guid?))
+                if (property.ClrType == typeof(Guid))
                 {
                     property.SetColumnType("char(36)");
+                    
+                    // Conversión segura para evitar el error de Unrecognized Guid format
+                    property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Guid, string>(
+                        v => v.ToString(),
+                        v => string.IsNullOrWhiteSpace(v) || v == "0" || v.Length < 36 ? Guid.Empty : Guid.Parse(v)
+                    ));
+                }
+                else if (property.ClrType == typeof(Guid?))
+                {
+                    property.SetColumnType("char(36)");
+                    
+                    // Conversión segura para Guid opcionales (nullable)
+                    property.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<Guid?, string?>(
+                        v => v.HasValue ? v.Value.ToString() : null,
+                        v => string.IsNullOrWhiteSpace(v) || v == "0" || v.Length < 36 ? (Guid?)null : Guid.Parse(v)
+                    ));
                 }
             }
         }

@@ -29,4 +29,11 @@ public class UserRepository : GenericRepository<User>, IUserRepository
             .IgnoreQueryFilters()
             .FirstOrDefaultAsync(u => u.ResetToken == token && u.ResetTokenExpires > DateTime.UtcNow);
     }
+
+    public async Task<IEnumerable<User>> GetByTenantIdAsync(Guid tenantId)
+    {
+        return await _context.Users
+            .Where(u => u.TenantId == tenantId)
+            .ToListAsync();
+    }
 }

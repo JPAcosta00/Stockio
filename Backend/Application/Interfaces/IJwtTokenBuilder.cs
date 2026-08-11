@@ -7,5 +7,6 @@ public interface IJwtTokenBuilder
     IJwtTokenBuilder WithUsername(string username);
     IJwtTokenBuilder WithEmail(string email);
     IJwtTokenBuilder WithCompanyName(string companyName);
+    IJwtTokenBuilder WithRole(string role);
     string Build();
 }

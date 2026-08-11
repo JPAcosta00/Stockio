@@ -79,7 +79,8 @@ public class AuthService : IAuthService
             .WithTenantId(user.TenantId)
             .WithUsername(user.Username)
             .WithEmail(user.Email)
-            .WithCompanyName(businessName) 
+            .WithCompanyName(businessName)
+            .WithRole(user.Role)
             .Build();
 
         return new AuthResponseDto

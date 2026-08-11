@@ -30,7 +30,6 @@ public class UserController : ControllerBase
 
             try
             {
-                // El controlador delega TODA la responsabilidad a la capa de aplicación
                 var result = await _userService.UpdateProfileAsync(currentUserId, dto);
 
                 if (!result)
@@ -49,7 +48,6 @@ public class UserController : ControllerBase
     [HttpPut("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto){
         try{
-            // Extrae el ID del usuario directamente de las claims del token JWT
             var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out Guid userId))
@@ -62,14 +60,95 @@ public class UserController : ControllerBase
             return Ok(new { message = "Contraseña modificada con éxito." });
         }
         catch (ArgumentException ex){
-            // Captura el mensaje si la contraseña actual no es correcta
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception){
             return StatusCode(500, new { message = "Error al intentar cambiar la contraseña." });
         }
     }
+
+    [HttpGet("employees")]
+    public async Task<IActionResult> GetEmployees()
+    {
+        // 1. Obtenemos el rol del usuario desde el token JWT (soporta ClaimTypes.Role o "role")
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("role")?.Value;
+
+        // 2. Si el usuario es ADMIN, devolvemos TODOS los usuarios del sistema
+        if (!string.IsNullOrEmpty(userRole) && userRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase))
+        {
+            var allUsers = await _userService.GetAllUsersAsync();
+            return Ok(allUsers);
+        }
+
+        // 3. Si es EMPRESA, filtramos únicamente por su TenantId
+        var tenantIdStr = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+        {
+            return Unauthorized(new { message = "Tenant no identificado en el token." });
+        }
+
+        var employees = await _userService.GetEmployeesByTenantAsync(tenantId);
+        return Ok(employees);
+    }
+
+    [HttpPost("employees")]
+    public async Task<IActionResult> CreateEmployee([FromBody] CreateEmployeeDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var tenantIdStr = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+        {
+            return Unauthorized(new { message = "Tenant no identificado en el token." });
+        }
+
+        try
+        {
+            var employeeId = await _userService.CreateEmployeeAsync(tenantId, dto);
+            return Ok(new { message = "Empleado creado con éxito.", employeeId });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("employees/{id}")]
+    public async Task<IActionResult> UpdateEmployee(Guid id, [FromBody] UpdateEmployeeDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var tenantIdStr = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+        {
+            return Unauthorized(new { message = "Tenant no identificado en el token." });
+        }
+
+        try
+        {
+            var updated = await _userService.UpdateEmployeeAsync(tenantId, id, dto);
+            if (!updated) return NotFound(new { message = "Empleado no encontrado." });
+
+            return Ok(new { message = "Empleado actualizado con éxito." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPatch("employees/{id}/toggle-status")]
+    public async Task<IActionResult> ToggleEmployeeStatus(Guid id)
+    {
+        var tenantIdStr = User.FindFirst("TenantId")?.Value;
+        if (string.IsNullOrEmpty(tenantIdStr) || !Guid.TryParse(tenantIdStr, out Guid tenantId))
+        {
+            return Unauthorized(new { message = "Tenant no identificado en el token." });
+        }
+
+        var success = await _userService.ToggleEmployeeStatusAsync(tenantId, id);
+        if (!success) return NotFound(new { message = "Empleado no encontrado." });
+
+        return Ok(new { message = "Estado del empleado modificado con éxito." });
+    }
 }
-
-
-//refactorizar la parte de extraer el id de usuario, CODIGO REPETIDO
