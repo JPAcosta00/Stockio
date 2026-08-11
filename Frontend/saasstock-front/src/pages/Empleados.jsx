@@ -119,7 +119,8 @@ export default function EmpleadosPage() {
   // Cambiar estado Activo/Inactivo
   const handleToggleStatus = async (id) => {
     try {
-      await apiClient.patch(`/user/employees/${id}/toggle-status`);
+      // Pasamos un objeto vacío {} como segundo parámetro por si Axios requiere cuerpo en PATCH
+      await apiClient.patch(`/user/employees/${id}/toggle-status`, {});
       showAlert("Estado del empleado modificado con éxito.", "success");
       fetchEmpleados();
     } catch (err) {
