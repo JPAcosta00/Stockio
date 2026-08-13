@@ -94,7 +94,7 @@ export default function EmpleadosPage() {
           username,
           email,
           password,
-          role
+          role: 'Empleado' // Forzado estáticamente por seguridad
         });
         showAlert("¡Empleado registrado con éxito!", "success");
       } else {
@@ -119,7 +119,6 @@ export default function EmpleadosPage() {
   // Cambiar estado Activo/Inactivo
   const handleToggleStatus = async (id) => {
     try {
-      // Pasamos un objeto vacío {} como segundo parámetro por si Axios requiere cuerpo en PATCH
       await apiClient.patch(`/user/employees/${id}/toggle-status`, {});
       showAlert("Estado del empleado modificado con éxito.", "success");
       fetchEmpleados();
@@ -340,17 +339,30 @@ export default function EmpleadosPage() {
 
               <div>
                 <label className="block font-semibold mb-1.5">Rol</label>
-                <input
-                  type="text"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className={`w-full p-2.5 rounded-xl border text-xs outline-none transition-all ${
-                    darkMode 
-                      ? 'bg-zinc-950 border-zinc-800 text-white focus:ring-2 focus:ring-[#5BA535]/50' 
-                      : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-2 focus:ring-[#5BA535]/50'
-                  }`}
-                  placeholder="Ej. Empleado, Cajero"
-                />
+                {modalMode === 'create' ? (
+                  <input
+                    type="text"
+                    disabled
+                    value="Empleado"
+                    className={`w-full p-2.5 rounded-xl border text-xs outline-none opacity-85 cursor-not-allowed ${
+                      darkMode 
+                        ? 'bg-zinc-900 border-zinc-800 text-zinc-400' 
+                        : 'bg-slate-100 border-slate-200 text-slate-500'
+                    }`}
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className={`w-full p-2.5 rounded-xl border text-xs outline-none transition-all ${
+                      darkMode 
+                        ? 'bg-zinc-950 border-zinc-800 text-white focus:ring-2 focus:ring-[#5BA535]/50' 
+                        : 'bg-slate-50 border-slate-200 text-slate-900 focus:ring-2 focus:ring-[#5BA535]/50'
+                    }`}
+                    placeholder="Ej. Empleado, Cajero"
+                  />
+                )}
               </div>
 
               {modalMode === 'edit' && (
