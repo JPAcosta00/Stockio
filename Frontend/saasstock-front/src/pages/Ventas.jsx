@@ -622,7 +622,7 @@ export default function Ventas() {
                 ${totalVenta.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
               </span>
             </div>
-                    
+
             <button
               type="button"
               onClick={() => {
@@ -744,14 +744,13 @@ export default function Ventas() {
       </div>
 
       {/* Modal de Cobro */}
-      {mostrarModalCobro && (
-        <CobroModal
-          total={totalVenta}
-          onClose={() => setMostrarModalCobro(false)}
-          onConfirm={confirmarVenta}
-          loading={enviando}
-        />
-      )}
+      <CobroModal
+        isOpen={mostrarModalCobro}
+        onClose={() => setMostrarModalCobro(false)}
+        totalVenta={totalVenta}
+        onConfirmarVenta={confirmarVenta}
+        enviando={enviando}
+      />
 
       {/* Modal de Ticket / Comprobante */}
       {ventaParaTicket && (
