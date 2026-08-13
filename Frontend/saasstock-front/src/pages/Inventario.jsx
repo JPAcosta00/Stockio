@@ -417,16 +417,16 @@ export default function Inventario() {
             {!isEmpleado && (
               <>
                 <button
-                 type="button"
-                 onClick={() => setIsExcelFormatModalOpen(true)}
-                 className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                   darkMode 
-                     ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
-                     : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                 } ${importando ? 'opacity-50 pointer-events-none' : ''}`}
+                  type="button"
+                  onClick={() => excelInputRef.current?.click()} // <-- AQUí ESTABA EL DETALLE
+                  className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    darkMode 
+                      ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  } ${importando ? 'opacity-50 pointer-events-none' : ''}`}
                 >
-                 <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
-                 <span>{importando ? 'Procesando...' : 'Importar Excel'}</span>
+                  <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
+                  <span>{importando ? 'Procesando...' : 'Importar Excel'}</span>
                 </button>
                  
                 <input 
@@ -532,6 +532,16 @@ export default function Inventario() {
           />
         </div>
       )}
+
+      <ImportExcelModal
+        darkMode={darkMode}
+        isOpen={modalImportarAbierto}
+        onClose={() => setModalImportarAbierto(false)}
+        archivoSeleccionado={archivoSeleccionado}
+        productosPreview={productosPreview}
+        darkMode={darkMode}
+        onImportSuccess={cargarInventario}
+      />
 
       <ProductModal 
         isOpen={isModalOpen} 
