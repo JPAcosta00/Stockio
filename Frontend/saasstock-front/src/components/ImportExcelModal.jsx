@@ -20,6 +20,20 @@ export default function ImportExcelModal({
   const [porcentaje, setPorcentaje] = useState(0);
   const [importando, setImportando] = useState(false);
 
+  // Lista de categorías disponibles (coincidiendo con las de tu backend)
+  const categoriasDisponibles = [
+    'Bebida', 
+    'FrutaVerdura', 
+    'Lacteo', 
+    'SnackDulce', 
+    'GranoCereal', 
+    'EnlatadoConserva', 
+    'Panaderia', 
+    'Limpieza', 
+    'CuidadoPersonal', 
+    'Otros'
+  ];
+
   // Inicializar estado local al abrir
   useEffect(() => {
     if (isOpen) {
@@ -27,7 +41,8 @@ export default function ImportExcelModal({
         ...p, 
         precioFinal: Number(p.price || p.Price || 0),
         nuevoStock: p.stock || 0,
-        nuevoStockMin: p.minStock || 0
+        nuevoStockMin: p.minStock || 0,
+        categoria: p.categoria || 'Otros' // Si no viene, se asigna 'Otros' por defecto
       })));
       document.body.style.overflow = 'hidden'; // Bloquear scroll fondo
     }
@@ -54,7 +69,6 @@ export default function ImportExcelModal({
   const handleConfirmarImportacion = async () => {
     setImportando(true);
     try {
-      // Ajusta la ruta del endpoint según tu API de C# (por ejemplo: '/products/import' o similar)
       await apiClient.post('/products/import', {
         productos: listaProductos,
         actualizarExistentes: actualizarExistentes
@@ -62,12 +76,10 @@ export default function ImportExcelModal({
 
       showAlert('Productos importados correctamente', 'success');
       
-      // Si el componente padre pasó una función para refrescar la tabla, la ejecutamos
       if (onImportSuccess) {
         onImportSuccess();
       }
       
-      // Cerramos el modal de forma exitosa
       onClose();
     } catch (error) {
       console.error(error);
@@ -81,7 +93,7 @@ export default function ImportExcelModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 animate-in fade-in duration-200">
-      <div className={`border p-6 rounded-3xl max-w-6xl w-full max-h-[85vh] flex flex-col shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
+      <div className={`border p-6 rounded-3xl max-w-7xl w-full max-h-[85vh] flex flex-col shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
         
         {/* Header mejorado */}
         <div className="flex justify-between items-start border-b pb-4 mb-2 border-zinc-500/20">
@@ -89,7 +101,7 @@ export default function ImportExcelModal({
             <h3 className="text-lg font-bold flex items-center gap-2">
               <Upload className="w-5 h-5 text-[#5BA535]" /> Previsualización de Importación
             </h3>
-            <p className="text-xs opacity-60 mt-1">Revisa los datos antes de confirmar la carga masiva al sistema.</p>
+            <p className="text-xs opacity-60 mt-1">Revisa los datos y ajusta las categorías antes de confirmar la carga masiva.</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-500/10 transition-colors"><X className="w-5 h-5" /></button>
         </div>
@@ -102,6 +114,7 @@ export default function ImportExcelModal({
                 <th className="p-4 rounded-tl-lg">Estado</th>
                 <th className="p-4">Código</th>
                 <th className="p-4">Nombre del Producto</th>
+                <th className="p-4">Categoría</th>
                 <th className="p-4 text-right">Precio ($)</th>
                 <th className="p-4 text-center">Stock</th>
                 <th className="p-4 rounded-tr-lg text-center">Stock Mín.</th>
@@ -117,6 +130,24 @@ export default function ImportExcelModal({
                   </td>
                   <td className="p-3 font-mono text-xs opacity-70">{prod.barcode}</td>
                   <td className="p-3 font-medium">{prod.name}</td>
+                  
+                  {/* Selector de Categoría añadido */}
+                  <td className="p-3">
+                    <select
+                      value={prod.categoria}
+                      onChange={(e) => handleManualChange(idx, 'categoria', e.target.value)}
+                      className={`w-full px-2 py-1 border rounded text-xs focus:outline-none focus:border-[#5BA535] cursor-pointer ${
+                        darkMode ? 'bg-zinc-950 border-zinc-800 text-white' : 'bg-slate-50 border-slate-300 text-slate-800'
+                      }`}
+                    >
+                      {categoriasDisponibles.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+
                   <td className="p-3 text-right font-semibold">$ {prod.precioFinal}</td>
                   <td className="p-3 text-center">
                     <input type="number" value={prod.nuevoStock} onChange={(e) => handleManualChange(idx, 'nuevoStock', e.target.value)} 
@@ -147,7 +178,7 @@ export default function ImportExcelModal({
             <button 
               onClick={handleConfirmarImportacion} 
               disabled={importando}
-              className="px-6 py-2.5 bg-[#5BA535] hover:bg-[#4a8a2b] transition-all text-white rounded-xl text-sm font-bold shadow-lg shadow-[#5BA535]/20 disabled:opacity-50 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#5BA535] hover:bg-[#4a8a2b] transition-all text-white rounded-xl text-sm font-bold shadow-lg shadow-[#5BA535]/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
             >
               {importando ? (
                 <>
