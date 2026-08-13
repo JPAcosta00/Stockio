@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../api/apiClient';
-import VentaDetalleModal from '../components/VentaDetalleModal';
 import CobroModal from '../components/CobroModal';
 import GraficoVentasPorCategoria from '../components/GraficoVentasPorCategoria';
 import TicketModal from '../components/TicketModal';
@@ -13,13 +12,11 @@ import {
   CreditCard,
   FileText,
   Loader2,
-  Eye,
   Printer,
   AlertCircle,
   CheckCircle2,
   X,
-  TrendingUp,
-  PackageCheck
+  TrendingUp
 } from 'lucide-react';
 
 const getCartStorageKey = () => {
@@ -54,12 +51,10 @@ export default function Ventas() {
   });
 
   const [historialVentas, setHistorialVentas] = useState([]);
-  const [ventaSeleccionada, setVentaSeleccionada] = useState(null);
   const [mostrarModalCobro, setMostrarModalCobro] = useState(false);
   const [ventaParaTicket, setVentaParaTicket] = useState(null);
 
   const [loadingHistorial, setLoadingHistorial] = useState(false);
-  const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [buscandoProducto, setBuscandoProducto] = useState(false);
 
@@ -150,16 +145,39 @@ export default function Ventas() {
     }
   };
 
-  const abrirDetalleVenta = async (venta) => {
+  const handleImprimirTicket = async (venta) => {
     try {
-      setLoadingDetalle(true);
+      // Si el objeto de la venta no trae los ítems completos, podemos consultar el detalle exacto para el ticket
       const response = await apiClient.get(`/sales/${venta.id}`);
-      setVentaSeleccionada(response.data);
+      const ventaDetallada = response.data;
+
+      const itemsNormalizados = (ventaDetallada.items || ventaDetallada.saleItems || venta.items || venta.saleItems || []).map(item => ({
+        ...item,
+        name: item.name || item.productName || item.descripcion || item.product?.name || 'Producto sin nombre',
+        quantity: item.quantity || item.cantidad || 1,
+        unitPrice: item.unitPrice || item.price || item.precioUnitario || 0
+      }));
+
+      setVentaParaTicket({
+        ...ventaDetallada,
+        items: itemsNormalizados,
+        total: ventaDetallada.total || ventaDetallada.montoTotal || venta.total || 0
+      });
     } catch (error) {
-      console.error('Error al obtener el detalle de la venta:', error);
-      mostrarAlerta('No se pudo cargar el detalle de esta venta.', 'error');
-    } finally {
-      setLoadingDetalle(false);
+      console.error('Error al obtener detalle para el ticket:', error);
+      // Fallback con la info local si falla la petición
+      const itemsNormalizados = (venta.items || venta.saleItems || []).map(item => ({
+        ...item,
+        name: item.name || item.productName || item.descripcion || 'Producto sin nombre',
+        quantity: item.quantity || item.cantidad || 1,
+        unitPrice: item.unitPrice || item.price || item.precioUnitario || 0
+      }));
+
+      setVentaParaTicket({
+        ...venta,
+        items: itemsNormalizados,
+        total: venta.total || venta.montoTotal || 0
+      });
     }
   };
 
@@ -252,7 +270,6 @@ export default function Ventas() {
   };
 
   const totalVenta = carrito.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
-  const totalArticulosItems = carrito.reduce((acc, item) => acc + item.quantity, 0);
 
   const confirmarVenta = async (datosCobro) => {
     if (carrito.length === 0) return;
@@ -279,20 +296,17 @@ export default function Ventas() {
 
       const response = await apiClient.post('/sales', payload);
 
-      // 🛡️ Normalizamos los ítems del carrito para garantizar que el TicketModal los lea bien
       const itemsNormalizados = carrito.map(item => ({
         name: item.name || item.productName || item.descripcion || 'Producto',
         quantity: Number(item.quantity || item.cantidad || 1),
         unitPrice: Number(item.unitPrice || item.price || item.precio || 0)
       }));
 
-      // Obtenemos los datos del backend o usamos los del payload local de respaldo
       const dataBackend = response.data?.sale || response.data || {};
 
       const ventaCreada = {
         id: dataBackend.id || dataBackend.saleId || 'N/D',
         createdAt: dataBackend.createdAt || new Date(),
-        // Forzamos el uso de los ítems normalizados del carrito actual para que nunca falle
         items: itemsNormalizados, 
         total: dataBackend.total || dataBackend.montoTotal || totalVenta,
         paymentMethod: datosCobro?.medioPago,
@@ -303,8 +317,6 @@ export default function Ventas() {
       mostrarAlerta('¡Venta registrada con éxito!', 'success');
       setCarrito([]);
       setMostrarModalCobro(false);
-
-      // Abrir modal de ticket automáticamente con la estructura garantizada
       setVentaParaTicket(ventaCreada);
 
       await obtenerHistorialVentas();
@@ -353,7 +365,6 @@ export default function Ventas() {
     return coincideId || coincideBarcodeItem;
   });
 
-  // Ventas de hoy para pasárselas al gráfico por categoría
   const ventasHoy = historialVentas.filter((v) => {
     const f = new Date(v.createdAt);
     const ahora = new Date();
@@ -558,7 +569,6 @@ export default function Ventas() {
                 <span className="text-[11px] mt-1 opacity-75">Escanee o busque un producto para iniciar la venta.</span>
               </div>
             ) : (
-              /* Altura reducida a 200px con scroll interno */
               <div className={`h-[200px] overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-lg [&::-webkit-scrollbar-thumb]:rounded-lg ${
                 darkMode 
                   ? '[&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-800 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700' 
@@ -628,7 +638,7 @@ export default function Ventas() {
         </div>
       </div>
 
-     {/* SECCIÓN INFERIOR DIVIDIDA: HISTORIAL (IZQ) Y GRÁFICO POR CATEGORÍA (DER) */}
+      {/* SECCIÓN INFERIOR DIVIDIDA: HISTORIAL (IZQ) Y GRÁFICO POR CATEGORÍA (DER) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Mitad Izquierda: Historial de Ventas */}
@@ -715,7 +725,7 @@ export default function Ventas() {
                     {historialFiltrado.map((v) => (
                       <tr
                         key={v.id}
-                        onClick={() => abrirDetalleVenta(v)}
+                        onClick={() => handleImprimirTicket(v)}
                         className={`transition-colors cursor-pointer group ${
                           darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'
                         }`}
@@ -735,41 +745,18 @@ export default function Ventas() {
                           ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                         </td>
                         <td className="py-2.5 px-2 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {/* Botón Ver Detalle */}
+                          <div className="flex items-center justify-center">
+                            {/* Botón Imprimir Ticket / Ver Comprobante */}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                abrirDetalleVenta(v);
+                                handleImprimirTicket(v);
                               }}
-                              title="Ver detalle"
-                              className="inline-flex items-center gap-1 text-[11px] text-emerald-500 hover:text-emerald-600 font-medium p-1 rounded hover:bg-emerald-500/10 transition-colors"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </button>
-                            
-                           {/* Botón Imprimir Ticket Rápido */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Mapeamos los items para asegurar que el nombre y precio tengan los nombres correctos
-                                const itemsNormalizados = (v.items || v.saleItems || []).map(item => ({
-                                  ...item,
-                                  name: item.name || item.productName || item.descripcion || 'Producto sin nombre',
-                                  quantity: item.quantity || item.cantidad || 1,
-                                  unitPrice: item.unitPrice || item.price || item.precioUnitario || 0
-                                }));
-                              
-                                setVentaParaTicket({
-                                  ...v,
-                                  items: itemsNormalizados,
-                                  total: v.total || v.montoTotal || 0
-                                });
-                              }}
-                              title="Imprimir Ticket"
-                              className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-emerald-500 font-medium p-1 rounded hover:bg-zinc-500/10 transition-colors"
+                              title="Ver Comprobante / Ticket"
+                              className="inline-flex items-center gap-1 text-[11px] text-emerald-500 hover:text-emerald-600 font-medium p-1.5 rounded hover:bg-emerald-500/10 transition-colors"
                             >
                               <Printer className="w-3.5 h-3.5" />
+                              <span>Ticket</span>
                             </button>
                           </div>
                         </td>
@@ -782,31 +769,45 @@ export default function Ventas() {
           </div>
         </div>
 
+        {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
+        <div className={`border rounded-2xl p-5 shadow-xl transition-colors flex flex-col justify-between ${
+          darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
+        }`}>
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
+            </div>
+            <div>
+              <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Rendimiento por Categoría</h2>
+              <p className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Distribución de ventas del día actual.</p>
+            </div>
+          </div>
 
-      {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
-      <GraficoVentasPorCategoria ventasHoy={ventasHoy} />
+          <div className="flex-1 flex items-center justify-center min-h-[220px]">
+            <GraficoVentasPorCategoria ventasHoy={ventasHoy} darkMode={darkMode} />
+          </div>
+        </div>
 
       </div>
 
-      <VentaDetalleModal
-        venta={ventaSeleccionada}
-        loading={loadingDetalle}
-        onClose={() => setVentaSeleccionada(null)}
-      />
-
-      <CobroModal
-        isOpen={mostrarModalCobro}
-        onClose={() => setMostrarModalCobro(false)}
-        totalVenta={totalVenta}
-        onConfirmarVenta={confirmarVenta}
-        enviando={enviando}
-      />
+      {/* Modales del sistema */}
+      {mostrarModalCobro && (
+        <CobroModal
+          isOpen={mostrarModalCobro}
+          onClose={() => setMostrarModalCobro(false)}
+          totalVenta={totalVenta}
+          onConfirmarVenta={confirmarVenta}
+          enviando={enviando}
+          darkMode={darkMode}
+        />
+      )}
 
       {/* 🎫 MODAL DE TICKET / COMPROBANTE */}
       {ventaParaTicket && (
         <TicketModal 
           venta={ventaParaTicket} 
           onClose={() => setVentaParaTicket(null)} 
+          darkMode={darkMode}
         />
       )}
     </div>
