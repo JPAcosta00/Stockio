@@ -7,6 +7,7 @@ import CreatePurchaseInvoiceModal from '../components/CreatePurchaseInvoiceModal
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout'; 
 import { useAuth } from '../context/AuthContext';
+import ImportExcelModal from '../components/ImportExcelModal';
 import {
   Package,
   Search,
