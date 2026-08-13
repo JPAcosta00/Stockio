@@ -9,7 +9,6 @@ export default function ImportExcelModal({
   onClose,
   archivoSeleccionado,
   productosPreview,
-  darkMode,
   onImportSuccess
 }) {
   const { darkMode } = useTheme();
