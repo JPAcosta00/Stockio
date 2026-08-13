@@ -425,7 +425,7 @@ export default function Inventario() {
             {!isEmpleado && (
               <>
                 <button 
-                  onClick={() => setIsFormatModalOpen(true)}
+                  onClick={() => setIsExcelFormatModalOpen(true)}
                   className="px-4 py-2 bg-[#5BA535] text-white rounded-xl text-xs font-bold"
                 >
                   Import Excel
@@ -539,7 +539,7 @@ export default function Inventario() {
 
       <ExcelFormatGuideModal 
         isOpen={isFormatModalOpen}
-        onClose={() => setIsFormatModalOpen(false)}
+        onClose={() => setIsExcelFormatModalOpen(false)}
         onFileSelected={handleFileSelected}
       />
 
