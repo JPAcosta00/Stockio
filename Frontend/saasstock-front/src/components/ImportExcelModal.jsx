@@ -37,14 +37,21 @@ export default function ImportExcelModal({
   // Inicializar estado local al abrir
   useEffect(() => {
     if (isOpen) {
-      setListaProductos(productosPreview.map(p => ({ 
-        ...p, 
-        precioFinal: Number(p.price || p.Price || 0),
-        nuevoStock: p.stock || 0,
-        nuevoStockMin: p.minStock || 0,
-        categoria: p.categoria || 'Otros' // Si no viene, se asigna 'Otros' por defecto
-      })));
-      document.body.style.overflow = 'hidden'; // Bloquear scroll fondo
+      setListaProductos(productosPreview.map(p => {
+        //  si la categoría es nula, indefinida, vacía, o el índice numérico 0 (Bebida)
+        const catValida = (p.categoria !== undefined && p.categoria !== null && p.categoria !== '' && p.categoria !== 0) 
+          ? p.categoria 
+          : 'Otros';
+      
+        return { 
+          ...p, 
+          precioFinal: Number(p.price || p.Price || 0),
+          nuevoStock: p.stock || 0,
+          nuevoStockMin: p.minStock || 0,
+          categoria: catValida 
+        };
+      }));
+      document.body.style.overflow = 'hidden'; 
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [isOpen, productosPreview]);
