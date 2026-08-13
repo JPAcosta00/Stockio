@@ -31,7 +31,6 @@ export default function Inventario() {
   const [proveedores, setProveedores] = useState([]); 
   const [loading, setLoading] = useState(true);
   
-  // Detección única y centralizada del rol de empleado desde el JWT
   const userRole = user?.role ? String(user.role).toUpperCase().trim() : '';
   const isEmpleado = userRole === 'EMPLEADO' || userRole === 'EMPLOYEE';
 
@@ -219,7 +218,7 @@ export default function Inventario() {
         name: formData.name || '',
         barcode: formData.barcode || '',
         price: Number(formData.price) || 0,
-        stock: Number(formData.stock) || 0,         
+        stock: Number(formData.stock) || 0,        
         minimumStock: Number(formData.minimumStock) || 0, 
         providerId: formData.providerId || null,
         categoria: typeof formData.categoria === 'string' && mapaEnumNumerico[formData.categoria] !== undefined
@@ -255,6 +254,9 @@ export default function Inventario() {
 
     try {
       setLoading(true);
+      // IMPORTANTE: Asegúrate de que este endpoint en el backend realice la consulta 
+      // a la base de datos comparando por código de barras o nombre para devolver 
+      // si el producto ya existe (ej. exists: true/false).
       const response = await apiClient.post('/products/preview-excel', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -419,7 +421,7 @@ export default function Inventario() {
               <>
                 <button
                   type="button"
-                  onClick={() => excelInputRef.current?.click()} // <-- AQUí ESTABA EL DETALLE
+                  onClick={() => excelInputRef.current?.click()}
                   className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
                     darkMode 
                       ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
@@ -438,6 +440,20 @@ export default function Inventario() {
                   className="hidden" 
                   disabled={importando} 
                 />
+
+                {/* BOTÓN AGREGADO PARA VER EL FORMATO DE EXCEL ESPERADO */}
+                <button
+                  type="button"
+                  onClick={() => setIsExcelFormatModalOpen(true)}
+                  className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+                    darkMode 
+                      ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <Info className="w-3.5 h-3.5 text-[#5BA535]" />
+                  <span>Ver Formato Excel</span>
+                </button>
 
                 <button
                   onClick={() => setIsPurchaseInvoiceModalOpen(true)}
@@ -534,13 +550,57 @@ export default function Inventario() {
         </div>
       )}
 
+      {/* MODAL DE PREVISUALIZACIÓN DE FORMATO EXCEL AGREGADO */}
+      {isExcelFormatModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className={`border p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Info className="w-4 h-4 text-[#5BA535]" />
+                Formato esperado para la Importación de Excel
+              </h3>
+              <button 
+                onClick={() => setIsExcelFormatModalOpen(false)}
+                className={`p-1 rounded-lg ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-slate-100 text-slate-500'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <p className={`text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
+              El archivo Excel debe contener las siguientes columnas en su primera fila (Cabecera) para que el sistema pueda procesarlo de forma correcta:
+            </p>
+
+            <div className={`border rounded-xl p-3 text-[11px] space-y-2 ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
+              <ul className="list-disc list-inside space-y-1">
+                <li><strong className="text-[#5BA535]">barcode</strong> (Código de barras opcional/único)</li>
+                <li><strong className="text-[#5BA535]">name</strong> (Nombre del producto - Obligatorio)</li>
+                <li><strong className="text-[#5BA535]">description</strong> (Descripción del producto)</li>
+                <li><strong className="text-[#5BA535]">price</strong> (Precio de venta unitario)</li>
+                <li><strong className="text-[#5BA535]">stock</strong> (Cantidad inicial en inventario)</li>
+                <li><strong className="text-[#5BA535]">minimumStock</strong> (Stock mínimo de alerta)</li>
+                <li><strong className="text-[#5BA535]">categoria</strong> (Nombre de la categoría)</li>
+              </ul>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => setIsExcelFormatModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#5BA535] hover:bg-[#4b8c2c] text-white text-xs font-semibold transition-colors cursor-pointer"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ImportExcelModal
         darkMode={darkMode}
         isOpen={modalImportarAbierto}
         onClose={() => setModalImportarAbierto(false)}
         archivoSeleccionado={archivoSeleccionado}
         productosPreview={productosPreview}
-        darkMode={darkMode}
         onImportSuccess={cargarInventario}
       />
 
