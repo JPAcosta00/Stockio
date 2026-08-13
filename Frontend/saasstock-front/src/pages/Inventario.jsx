@@ -8,6 +8,7 @@ import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout'; 
 import { useAuth } from '../context/AuthContext';
 import ImportExcelModal from '../components/ImportExcelModal';
+import ExcelFormatGuideModal from '../components/ExcelFormatGuideModal';
 import {
   Package,
   Search,
@@ -243,32 +244,36 @@ export default function Inventario() {
     }
   };
 
-  const handleArchivoSeleccionado = async (e) => {
+  const handleFileSelected = async (fileOrEvent) => {
     if (isEmpleado) return;
-    const file = e.target.files[0];
+    
+    // Soporta tanto si viene directo de un input (con event 'e') como si viene directo como objeto 'file'
+    const file = fileOrEvent?.target ? fileOrEvent.target.files[0] : fileOrEvent;
     if (!file) return;
-
+    
     setArchivoSeleccionado(file);
+    setIsFormatModalOpen(false); // Cierra el modal de la guía de formato
+    
     const formData = new FormData();
     formData.append("file", file);
-
+    
     try {
       setLoading(true);
-      // IMPORTANTE: Asegúrate de que este endpoint en el backend realice la consulta 
-      // a la base de datos comparando por código de barras o nombre para devolver 
-      // si el producto ya existe (ej. exists: true/false).
       const response = await apiClient.post('/products/preview-excel', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
+    
       setProductosPreview(response.data); 
-      setModalImportarAbierto(true);      
+      setModalImportarAbierto(true); // Abre el modal final de previsualización y edición
     } catch (error) {
       console.error("Error al previsualizar el Excel:", error);
       showAlert("El archivo Excel tiene un formato inválido o está vacío.", "error");
     } finally {
       setLoading(false);
-      e.target.value = null; 
+      // Si vino de un input tradicional, limpiamos su valor por si acaso
+      if (fileOrEvent?.target) {
+        fileOrEvent.target.value = null; 
+      }
     }
   };
 
@@ -419,17 +424,11 @@ export default function Inventario() {
           
             {!isEmpleado && (
               <>
-                <button
-                  type="button"
-                  onClick={() => excelInputRef.current?.click()}
-                  className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    darkMode 
-                      ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                  } ${importando ? 'opacity-50 pointer-events-none' : ''}`}
+                <button 
+                  onClick={() => setIsFormatModalOpen(true)}
+                  className="px-4 py-2 bg-[#5BA535] text-white rounded-xl text-xs font-bold"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[#5BA535]" />
-                  <span>{importando ? 'Procesando...' : 'Importar Excel'}</span>
+                  Import Excel
                 </button>
                  
                 <input 
@@ -441,19 +440,6 @@ export default function Inventario() {
                   disabled={importando} 
                 />
 
-                {/* BOTÓN AGREGADO PARA VER EL FORMATO DE EXCEL ESPERADO */}
-                <button
-                  type="button"
-                  onClick={() => setIsExcelFormatModalOpen(true)}
-                  className={`border px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
-                    darkMode 
-                      ? 'bg-zinc-950 hover:bg-zinc-800/80 border-zinc-800 text-zinc-300' 
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <Info className="w-3.5 h-3.5 text-[#5BA535]" />
-                  <span>Ver Formato Excel</span>
-                </button>
 
                 <button
                   onClick={() => setIsPurchaseInvoiceModalOpen(true)}
@@ -550,50 +536,12 @@ export default function Inventario() {
         </div>
       )}
 
-      {/* MODAL DE PREVISUALIZACIÓN DE FORMATO EXCEL AGREGADO */}
-      {isExcelFormatModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className={`border p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl animate-in zoom-in-95 duration-200 ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold flex items-center gap-2">
-                <Info className="w-4 h-4 text-[#5BA535]" />
-                Formato esperado para la Importación de Excel
-              </h3>
-              <button 
-                onClick={() => setIsExcelFormatModalOpen(false)}
-                className={`p-1 rounded-lg ${darkMode ? 'hover:bg-zinc-800 text-zinc-400' : 'hover:bg-slate-100 text-slate-500'}`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <p className={`text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-600'}`}>
-              El archivo Excel debe contener las siguientes columnas en su primera fila (Cabecera) para que el sistema pueda procesarlo de forma correcta:
-            </p>
 
-            <div className={`border rounded-xl p-3 text-[11px] space-y-2 ${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'}`}>
-              <ul className="list-disc list-inside space-y-1">
-                <li><strong className="text-[#5BA535]">barcode</strong> (Código de barras opcional/único)</li>
-                <li><strong className="text-[#5BA535]">name</strong> (Nombre del producto - Obligatorio)</li>
-                <li><strong className="text-[#5BA535]">description</strong> (Descripción del producto)</li>
-                <li><strong className="text-[#5BA535]">price</strong> (Precio de venta unitario)</li>
-                <li><strong className="text-[#5BA535]">stock</strong> (Cantidad inicial en inventario)</li>
-                <li><strong className="text-[#5BA535]">minimumStock</strong> (Stock mínimo de alerta)</li>
-                <li><strong className="text-[#5BA535]">categoria</strong> (Nombre de la categoría)</li>
-              </ul>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setIsExcelFormatModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#5BA535] hover:bg-[#4b8c2c] text-white text-xs font-semibold transition-colors cursor-pointer"
-              >
-                Entendido
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ExcelFormatGuideModal 
+        isOpen={isFormatModalOpen}
+        onClose={() => setIsFormatModalOpen(false)}
+        onFileSelected={handleFileSelected}
+      />
 
       <ImportExcelModal
         darkMode={darkMode}

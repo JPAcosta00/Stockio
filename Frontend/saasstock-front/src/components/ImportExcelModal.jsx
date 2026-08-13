@@ -8,7 +8,7 @@ export default function ImportExcelModal({
   isOpen,
   onClose,
   archivoSeleccionado,
-  productosPreview, // Se asume que viene con una propiedad 'existe' (boolean)
+  productosPreview,
   onImportSuccess
 }) {
   const { darkMode } = useTheme();
@@ -50,78 +50,115 @@ export default function ImportExcelModal({
     setListaProductos(nuevaLista);
   };
 
+  // Función para procesar y confirmar la importación con el backend
+  const handleConfirmarImportacion = async () => {
+    setImportando(true);
+    try {
+      // Ajusta la ruta del endpoint según tu API de C# (por ejemplo: '/products/import' o similar)
+      await apiClient.post('/products/import', {
+        productos: listaProductos,
+        actualizarExistentes: actualizarExistentes
+      });
+
+      showAlert('Productos importados correctamente', 'success');
+      
+      // Si el componente padre pasó una función para refrescar la tabla, la ejecutamos
+      if (onImportSuccess) {
+        onImportSuccess();
+      }
+      
+      // Cerramos el modal de forma exitosa
+      onClose();
+    } catch (error) {
+      console.error(error);
+      showAlert(error.response?.data?.message || 'Error al importar los productos', 'error');
+    } finally {
+      setImportando(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 animate-in fade-in duration-200">
-    <div className={`border p-6 rounded-3xl max-w-6xl w-full max-h-[85vh] flex flex-col shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
-      
-      {/* Header mejorado */}
-      <div className="flex justify-between items-start border-b pb-4 mb-2 border-zinc-500/20">
-        <div>
-          <h3 className="text-lg font-bold flex items-center gap-2">
-            <Upload className="w-5 h-5 text-[#5BA535]" /> Previsualización de Importación
-          </h3>
-          <p className="text-xs opacity-60 mt-1">Revisa los datos antes de confirmar la carga masiva al sistema.</p>
-        </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-500/10 transition-colors"><X className="w-5 h-5" /></button>
-      </div>
-
-      {/* Tabla con más aire */}
-      <div className={`flex-1 overflow-y-auto pr-2 custom-scrollbar ${darkMode ? 'scrollbar-dark' : 'scrollbar-light'}`}>
-        <table className="w-full text-left border-collapse">
-          <thead className={`sticky top-0 z-10 text-[10px] uppercase tracking-wider font-bold ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-50 text-slate-500'}`}>
-            <tr>
-              <th className="p-4 rounded-tl-lg">Estado</th>
-              <th className="p-4">Código</th>
-              <th className="p-4">Nombre del Producto</th>
-              <th className="p-4 text-right">Precio ($)</th>
-              <th className="p-4 text-center">Stock</th>
-              <th className="p-4 rounded-tr-lg text-center">Stock Mín.</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-500/10 text-sm">
-            {listaProductos.map((prod, idx) => (
-              <tr key={idx} className={`group ${darkMode ? 'hover:bg-zinc-800/40' : 'hover:bg-slate-50'}`}>
-                <td className="p-3">
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${prod.isExisting ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
-                    {prod.isExisting ? 'EXISTENTE' : 'NUEVO'}
-                  </span>
-                </td>
-                <td className="p-3 font-mono text-xs opacity-70">{prod.barcode}</td>
-                <td className="p-3 font-medium">{prod.name}</td>
-                <td className="p-3 text-right font-semibold">$ {prod.precioFinal}</td>
-                <td className="p-3 text-center">
-                  <input type="number" value={prod.nuevoStock} onChange={(e) => handleManualChange(idx, 'nuevoStock', e.target.value)} 
-                    className="w-20 px-2 py-1 bg-transparent border border-zinc-500/30 rounded focus:border-[#5BA535] focus:outline-none text-center" />
-                </td>
-                <td className="p-3 text-center">
-                  <input type="number" value={prod.nuevoStockMin} onChange={(e) => handleManualChange(idx, 'nuevoStockMin', e.target.value)} 
-                    className="w-20 px-2 py-1 bg-transparent border border-zinc-500/30 rounded focus:border-[#5BA535] focus:outline-none text-center" />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Footer mejorado */}
-      <div className="mt-4 pt-4 border-t border-zinc-500/20 flex justify-between items-center">
-          <div className="flex gap-6">
-              <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
-                  <input type="checkbox" checked={actualizarExistentes} onChange={(e) => setActualizarExistentes(e.target.checked)} className="w-4 h-4 accent-[#5BA535]" />
-                  Actualizar datos de existentes
-              </label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs opacity-60">Ajuste %:</span>
-                <input type="number" placeholder="0" onChange={(e) => handleCambioPorcentaje(e.target.value)} className="w-20 px-3 py-1 bg-zinc-800/20 border border-zinc-500/20 rounded-lg text-xs focus:outline-none focus:border-[#5BA535]" />
-              </div>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 animate-in fade-in duration-200">
+      <div className={`border p-6 rounded-3xl max-w-6xl w-full max-h-[85vh] flex flex-col shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
+        
+        {/* Header mejorado */}
+        <div className="flex justify-between items-start border-b pb-4 mb-2 border-zinc-500/20">
+          <div>
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <Upload className="w-5 h-5 text-[#5BA535]" /> Previsualización de Importación
+            </h3>
+            <p className="text-xs opacity-60 mt-1">Revisa los datos antes de confirmar la carga masiva al sistema.</p>
           </div>
-          <button onClick={onImportSuccess} className="px-6 py-2.5 bg-[#5BA535] hover:bg-[#4a8a2b] transition-all text-white rounded-xl text-sm font-bold shadow-lg shadow-[#5BA535]/20">
-            Confirmar Importación
-          </button>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-500/10 transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+
+        {/* Tabla con más aire */}
+        <div className={`flex-1 overflow-y-auto pr-2 custom-scrollbar ${darkMode ? 'scrollbar-dark' : 'scrollbar-light'}`}>
+          <table className="w-full text-left border-collapse">
+            <thead className={`sticky top-0 z-10 text-[10px] uppercase tracking-wider font-bold ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-50 text-slate-500'}`}>
+              <tr>
+                <th className="p-4 rounded-tl-lg">Estado</th>
+                <th className="p-4">Código</th>
+                <th className="p-4">Nombre del Producto</th>
+                <th className="p-4 text-right">Precio ($)</th>
+                <th className="p-4 text-center">Stock</th>
+                <th className="p-4 rounded-tr-lg text-center">Stock Mín.</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-500/10 text-sm">
+              {listaProductos.map((prod, idx) => (
+                <tr key={idx} className={`group ${darkMode ? 'hover:bg-zinc-800/40' : 'hover:bg-slate-50'}`}>
+                  <td className="p-3">
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${prod.isExisting ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'}`}>
+                      {prod.isExisting ? 'EXISTENTE' : 'NUEVO'}
+                    </span>
+                  </td>
+                  <td className="p-3 font-mono text-xs opacity-70">{prod.barcode}</td>
+                  <td className="p-3 font-medium">{prod.name}</td>
+                  <td className="p-3 text-right font-semibold">$ {prod.precioFinal}</td>
+                  <td className="p-3 text-center">
+                    <input type="number" value={prod.nuevoStock} onChange={(e) => handleManualChange(idx, 'nuevoStock', e.target.value)} 
+                      className="w-20 px-2 py-1 bg-transparent border border-zinc-500/30 rounded focus:border-[#5BA535] focus:outline-none text-center" />
+                  </td>
+                  <td className="p-3 text-center">
+                    <input type="number" value={prod.nuevoStockMin} onChange={(e) => handleManualChange(idx, 'nuevoStockMin', e.target.value)} 
+                      className="w-20 px-2 py-1 bg-transparent border border-zinc-500/30 rounded focus:border-[#5BA535] focus:outline-none text-center" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer mejorado */}
+        <div className="mt-4 pt-4 border-t border-zinc-500/20 flex justify-between items-center">
+            <div className="flex gap-6">
+                <label className="flex items-center gap-2 text-xs font-medium cursor-pointer">
+                    <input type="checkbox" checked={actualizarExistentes} onChange={(e) => setActualizarExistentes(e.target.checked)} className="w-4 h-4 accent-[#5BA535]" />
+                    Actualizar datos de existentes
+                </label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs opacity-60">Ajuste %:</span>
+                  <input type="number" placeholder="0" onChange={(e) => handleCambioPorcentaje(e.target.value)} className="w-20 px-3 py-1 bg-zinc-800/20 border border-zinc-500/20 rounded-lg text-xs focus:outline-none focus:border-[#5BA535]" />
+                </div>
+            </div>
+            <button 
+              onClick={handleConfirmarImportacion} 
+              disabled={importando}
+              className="px-6 py-2.5 bg-[#5BA535] hover:bg-[#4a8a2b] transition-all text-white rounded-xl text-sm font-bold shadow-lg shadow-[#5BA535]/20 disabled:opacity-50 flex items-center gap-2"
+            >
+              {importando ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Procesando...
+                </>
+              ) : (
+                "Confirmar Importación"
+              )}
+            </button>
+        </div>
       </div>
-    </div>
       
       {/* Estilos para el scroll personalizado */}
       <style jsx>{`
