@@ -247,12 +247,11 @@ export default function Inventario() {
   const handleFileSelected = async (fileOrEvent) => {
     if (isEmpleado) return;
 
-    // Soporta tanto si viene directo de un input (con event 'e') como si viene directo como objeto 'file'
     const file = fileOrEvent?.target ? fileOrEvent.target.files[0] : fileOrEvent;
     if (!file) return;
 
     setArchivoSeleccionado(file);
-    setIsFormatModalOpen(false); // Cierra el modal de la guía de formato
+    setIsExcelFormatModalOpen(false); // ✅ Corregido aquí
 
     const formData = new FormData();
     formData.append("file", file);
@@ -264,13 +263,12 @@ export default function Inventario() {
       });
 
       setProductosPreview(response.data); 
-      setModalImportarAbierto(true); // Abre el modal final de previsualización y edición
+      setModalImportarAbierto(true);
     } catch (error) {
       console.error("Error al previsualizar el Excel:", error);
       showAlert("El archivo Excel tiene un formato inválido o está vacío.", "error");
     } finally {
       setLoading(false);
-      // Si vino de un input tradicional, limpiamos su valor por si acaso
       if (fileOrEvent?.target) {
         fileOrEvent.target.value = null; 
       }
@@ -426,7 +424,7 @@ export default function Inventario() {
               <>
                 <button 
                   onClick={() => setIsExcelFormatModalOpen(true)}
-                  className="px-4 py-2 bg-[#5BA535] text-white rounded-xl text-xs font-bold"
+                  className="px-4 py-2 bg-[#5BA535] text-white rounded-xl text-xs font-bold cursor-pointer"
                 >
                   Import Excel
                 </button>
@@ -439,7 +437,6 @@ export default function Inventario() {
                   className="hidden" 
                   disabled={importando} 
                 />
-
 
                 <button
                   onClick={() => setIsPurchaseInvoiceModalOpen(true)}
@@ -536,9 +533,9 @@ export default function Inventario() {
         </div>
       )}
 
-
+      {/* ✅ Corregido aquí: Usando isExcelFormatModalOpen */}
       <ExcelFormatGuideModal 
-        isOpen={isFormatModalOpen}
+        isOpen={isExcelFormatModalOpen}
         onClose={() => setIsExcelFormatModalOpen(false)}
         onFileSelected={handleFileSelected}
       />
