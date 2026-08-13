@@ -1,3 +1,4 @@
+// Application/Services/SaleService.cs
 using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
@@ -36,7 +37,7 @@ namespace Application.Services
                         ProductId = d.ProductId,
                         ProductName = d.Product?.Name ?? "Producto no disponible",
                         ProductBarcode = d.Product?.Barcode ?? string.Empty,
-                        CategoryName = d.Product != null ? d.Product.Categoria.ToString() : "Otros", // <--- Mapeo del Enum
+                        CategoryName = d.Product != null ? d.Product.Categoria.ToString() : "Otros",
                         Quantity = d.Quantity,
                         UnitPrice = d.UnitPrice
                     }).ToList()
@@ -50,9 +51,9 @@ namespace Application.Services
             if (dto.Items == null || !dto.Items.Any())
                 throw new ArgumentException("La venta debe contener artículos.");
         
-            await _saleRepository.BeginTransactionAsync();
-        
-            try
+            Guid saleId = Guid.Empty;
+
+            await _saleRepository.ExecuteInTransactionAsync(async () =>
             {
                 var nuevaVenta = new Sale
                 {
@@ -122,21 +123,13 @@ namespace Application.Services
                 };
         
                 await _cajaService.RegistrarMovimientoAsync(tenantId, dtoMovimiento);
-        
-                // 3. Confirmar la transacción
-                await _saleRepository.CommitTransactionAsync();
-        
-                return nuevaVenta.Id;
-            }
-            catch (Exception ex)
-            {
-                await _saleRepository.RollbackTransactionAsync();
-                // Imprimir el error exacto en la consola para saber la causa si vuelve a fallar
-                Console.WriteLine($"[ERROR CREATE SALE]: {ex.Message} | Inner: {ex.InnerException?.Message}");
-                throw;
-            }
+
+                saleId = nuevaVenta.Id;
+            });
+
+            return saleId;
         }
-  
+ 
         // -- OBTENER DETALLES DE UNA VENTA
         public async Task<SaleResponseDto?> GetSaleByIdAsync(Guid tenantId, Guid saleId){
             var sale = await _saleRepository.GetByIdWithDetailsAsync(saleId, tenantId);
@@ -164,7 +157,7 @@ namespace Application.Services
                     ProductName = d.Product?.Name ?? "Producto no disponible",
                     ProductBarcode = d.Product?.Barcode ?? string.Empty,
                     Quantity = d.Quantity,
-                 UnitPrice = d.UnitPrice
+                   UnitPrice = d.UnitPrice
                 }).ToList()
             };
         }

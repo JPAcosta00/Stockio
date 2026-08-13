@@ -12,6 +12,8 @@ namespace Application.Interfaces
         
         //para las estadisticas de cada usuario
         Task<IEnumerable<Sale>> GetSalesWithDetailsAsync(Guid tenantId, DateTime startDate);
+
+        Task ExecuteInTransactionAsync(Func<Task> action);
         Task BeginTransactionAsync();
         Task CommitTransactionAsync();
         Task RollbackTransactionAsync();
