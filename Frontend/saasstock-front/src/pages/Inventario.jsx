@@ -246,23 +246,23 @@ export default function Inventario() {
 
   const handleFileSelected = async (fileOrEvent) => {
     if (isEmpleado) return;
-    
+
     // Soporta tanto si viene directo de un input (con event 'e') como si viene directo como objeto 'file'
     const file = fileOrEvent?.target ? fileOrEvent.target.files[0] : fileOrEvent;
     if (!file) return;
-    
+
     setArchivoSeleccionado(file);
     setIsFormatModalOpen(false); // Cierra el modal de la guía de formato
-    
+
     const formData = new FormData();
     formData.append("file", file);
-    
+
     try {
       setLoading(true);
       const response = await apiClient.post('/products/preview-excel', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-    
+
       setProductosPreview(response.data); 
       setModalImportarAbierto(true); // Abre el modal final de previsualización y edición
     } catch (error) {
@@ -435,7 +435,7 @@ export default function Inventario() {
                   type="file" 
                   ref={excelInputRef}
                   accept=".xlsx, .xls" 
-                  onChange={handleArchivoSeleccionado} 
+                  onChange={handleFileSelected} 
                   className="hidden" 
                   disabled={importando} 
                 />
