@@ -12,6 +12,16 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
   const { showAlert } = useAlert();
   const { darkMode } = useTheme();
 
+  // Bloquear scroll de la pantalla de atrás cuando el modal está abierto
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   // Estado del formulario de la factura
   const [invoiceData, setInvoiceData] = useState({
     providerId: defaultProviderId || '',
@@ -147,40 +157,41 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in">
-      <div className={`border rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto transition-colors ${
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
+      <div className={`border rounded-2xl max-w-xl w-full p-4 shadow-2xl space-y-4 max-h-[85vh] flex flex-col transition-colors ${
         darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'
       }`}>
         
-        <div className={`flex items-center justify-between border-b pb-4 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
-          <h2 className={`text-lg font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-            <FileText className="w-5 h-5 text-[#5BA535]" />
+        {/* Header */}
+        <div className={`flex items-center justify-between border-b pb-3 ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+          <h2 className={`text-sm font-bold flex items-center gap-2 ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+            <FileText className="w-4 h-4 text-[#5BA535]" />
             Registrar Factura de Compra
           </h2>
           <button 
             onClick={onClose} 
-            className={`p-1.5 rounded-xl cursor-pointer transition-colors ${
+            className={`p-1 rounded-lg cursor-pointer transition-colors ${
               darkMode ? 'bg-zinc-800 text-zinc-400 hover:text-white' : 'bg-slate-100 text-slate-500 hover:text-slate-900'
             }`}
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {loadingData ? (
-          <div className={`py-12 text-center ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Cargando datos...</div>
+          <div className={`py-8 text-center text-xs ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Cargando datos...</div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 flex-1 flex flex-col overflow-hidden">
             
             {/* Cabecera: Proveedor, Nro Factura y Fecha */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div>
-                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Proveedor</label>
+                <label className={`block text-[10px] font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Proveedor</label>
                 <select 
                   disabled={Boolean(defaultProviderId)}
                   value={invoiceData.providerId}
                   onChange={(e) => setInvoiceData({...invoiceData, providerId: e.target.value})}
-                  className={`w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none transition-colors disabled:opacity-50 ${
+                  className={`w-full border rounded-xl px-3 py-1.5 text-xs outline-none transition-colors disabled:opacity-50 ${
                     darkMode 
                       ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                       : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -195,14 +206,14 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
               </div>
 
               <div>
-                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Nro Factura</label>
+                <label className={`block text-[10px] font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Nro Factura</label>
                 <input 
                   type="text" 
                   required
                   placeholder="Ej. A-0001-00004512"
                   value={invoiceData.invoiceNumber}
                   onChange={(e) => setInvoiceData({...invoiceData, invoiceNumber: e.target.value})}
-                  className={`w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none transition-colors ${
+                  className={`w-full border rounded-xl px-3 py-1.5 text-xs outline-none transition-colors ${
                     darkMode 
                       ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                       : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -211,13 +222,13 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
               </div>
 
               <div>
-                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Fecha</label>
+                <label className={`block text-[10px] font-semibold uppercase tracking-wider mb-1 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Fecha</label>
                 <input 
                   type="date" 
                   required
                   value={invoiceData.invoiceDate}
                   onChange={(e) => setInvoiceData({...invoiceData, invoiceDate: e.target.value})}
-                  className={`w-full border rounded-xl px-3.5 py-2.5 text-sm outline-none transition-colors ${
+                  className={`w-full border rounded-xl px-3 py-1.5 text-xs outline-none transition-colors ${
                     darkMode 
                       ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                       : 'bg-slate-50 border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -227,18 +238,18 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
             </div>
 
             {/* Sección para agregar productos al detalle */}
-            <div className={`border rounded-xl p-4 space-y-3 mt-4 transition-colors ${
+            <div className={`border rounded-xl p-3 space-y-2 transition-colors ${
               darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <h3 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Agregar Ítems a la Factura</h3>
+              <h3 className={`text-[11px] font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-slate-700'}`}>Agregar Ítems a la Factura</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
                 <div className="sm:col-span-6">
-                  <label className={`block text-[10px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Producto</label>
+                  <label className={`block text-[9px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Producto</label>
                   <select 
                     value={currentItem.productId}
                     onChange={(e) => setCurrentItem({...currentItem, productId: e.target.value})}
-                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none transition-colors ${
+                    className={`w-full border rounded-xl px-2.5 py-1.5 text-xs outline-none transition-colors ${
                       darkMode 
                         ? 'bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                         : 'bg-white border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -252,13 +263,13 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className={`block text-[10px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Cantidad</label>
+                  <label className={`block text-[9px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Cantidad</label>
                   <input 
                     type="number" 
                     min="1"
                     value={currentItem.quantity}
                     onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
-                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none transition-colors ${
+                    className={`w-full border rounded-xl px-2.5 py-1.5 text-xs outline-none transition-colors ${
                       darkMode 
                         ? 'bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                         : 'bg-white border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -267,14 +278,14 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className={`block text-[10px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Precio Unit.</label>
+                  <label className={`block text-[9px] uppercase mb-1 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Precio Unit.</label>
                   <input 
                     type="number" 
                     step="0.01"
                     min="0"
                     value={currentItem.unitPrice}
                     onChange={(e) => setCurrentItem({...currentItem, unitPrice: e.target.value})}
-                    className={`w-full border rounded-xl px-3 py-2 text-xs outline-none transition-colors ${
+                    className={`w-full border rounded-xl px-2.5 py-1.5 text-xs outline-none transition-colors ${
                       darkMode 
                         ? 'bg-zinc-900 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' 
                         : 'bg-white border-slate-200 text-slate-900 focus:border-[#5BA535]'
@@ -286,37 +297,37 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
                   <button 
                     type="button"
                     onClick={handleAddDetail}
-                    className="w-full h-[34px] bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl flex items-center justify-center transition-colors cursor-pointer"
+                    className="w-full h-[30px] bg-[#5BA535] hover:bg-[#4d8d2c] text-white rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                     title="Agregar ítem"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Tabla de ítems agregados */}
-            <div className={`border rounded-xl overflow-hidden transition-colors ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+            {/* Tabla de ítems agregados (con scroll interno propio si crece) */}
+            <div className={`border rounded-xl overflow-hidden max-h-40 overflow-y-auto transition-colors ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
               <table className="min-w-full divide-y text-left text-xs">
-                <thead className={`uppercase ${darkMode ? 'bg-zinc-950 divide-zinc-800 text-zinc-400' : 'bg-slate-100 divide-slate-200 text-slate-500'}`}>
+                <thead className={`uppercase sticky top-0 ${darkMode ? 'bg-zinc-950 divide-zinc-800 text-zinc-400' : 'bg-slate-100 divide-slate-200 text-slate-500'}`}>
                   <tr>
-                    <th className="px-3.5 py-2.5">Producto</th>
-                    <th className="px-3.5 py-2.5 text-center">Cant.</th>
-                    <th className="px-3.5 py-2.5 text-right">Precio Unit.</th>
-                    <th className="px-3.5 py-2.5 text-right">Subtotal</th>
-                    <th className="px-3.5 py-2.5 text-center">Acción</th>
+                    <th className="px-3 py-2">Producto</th>
+                    <th className="px-3 py-2 text-center">Cant.</th>
+                    <th className="px-3 py-2 text-right">Precio Unit.</th>
+                    <th className="px-3 py-2 text-right">Subtotal</th>
+                    <th className="px-3 py-2 text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody className={`divide-y ${darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-slate-200 text-slate-700'}`}>
                   {invoiceData.details.map((item) => (
                     <tr key={item.productId} className={`transition-colors ${darkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-slate-50'}`}>
-                      <td className={`px-3.5 py-2.5 font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>{item.productName}</td>
-                      <td className="px-3.5 py-2.5 text-center">{item.quantity}</td>
-                      <td className="px-3.5 py-2.5 text-right">${item.unitPrice.toLocaleString()}</td>
-                      <td className={`px-3.5 py-2.5 text-right font-semibold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
+                      <td className={`px-3 py-2 font-medium ${darkMode ? 'text-white' : 'text-slate-900'}`}>{item.productName}</td>
+                      <td className="px-3 py-2 text-center">{item.quantity}</td>
+                      <td className="px-3 py-2 text-right">${item.unitPrice.toLocaleString()}</td>
+                      <td className={`px-3 py-2 text-right font-semibold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                         ${(item.quantity * item.unitPrice).toLocaleString()}
                       </td>
-                      <td className="px-3.5 py-2.5 text-center">
+                      <td className="px-3 py-2 text-center">
                         <button 
                           type="button"
                           onClick={() => handleRemoveDetail(item.productId)}
@@ -329,7 +340,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
                   ))}
                   {invoiceData.details.length === 0 && (
                     <tr>
-                      <td colSpan="5" className={`px-4 py-6 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                      <td colSpan="5" className={`px-4 py-4 text-center text-xs ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
                         No hay productos agregados en la factura todavía.
                       </td>
                     </tr>
@@ -339,19 +350,19 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
             </div>
 
             {/* Total General */}
-            <div className={`flex justify-between items-center px-4 py-3 rounded-xl border transition-colors ${
+            <div className={`flex justify-between items-center px-3 py-2.5 rounded-xl border transition-colors ${
               darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'
             }`}>
-              <span className={`text-sm font-semibold uppercase ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Total Factura:</span>
-              <span className={`text-xl font-extrabold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>${calculateTotal().toLocaleString()}</span>
+              <span className={`text-xs font-semibold uppercase ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>Total Factura:</span>
+              <span className={`text-base font-extrabold ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>${calculateTotal().toLocaleString()}</span>
             </div>
 
             {/* Botones de acción */}
-            <div className={`flex justify-end gap-3 pt-3 border-t ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
+            <div className={`flex justify-end gap-2 pt-2 border-t ${darkMode ? 'border-zinc-800' : 'border-slate-200'}`}>
               <button 
                 type="button" 
                 onClick={onClose}
-                className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
                   darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-200 hover:bg-slate-300 text-slate-700'
                 }`}
               >
@@ -360,7 +371,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
               <button 
                 type="submit" 
                 disabled={submitting}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white text-sm font-medium shadow-md transition-all cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white text-xs font-medium shadow-md transition-all cursor-pointer disabled:opacity-50"
               >
                 {submitting ? 'Guardando...' : 'Registrar Factura'}
               </button>
