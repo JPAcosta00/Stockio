@@ -147,7 +147,6 @@ export default function Ventas() {
 
   const handleImprimirTicket = async (venta) => {
     try {
-      // Si el objeto de la venta no trae los ítems completos, podemos consultar el detalle exacto para el ticket
       const response = await apiClient.get(`/sales/${venta.id}`);
       const ventaDetallada = response.data;
 
@@ -165,7 +164,6 @@ export default function Ventas() {
       });
     } catch (error) {
       console.error('Error al obtener detalle para el ticket:', error);
-      // Fallback con la info local si falla la petición
       const itemsNormalizados = (venta.items || venta.saleItems || []).map(item => ({
         ...item,
         name: item.name || item.productName || item.descripcion || 'Producto sin nombre',
@@ -195,31 +193,31 @@ export default function Ventas() {
       return;
     }
 
-    const existeEnCarrito = carrito.find((item) => item.productId === prod.id);
+    setCarrito((prevCarrito) => {
+      const existeEnCarrito = prevCarrito.find((item) => item.productId === prod.id);
 
-    if (existeEnCarrito) {
-      if (existeEnCarrito.quantity + 1 > prod.stock) {
-        mostrarAlerta(`No podés agregar más unidades de "${prod.name}". Stock máximo: ${prod.stock} un.`, 'warning');
-        return;
-      }
-      setCarrito(
-        carrito.map((item) =>
+      if (existeEnCarrito) {
+        if (existeEnCarrito.quantity + 1 > prod.stock) {
+          mostrarAlerta(`No podés agregar más unidades de "${prod.name}". Stock máximo: ${prod.stock} un.`, 'warning');
+          return prevCarrito;
+        }
+        return prevCarrito.map((item) =>
           item.productId === prod.id ? { ...item, quantity: item.quantity + 1 } : item
-        )
-      );
-    } else {
-      setCarrito([
-        ...carrito,
-        {
-          productId: prod.id,
-          name: prod.name,
-          barcode: prod.barcode,
-          quantity: 1,
-          unitPrice: prod.price,
-          maxStock: prod.stock,
-        },
-      ]);
-    }
+        );
+      } else {
+        return [
+          ...prevCarrito,
+          {
+            productId: prod.id,
+            name: prod.name,
+            barcode: prod.barcode,
+            quantity: 1,
+            unitPrice: prod.price,
+            maxStock: prod.stock,
+          },
+        ];
+      }
+    });
 
     setBarcodeInput('');
     setSugerencias([]);
@@ -246,27 +244,26 @@ export default function Ventas() {
   };
 
   const modificarCantidad = (productId, nuevaCantidad) => {
-    const item = carrito.find((i) => i.productId === productId);
-    if (!item) return;
+    setCarrito((prevCarrito) => {
+      const item = prevCarrito.find((i) => i.productId === productId);
+      if (!item) return prevCarrito;
 
-    if (nuevaCantidad > item.maxStock) {
-      mostrarAlerta(`Stock máximo disponible: ${item.maxStock} un.`, 'warning');
-      return;
-    }
+      if (nuevaCantidad > item.maxStock) {
+        mostrarAlerta(`Stock máximo disponible: ${item.maxStock} un.`, 'warning');
+        return prevCarrito;
+      }
 
-    if (nuevaCantidad <= 0) {
-      quitarDelCarrito(productId);
-      return;
-    }
+      if (nuevaCantidad <= 0) {
+        return prevCarrito.filter((i) => i.productId !== productId);
+      }
 
-    setCarrito(
-      carrito.map((i) => (i.productId === productId ? { ...i, quantity: nuevaCantidad } : i))
-    );
+      return prevCarrito.map((i) => (i.productId === productId ? { ...i, quantity: nuevaCantidad } : i));
+    });
     setAlerta(null);
   };
 
   const quitarDelCarrito = (id) => {
-    setCarrito(carrito.filter((item) => item.productId !== id));
+    setCarrito((prevCarrito) => prevCarrito.filter((item) => item.productId !== id));
   };
 
   const totalVenta = carrito.reduce((acc, item) => acc + item.quantity * item.unitPrice, 0);
@@ -694,122 +691,72 @@ export default function Ventas() {
                 </button>
               ))}
             </div>
-            
+
             {loadingHistorial ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-5 h-5 animate-spin text-emerald-500 mb-2" />
-                <p className={`text-xs ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando...</p>
+              <div className="py-12 flex justify-center items-center">
+                <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
               </div>
             ) : historialFiltrado.length === 0 ? (
-              <div className={`text-center py-12 text-xs ${darkMode ? 'text-zinc-600' : 'text-zinc-500'}`}>
-                Sin registros de ventas.
+              <div className={`text-center py-12 text-xs ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                No se registran ventas para este filtro.
               </div>
             ) : (
-              <div className={`overflow-x-auto max-h-56 overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-lg [&::-webkit-scrollbar-thumb]:rounded-lg ${
-                darkMode 
-                  ? '[&::-webkit-scrollbar-track]:bg-zinc-950 [&::-webkit-scrollbar-thumb]:bg-zinc-800 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-700' 
-                  : '[&::-webkit-scrollbar-track]:bg-zinc-100 [&::-webkit-scrollbar-thumb]:bg-zinc-300 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-400'
+              <div className={`h-[220px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-lg ${
+                darkMode ? '[&::-webkit-scrollbar-thumb]:bg-zinc-800' : '[&::-webkit-scrollbar-thumb]:bg-zinc-300'
               }`}>
-                <table className={`w-full text-left text-xs divide-y whitespace-nowrap sm:whitespace-normal ${
-                  darkMode ? 'divide-zinc-800' : 'divide-zinc-200'
-                }`}>
-                  <thead>
-                    <tr className={`font-semibold uppercase text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                      <th className="pb-2.5 px-2">ID</th>
-                      <th className="pb-2.5 px-2">Fecha / Hora</th>
-                      <th className="pb-2.5 px-2 text-right">Total</th>
-                      <th className="pb-2.5 px-2 text-center">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody className={`divide-y ${darkMode ? 'divide-zinc-800/50' : 'divide-zinc-100'}`}>
-                    {historialFiltrado.map((v) => (
-                      <tr
-                        key={v.id}
-                        onClick={() => handleImprimirTicket(v)}
-                        className={`transition-colors cursor-pointer group ${
-                          darkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50'
-                        }`}
+                <div className="space-y-2">
+                  {historialFiltrado.map((venta) => (
+                    <div key={venta.id} className={`p-3 rounded-xl border flex justify-between items-center text-xs transition-colors ${
+                      darkMode ? 'bg-zinc-950/40 border-zinc-800/80 hover:bg-zinc-900' : 'bg-zinc-50 border-zinc-200 hover:bg-white'
+                    }`}>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold font-mono ${darkMode ? 'text-zinc-200' : 'text-zinc-900'}`}>#{venta.id}</span>
+                          <span className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                            {new Date(venta.createdAt).toLocaleDateString()} {new Date(venta.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className={`text-[11px] font-mono mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+                          Total: <strong className="text-emerald-500">${(venta.total || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</strong>
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleImprimirTicket(venta)}
+                        className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 p-2 rounded-lg transition-colors cursor-pointer border border-emerald-500/20"
+                        title="Reimprimir Ticket"
                       >
-                        <td className="py-2.5 px-2 font-mono text-emerald-500 text-[11px] group-hover:underline font-semibold">
-                          #{v.id}
-                        </td>
-                        <td className={`py-2.5 px-2 text-[11px] ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>
-                          {new Date(v.createdAt).toLocaleString('es-AR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })} hs.
-                        </td>
-                        <td className={`py-2.5 px-2 text-right font-mono font-bold text-xs ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>
-                          ${v.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-2.5 px-2 text-center">
-                          <div className="flex items-center justify-center">
-                            {/* Botón Imprimir Ticket / Ver Comprobante */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleImprimirTicket(v);
-                              }}
-                              title="Ver Comprobante / Ticket"
-                              className="inline-flex items-center gap-1 text-[11px] text-emerald-500 hover:text-emerald-600 font-medium p-1.5 rounded hover:bg-emerald-500/10 transition-colors"
-                            >
-                              <Printer className="w-3.5 h-3.5" />
-                              <span>Ticket</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                        <Printer className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
-
-        {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
-        <div className={`border rounded-2xl p-5 shadow-xl transition-colors flex flex-col justify-between ${
-          darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
-        }`}>
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/15 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-            </div>
-            <div>
-              <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Rendimiento por Categoría</h2>
-              <p className={`text-[10px] ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Distribución de ventas del día actual.</p>
-            </div>
-          </div>
-
-          <div className="flex-1 flex items-center justify-center min-h-[220px]">
-            <GraficoVentasPorCategoria ventasHoy={ventasHoy} darkMode={darkMode} />
-          </div>
-        </div>
+          {/* Mitad Derecha: Gráfico de Ventas por Categoría (Componente Externo) */}
+          <GraficoVentasPorCategoria ventasHoy={ventasHoy} />
 
       </div>
 
-      {/* Modales del sistema */}
+      {/* Modal de Cobro */}
       {mostrarModalCobro && (
         <CobroModal
-          isOpen={mostrarModalCobro}
+          total={totalVenta}
           onClose={() => setMostrarModalCobro(false)}
-          totalVenta={totalVenta}
-          onConfirmarVenta={confirmarVenta}
-          enviando={enviando}
-          darkMode={darkMode}
+          onConfirm={confirmarVenta}
+          loading={enviando}
         />
       )}
 
-      {/* 🎫 MODAL DE TICKET / COMPROBANTE */}
+      {/* Modal de Ticket / Comprobante */}
       {ventaParaTicket && (
-        <TicketModal 
-          venta={ventaParaTicket} 
-          onClose={() => setVentaParaTicket(null)} 
-          darkMode={darkMode}
+        <TicketModal
+          venta={ventaParaTicket}
+          onClose={() => setVentaParaTicket(null)}
         />
       )}
+
     </div>
   );
 }
