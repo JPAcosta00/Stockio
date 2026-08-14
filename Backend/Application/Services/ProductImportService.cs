@@ -20,6 +20,40 @@ public class ProductImportService : IProductImportService
         _productValidator = productValidator;
     }
 
+    // Método auxiliar para mapear dinámicamente los nombres de las columnas a sus índices
+    private Dictionary<string, int> GetColumnMappings(IXLRangeRow headerRow)
+    {
+        var mappings = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var cell in headerRow.Cells())
+        {
+            var headerName = cell.GetValue<string>().Trim();
+            if (!string.IsNullOrEmpty(headerName) && !mappings.ContainsKey(headerName))
+            {
+                mappings[headerName] = cell.Address.ColumnNumber;
+            }
+        }
+        return mappings;
+    }
+
+    // Método auxiliar para parsear la categoría de forma segura
+    private ProductCategory ParseCategory(string categoriaStr)
+    {
+        if (string.IsNullOrWhiteSpace(categoriaStr))
+        {
+            return ProductCategory.Otros;
+        }
+
+        string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
+
+        if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
+            Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
+        {
+            return parsedCategory;
+        }
+
+        return ProductCategory.Otros;
+    }
+
     // 1. Método exclusivo para la PREVISUALIZACIÓN (No guarda en base de datos)
     public async Task<IEnumerable<ProductPreviewDto>> PreviewExcelAsync(IFormFile file, Guid tenantId)
     {
@@ -38,40 +72,52 @@ public class ProductImportService : IProductImportService
             throw new ArgumentException("La planilla de Excel no contiene datos.");
         }
     
+        // Obtenemos los encabezados de la primera fila para mapear las columnas
+        var headerRow = usedRange.FirstRow();
+        var mappings = GetColumnMappings(headerRow);
+
         var rows = usedRange.RowsUsed().Skip(1);
     
         foreach (var row in rows)
         {
-            // Usamos GetFormattedString() para evitar problemas con números largos o científica
-            string barcode = row.Cell(1).GetFormattedString().Trim();
-            string name = row.Cell(2).GetValue<string>().Trim();
-            string description = row.Cell(3).GetValue<string>().Trim();
-            decimal price = row.Cell(4).GetValue<decimal>();
-            int stock = row.Cell(5).GetValue<int>();
-            int minimumStock = row.Cell(6).GetValue<int>();
-            
-            // Leemos la celda 7 para la categoría
-            string categoriaStr = row.Cell(7).GetValue<string>().Trim();
-            
-            // Limpieza opcional para remover caracteres como barras o espacios si tu Enum no los lleva
-            string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
+            // Lectura dinámica e independiente del orden de columnas
+            string barcode = mappings.ContainsKey("barcode") && !row.Cell(mappings["barcode"]).IsEmpty()
+                ? row.Cell(mappings["barcode"]).GetFormattedString().Trim() 
+                : string.Empty;
 
-            ProductCategory categoriaFinal;
-            bool missingCategory = false;
-    
-            // Intentamos parsear el texto limpio o el original al Enum de C#
-            if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
-                Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
-            {
-                categoriaFinal = parsedCategory;
-            }
-            else
-            {
-                categoriaFinal = ProductCategory.Otros;
-                missingCategory = true; 
-            }
-    
-            var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
+            string name = mappings.ContainsKey("name") && !row.Cell(mappings["name"]).IsEmpty()
+                ? row.Cell(mappings["name"]).GetValue<string>().Trim() 
+                : string.Empty;
+
+            string description = mappings.ContainsKey("description") && !row.Cell(mappings["description"]).IsEmpty()
+                ? row.Cell(mappings["description"]).GetValue<string>().Trim() 
+                : string.Empty;
+
+            decimal price = mappings.ContainsKey("price") && !row.Cell(mappings["price"]).IsEmpty() && decimal.TryParse(row.Cell(mappings["price"]).GetFormattedString(), out var parsedPrice)
+                ? parsedPrice 
+                : 0;
+
+            int stock = mappings.ContainsKey("stock") && !row.Cell(mappings["stock"]).IsEmpty() && int.TryParse(row.Cell(mappings["stock"]).GetFormattedString(), out var parsedStock)
+                ? parsedStock 
+                : 0;
+
+            int minimumStock = mappings.ContainsKey("minimumStock") && !row.Cell(mappings["minimumStock"]).IsEmpty() && int.TryParse(row.Cell(mappings["minimumStock"]).GetFormattedString(), out var parsedMinStock)
+                ? parsedMinStock 
+                : 0;
+
+            // Lectura de categoría (con soporte para columna "categoria" o "category")
+            string categoriaStr = string.Empty;
+            if (mappings.ContainsKey("categoria") && !row.Cell(mappings["categoria"]).IsEmpty())
+                categoriaStr = row.Cell(mappings["categoria"]).GetValue<string>().Trim();
+            else if (mappings.ContainsKey("category") && !row.Cell(mappings["category"]).IsEmpty())
+                categoriaStr = row.Cell(mappings["category"]).GetValue<string>().Trim();
+
+            ProductCategory categoriaFinal = ParseCategory(categoriaStr);
+            bool missingCategory = string.IsNullOrWhiteSpace(categoriaStr);
+
+            var existingProduct = !string.IsNullOrEmpty(barcode) 
+                ? await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId) 
+                : null;
     
             previewList.Add(new ProductPreviewDto
             {
@@ -81,7 +127,7 @@ public class ProductImportService : IProductImportService
                 Price = price,
                 Stock = stock,
                 MinimumStock = minimumStock,
-                Categoria = categoriaFinal,           
+                Categoria = categoriaFinal,          
                 MissingCategoryInExcel = missingCategory, 
                 IsExisting = existingProduct != null,
                 UpdatedAt = existingProduct?.UpdatedAt
@@ -109,6 +155,10 @@ public class ProductImportService : IProductImportService
             throw new ArgumentException("La planilla de Excel no contiene datos.");
         }
 
+        // Mapeo dinámico de columnas
+        var headerRow = usedRange.FirstRow();
+        var mappings = GetColumnMappings(headerRow);
+
         var rows = usedRange.RowsUsed().Skip(1); 
         int currentRowIndex = 1;
 
@@ -116,28 +166,41 @@ public class ProductImportService : IProductImportService
             currentRowIndex++;
             result.TotalRows++;
 
-            string barcode = row.Cell(1).GetFormattedString().Trim();
-            string name = row.Cell(2).GetValue<string>().Trim();
-            string description = row.Cell(3).GetValue<string>().Trim();
-            decimal price = row.Cell(4).GetValue<decimal>();
-            int stock = row.Cell(5).GetValue<int>();
-            int minimumStock = row.Cell(6).GetValue<int>();
+            string barcode = mappings.ContainsKey("barcode") && !row.Cell(mappings["barcode"]).IsEmpty()
+                ? row.Cell(mappings["barcode"]).GetFormattedString().Trim() 
+                : string.Empty;
 
-            string categoriaStr = row.Cell(7).GetValue<string>().Trim();
-            string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
+            string name = mappings.ContainsKey("name") && !row.Cell(mappings["name"]).IsEmpty()
+                ? row.Cell(mappings["name"]).GetValue<string>().Trim() 
+                : string.Empty;
 
-            ProductCategory categoriaFinal;
-            if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
-                Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
-            {
-                categoriaFinal = parsedCategory;
-            }
-            else
-            {
-                categoriaFinal = ProductCategory.Otros;
-            }
+            string description = mappings.ContainsKey("description") && !row.Cell(mappings["description"]).IsEmpty()
+                ? row.Cell(mappings["description"]).GetValue<string>().Trim() 
+                : string.Empty;
 
-            var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
+            decimal price = mappings.ContainsKey("price") && !row.Cell(mappings["price"]).IsEmpty() && decimal.TryParse(row.Cell(mappings["price"]).GetFormattedString(), out var parsedPrice)
+                ? parsedPrice 
+                : 0;
+
+            int stock = mappings.ContainsKey("stock") && !row.Cell(mappings["stock"]).IsEmpty() && int.TryParse(row.Cell(mappings["stock"]).GetFormattedString(), out var parsedStock)
+                ? parsedStock 
+                : 0;
+
+            int minimumStock = mappings.ContainsKey("minimumStock") && !row.Cell(mappings["minimumStock"]).IsEmpty() && int.TryParse(row.Cell(mappings["minimumStock"]).GetFormattedString(), out var parsedMinStock)
+                ? parsedMinStock 
+                : 0;
+
+            string categoriaStr = string.Empty;
+            if (mappings.ContainsKey("categoria") && !row.Cell(mappings["categoria"]).IsEmpty())
+                categoriaStr = row.Cell(mappings["categoria"]).GetValue<string>().Trim();
+            else if (mappings.ContainsKey("category") && !row.Cell(mappings["category"]).IsEmpty())
+                categoriaStr = row.Cell(mappings["category"]).GetValue<string>().Trim();
+
+            ProductCategory categoriaFinal = ParseCategory(categoriaStr);
+
+            var existingProduct = !string.IsNullOrEmpty(barcode)
+                ? await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId)
+                : null;
 
             if (existingProduct != null)
             {
