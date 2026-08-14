@@ -143,10 +143,9 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-// Agrego el manejo de excepciones 
+// Configure the HTTP request pipeline.
 app.UseExceptionHandler();
 
-// Configure the HTTP request pipeline.
 app.UseSwagger();
 app.UseSwaggerUI();
 
