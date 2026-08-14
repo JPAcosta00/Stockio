@@ -146,7 +146,6 @@ public class ProductsController : ControllerBase
 
         try
         {
-            // Pasamos el archivo y el tenantId requerido
             var previewList = await _productImportService.PreviewExcelAsync(file, tenantId);
             return Ok(previewList);
         }
@@ -163,7 +162,7 @@ public class ProductsController : ControllerBase
     // POST: api/products/import
     [HttpPost("import")]
     [Authorize]
-    public async Task<IActionResult> ImportProducts([FromForm] IFormFile file, [FromForm] bool updateExisting)
+    public async Task<IActionResult> ImportProducts([FromBody] ImportRequest request)
     {
         var tenantClaim = User.FindFirst("TenantId")?.Value;
 
@@ -172,17 +171,21 @@ public class ProductsController : ControllerBase
             return Unauthorized("No se pudo determinar el Tenant del usuario actual.");
         }
 
-        if (file == null || file.Length == 0)
+        if (request?.Productos == null || !request.Productos.Any())
         {
-            return BadRequest("Por favor, seleccione un archivo de Excel válido.");
+            return BadRequest("No hay productos para importar.");
         }
 
         try
         {
-            // Llamamos al nombre correcto del método: ImportFromExcelAsync
-            var importResult = await _productImportService.ImportFromExcelAsync(file, tenantId, updateExisting);
+            // Llamamos al método que procesa la lista editada desde el Frontend
+            var importedCount = await _productImportService.ImportFromListAsync(
+                request.Productos, 
+                request.ActualizarExistentes, 
+                tenantId
+            );
             
-            return Ok(new { Message = "¡Importación masiva procesada con éxito!", result = importResult });
+            return Ok(new { Message = "¡Importación masiva procesada con éxito!", count = importedCount });
         }
         catch (Exception ex)
         {
@@ -254,4 +257,12 @@ public class ProductsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+}
+
+
+// Clase auxiliar para recibir el JSON enviado desde React
+public class ImportRequest
+{
+    public List<ProductImportDto> Productos { get; set; }
+    public bool ActualizarExistentes { get; set; }
 }

@@ -73,13 +73,24 @@ export default function ImportExcelModal({
   };
 
   // Función para procesar y confirmar la importación con el backend
-  const handleConfirmarImportacion = async () => {
+ const handleConfirmarImportacion = async () => {
     setImportando(true);
     try {
-      await apiClient.post('/products/import', {
-        productos: listaProductos,
+      // Estructura adaptada al ProductImportDto del backend
+      const payload = {
+        productos: listaProductos.map(p => ({
+          barcode: p.barcode,
+          name: p.name,
+          description: p.description || "",
+          precioFinal: Number(p.precioFinal),
+          nuevoStock: Number(p.nuevoStock),
+          nuevoStockMin: Number(p.nuevoStockMin),
+          categoria: p.categoria // Envía el string (ej: "Bebida", "Lacteo", etc.)
+        })),
         actualizarExistentes: actualizarExistentes
-      });
+      };
+
+      await apiClient.post('/products/import', payload);
 
       showAlert('Productos importados correctamente', 'success');
       
