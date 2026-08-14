@@ -8,18 +8,18 @@ export default function GraficoVentasPorCategoria({ ventasHoy = [] }) {
   const categoriasMap = {};
 
   ventasHoy.forEach((venta) => {
-    // Soportamos tanto si vienen en un array 'items' o 'detalles', o si es un objeto plano
+    // Soporta tanto si vienen en un array 'items' o 'detalles', o si es un objeto plano
     const itemsVenta = venta.items || venta.detalles || venta.productos || [venta];
 
     itemsVenta.forEach((item) => {
-      // Intentamos extraer la categoría de múltiples rutas posibles del backend
+    
       const categoria = 
         item.categoryName || 
         item.CategoryName || 
         item.product?.category?.name || 
         'Sin Categoría';
 
-      // Soportamos distintas formas en que el backend guarde la cantidad y precio
+    
       const cantidad = Number(item.quantity || item.cantidad || 1);
       const unitPrice = Number(item.unitPrice || item.precioUnitario || item.precio || 0);
       const subtotalItem = Number(item.subtotal || (cantidad * unitPrice));

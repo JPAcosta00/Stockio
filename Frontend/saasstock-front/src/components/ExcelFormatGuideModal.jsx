@@ -15,7 +15,7 @@ export default function ExcelFormatGuideModal({
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      onFileSelected(file); // Pasa el archivo seleccionado al componente padre y avanza el flujo
+      onFileSelected(file); 
       e.target.value = null; // Limpiar input
     }
   };
@@ -52,7 +52,7 @@ export default function ExcelFormatGuideModal({
           </ul>
         </div>
 
-        {/* Input oculto para cargar el archivo */}
+        {/* Input  para cargar el archivo */}
         <input 
           type="file" 
           ref={fileInputRef} 

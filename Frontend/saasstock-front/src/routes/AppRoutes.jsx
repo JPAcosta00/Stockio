@@ -45,7 +45,6 @@ const RoleRoute = ({ children, allowedRoles }) => {
 
   const userRole = user?.role ? String(user.role).toUpperCase().trim() : '';
 
-  // Si el rol del usuario no está permitido en esta ruta, lo mandamos a Inventario
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to="/inventario" replace />;
   }

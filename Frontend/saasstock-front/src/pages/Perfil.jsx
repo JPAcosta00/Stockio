@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
-import { useTheme } from '../components/DashboardLayout'; // Ajusta la ruta si es necesario al lugar donde definís tu ThemeContext
+import { useTheme } from '../components/DashboardLayout'; 
 import apiClient from '../api/apiClient';
-import { User, Shield, LogOut, Loader2 } from "lucide-react";
+import { User, Shield, LogOut, Loader2, BadgeCheck } from "lucide-react";
 
 export default function Perfil() {
   const { user, logout } = useAuth();
   const { showAlert } = useAlert();
-  const { darkMode } = useTheme(); // ⚡ Consumimos el estado global del tema
+  const { darkMode } = useTheme(); 
   
   const [activeTab, setActiveTab] = useState('profile');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [role, setRole] = useState('');
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -24,6 +25,9 @@ export default function Perfil() {
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
+      // Extraemos el rol del token/usuario (adaptado según cómo lo guardes: role, rol, etc.)
+      const userRole = user.role || user.rol || '';
+      setRole(userRole);
     }
   }, [user]);
 
@@ -81,7 +85,33 @@ export default function Perfil() {
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* MENÚ LATERAL RESPONSIVO */}
-        <div className="w-full lg:w-64 flex flex-col gap-2 shrink-0">
+        <div className="w-full lg:w-64 flex flex-col gap-3 shrink-0">
+          
+          {/* Tarjeta de información rápida del usuario (Email y Rol) */}
+          <div className={`border rounded-2xl p-4 shadow-xl space-y-2 transition-colors ${
+            darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700'
+          }`}>
+            <div className="flex items-center gap-2 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-[#5BA535]/20 flex items-center justify-center text-[#5BA535] font-bold shrink-0">
+                {name ? name.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div className="overflow-hidden">
+                <p className={`text-xs font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{name || 'Usuario'}</p>
+                <p className="text-[11px] truncate opacity-70">{email || 'Sin correo'}</p>
+              </div>
+            </div>
+            {role && (
+              <div className="pt-2 border-t border-zinc-500/10 flex items-center justify-between text-xs">
+                <span className="opacity-60 flex items-center gap-1">
+                  <BadgeCheck className="w-3.5 h-3.5 text-[#5BA535]" /> Rol:
+                </span>
+                <span className="font-semibold uppercase px-2 py-0.5 rounded-md bg-[#5BA535]/10 text-[#5BA535] border border-[#5BA535]/20 text-[10px]">
+                  {role}
+                </span>
+              </div>
+            )}
+          </div>
+
           <div className={`border rounded-2xl p-2 shadow-xl flex flex-row lg:flex-col gap-1 transition-colors ${
             darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
           }`}>

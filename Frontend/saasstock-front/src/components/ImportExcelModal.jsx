@@ -14,13 +14,13 @@ export default function ImportExcelModal({
   const { darkMode } = useTheme();
   const { showAlert } = useAlert();
   
-  // Estado local para permitir edición manual
+  // Estado local
   const [listaProductos, setListaProductos] = useState([]);
   const [actualizarExistentes, setActualizarExistentes] = useState(false);
   const [porcentaje, setPorcentaje] = useState(0);
   const [importando, setImportando] = useState(false);
 
-  // Lista de categorías disponibles (coincidiendo con las de tu backend)
+  // Lista de categorías disponibles 
   const categoriasDisponibles = [
     'Bebida', 
     'FrutaVerdura', 
@@ -42,7 +42,7 @@ export default function ImportExcelModal({
         const catValida = (p.categoria !== undefined && p.categoria !== null && p.categoria !== '' && p.categoria !== 0) 
           ? p.categoria 
           : 'Otros';
-      
+
         return { 
           ...p, 
           precioFinal: Number(p.price || p.Price || 0),
@@ -102,7 +102,7 @@ export default function ImportExcelModal({
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-6 animate-in fade-in duration-200">
       <div className={`border p-6 rounded-3xl max-w-7xl w-full max-h-[85vh] flex flex-col shadow-2xl ${darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-slate-200 text-slate-800'}`}>
         
-        {/* Header mejorado */}
+        {/* Header  */}
         <div className="flex justify-between items-start border-b pb-4 mb-2 border-zinc-500/20">
           <div>
             <h3 className="text-lg font-bold flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function ImportExcelModal({
           <button onClick={onClose} className="p-2 rounded-full hover:bg-zinc-500/10 transition-colors"><X className="w-5 h-5" /></button>
         </div>
 
-        {/* Tabla con más aire */}
+        {/* Tabla con los productos */}
         <div className={`flex-1 overflow-y-auto pr-2 custom-scrollbar ${darkMode ? 'scrollbar-dark' : 'scrollbar-light'}`}>
           <table className="w-full text-left border-collapse">
             <thead className={`sticky top-0 z-10 text-[10px] uppercase tracking-wider font-bold ${darkMode ? 'bg-zinc-800 text-zinc-400' : 'bg-slate-50 text-slate-500'}`}>

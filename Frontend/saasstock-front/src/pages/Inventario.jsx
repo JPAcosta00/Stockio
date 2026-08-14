@@ -251,7 +251,7 @@ export default function Inventario() {
     if (!file) return;
 
     setArchivoSeleccionado(file);
-    setIsExcelFormatModalOpen(false); // ✅ Corregido aquí
+    setIsExcelFormatModalOpen(false); 
 
     const formData = new FormData();
     formData.append("file", file);
@@ -533,7 +533,6 @@ export default function Inventario() {
         </div>
       )}
 
-      {/* ✅ Corregido aquí: Usando isExcelFormatModalOpen */}
       <ExcelFormatGuideModal 
         isOpen={isExcelFormatModalOpen}
         onClose={() => setIsExcelFormatModalOpen(false)}

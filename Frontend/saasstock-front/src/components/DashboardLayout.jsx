@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import useAutoLogout from '../hooks/useAutoLogout';
 import { 
   Home, 
@@ -18,7 +18,6 @@ import {
   Moon
 } from 'lucide-react';
 
-// --- 1. CREACIÓN DEL CONTEXTO DE TEMA ---
 const ThemeContext = createContext();
 
 export function useTheme() {
@@ -29,9 +28,9 @@ export default function DashboardLayout({ children }) {
   useAutoLogout();
   const { user, logout }  = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
-  // --- ESTADO DE TEMA (CLARO / OSCURO) SINCRONIZADO ---
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('inventario_theme');
     if (saved !== null) return saved === 'dark';
@@ -47,20 +46,20 @@ export default function DashboardLayout({ children }) {
     }
   }, [darkMode]);
 
-  // Validar rol del usuario actual (normalizamos a minúsculas por seguridad)
+  // Validar rol del usuario actual 
   const userRole = user?.role?.toLowerCase() || '';
   
   // Acepta tanto 'admin' como 'empresa' o 'company'
   const isAdmin = userRole === 'admin' || userRole === 'empresa' || userRole === 'company';
 
-  // Definir todas las rutas posibles
+  // Definir todas las rutas posibles con su respectiva tecla de atajo
   const allNavigationLinks = [
-    { name: 'Inicio', href: '/', icon: Home, adminOnly: true },          // Solo Dueño/Admin/Empresa
-    { name: 'Caja', href: '/caja', icon: Wallet, adminOnly: false },
-    { name: 'Inventario', href: '/inventario', icon: Package, adminOnly: false },
-    { name: 'Ventas', href: '/ventas', icon: ShoppingBag, adminOnly: false },
-    { name: 'Proveedores', href: '/providers', icon: Truck, adminOnly: true }, // Solo Dueño/Admin/Empresa
-    { name: 'Empleados', href: '/empleados', icon: Users, adminOnly: true },     // Solo Dueño/Admin/Empresa
+    { name: 'Inicio', href: '/', icon: Home, adminOnly: true, shortcut: '1' },          // Solo Dueño/Admin/Empresa
+    { name: 'Caja', href: '/caja', icon: Wallet, adminOnly: false, shortcut: '2' },
+    { name: 'Inventario', href: '/inventario', icon: Package, adminOnly: false, shortcut: '3' },
+    { name: 'Ventas', href: '/ventas', icon: ShoppingBag, adminOnly: false, shortcut: '4' },
+    { name: 'Proveedores', href: '/providers', icon: Truck, adminOnly: true, shortcut: '5' }, // Solo Dueño/Admin/Empresa
+    { name: 'Empleados', href: '/empleados', icon: Users, adminOnly: true, shortcut: '6' },    // Solo Dueño/Admin/Empresa
   ];
 
   // Filtrar enlaces según el rol
@@ -70,6 +69,44 @@ export default function DashboardLayout({ children }) {
     }
     return true;
   });
+
+  // Configuración de atajos de teclado
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Evitar que los atajos se activen si el usuario está escribiendo en un input, textarea o select
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        return;
+      }
+
+      switch (e.key) {
+        case '1':
+          if (isAdmin) navigate('/');
+          break;
+        case '2':
+          navigate('/caja');
+          break;
+        case '3':
+          navigate('/inventario');
+          break;
+        case '4':
+          navigate('/ventas');
+          break;
+        case '5':
+          if (isAdmin) navigate('/providers');
+          break;
+        case '6':
+          if (isAdmin) navigate('/empleados');
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isAdmin, navigate]);
 
   const getInitials = (email) => {
     if (!email) return 'ST';
@@ -199,7 +236,7 @@ export default function DashboardLayout({ children }) {
               </div>
             </div>
 
-            {/* Menú de Navegación Dinámico */}
+            {/* Menú de Navegación  */}
             <nav className="space-y-1">
               {navigationLinks.map((item) => {
                 const isActive = location.pathname === item.href;
@@ -208,7 +245,7 @@ export default function DashboardLayout({ children }) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                       isActive
                         ? darkMode 
                           ? 'bg-zinc-800 text-white font-semibold border-l-2 border-[#5BA535] shadow-sm' 
@@ -218,8 +255,17 @@ export default function DashboardLayout({ children }) {
                           : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[#5BA535]' : (darkMode ? 'text-zinc-500' : 'text-slate-400')}`} />
-                    {item.name}
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[#5BA535]' : (darkMode ? 'text-zinc-500' : 'text-slate-400')}`} />
+                      <span>{item.name}</span>
+                    </div>
+                    {item.shortcut && (
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                        darkMode ? 'bg-zinc-800 text-zinc-400 border border-zinc-700/50' : 'bg-slate-200 text-slate-500 border border-slate-300/50'
+                      }`}>
+                        [{item.shortcut}]
+                      </span>
+                    )}
                   </Link>
                 );
               })}

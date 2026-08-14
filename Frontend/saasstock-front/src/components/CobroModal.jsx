@@ -117,7 +117,7 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
             </div>
           </div>
 
-          {/* Sección exclusiva para Efectivo */}
+          {/* Sección para Efectivo */}
           {esEfectivo && (
             <div className="space-y-2">
               
@@ -142,7 +142,7 @@ export default function CobroModal({ isOpen, onClose, totalVenta, onConfirmarVen
                 </div>
               </div>
 
-              {/* Botones de Atajo (Billetes comunes) */}
+              {/* Botones de Atajo */}
               <div className="flex flex-wrap gap-1">
                 <button
                   type="button"

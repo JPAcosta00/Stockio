@@ -3,8 +3,6 @@ using Application.DTOs;
 using Application.Interfaces;
 using Domain.Entities;
 using Domain.Interfaces;
-using Infraestructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
 {
@@ -65,6 +63,8 @@ namespace Application.Services
                 };
         
                 decimal acumuladorTotal = 0;
+
+
         
                 foreach (var item in dto.Items)
                 {
@@ -75,9 +75,7 @@ namespace Application.Services
         
                     if (producto.Stock < item.Quantity)
                         throw new Exception($"Stock insuficiente para '{producto.Name}'.");
-        
-                    producto.Stock -= item.Quantity;
-                    _productRepository.Update(producto);
+
         
                     var detalle = new SaleDetail
                     {
@@ -91,6 +89,16 @@ namespace Application.Services
         
                     acumuladorTotal += (item.Quantity * item.UnitPrice);
                     nuevaVenta.Details.Add(detalle);
+                }
+
+                foreach (SaleDetail sd in nuevaVenta.Details)
+                {
+                    //buscar el producto 
+                    var produc = await _productRepository.GetByIdAsync(sd.ProductId);
+                    //modificar producto
+                    produc.Stock -= sd.Quantity;
+                    //actualizar
+                    _productRepository.Update(produc);
                 }
         
                 nuevaVenta.Total = acumuladorTotal;

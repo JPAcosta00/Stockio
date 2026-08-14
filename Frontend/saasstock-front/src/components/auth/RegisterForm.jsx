@@ -12,7 +12,6 @@ import {
 export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
   const { register } = useAuth();
   
-  // Definimos darkMode de forma estática o segura para evitar errores fuera del dashboard
   const darkMode = false; 
   
   // Estados para datos personales 
@@ -73,7 +72,7 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
     const result = await register(username, email, password, companyName);
     
     if (result.success) {
-      onSuccess(); // Aviso de que se registró con éxito
+      onSuccess(); // Avisa de que se registró con éxito
     } else {
       setError(result.error || 'Ocurrió un error al registrar la cuenta.');
     }

@@ -7,7 +7,7 @@ export default function ProductModal({ isOpen, mode, formData, setFormData, onCl
 
   if (!isOpen) return null;
 
-  // Función para traducir el valor numérico (de la API) a string (para el select)
+  // Función para traducir el valor numérico (del backend) a string (para el select)
   const obtenerNombreCategoria = (valor) => {
     const mapa = {
       0: 'Bebida',

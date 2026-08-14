@@ -21,7 +21,7 @@ public class ProductImportService : IProductImportService
     }
 
     // 1. Método exclusivo para la PREVISUALIZACIÓN (No guarda en base de datos)
-        public async Task<IEnumerable<ProductPreviewDto>> PreviewExcelAsync(IFormFile file, Guid tenantId)
+    public async Task<IEnumerable<ProductPreviewDto>> PreviewExcelAsync(IFormFile file, Guid tenantId)
     {
         var previewList = new List<ProductPreviewDto>();
     
@@ -42,32 +42,35 @@ public class ProductImportService : IProductImportService
     
         foreach (var row in rows)
         {
-            string barcode = row.Cell(1).GetValue<string>().Trim();
+            // Usamos GetFormattedString() para evitar problemas con números largos o científica
+            string barcode = row.Cell(1).GetFormattedString().Trim();
             string name = row.Cell(2).GetValue<string>().Trim();
             string description = row.Cell(3).GetValue<string>().Trim();
             decimal price = row.Cell(4).GetValue<decimal>();
             int stock = row.Cell(5).GetValue<int>();
             int minimumStock = row.Cell(6).GetValue<int>();
             
-            // Leemos la celda 7 para la categoría (asumiendo que está ahí)
+            // Leemos la celda 7 para la categoría
             string categoriaStr = row.Cell(7).GetValue<string>().Trim();
-    
+            
+            // Limpieza opcional para remover caracteres como barras o espacios si tu Enum no los lleva
+            string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
+
             ProductCategory categoriaFinal;
             bool missingCategory = false;
     
-            // Intentamos parsear el texto del Excel al Enum de C#
-            if (Enum.TryParse<ProductCategory>(categoriaStr, true, out var parsedCategory))
+            // Intentamos parsear el texto limpio o el original al Enum de C#
+            if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
+                Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
             {
                 categoriaFinal = parsedCategory;
             }
             else
             {
-                // Si viene vacía o no coincide con ninguna del Enum, por defecto ponemos "Otros" y marcamos faltante
                 categoriaFinal = ProductCategory.Otros;
                 missingCategory = true; 
             }
     
-            // Verificamos si ya existe en la base de datos para este tenant
             var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
     
             previewList.Add(new ProductPreviewDto
@@ -78,8 +81,8 @@ public class ProductImportService : IProductImportService
                 Price = price,
                 Stock = stock,
                 MinimumStock = minimumStock,
-                Categoria = categoriaFinal,           // <--- Asignamos la categoría resuelta
-                MissingCategoryInExcel = missingCategory, // <--- Bandera para el frontend
+                Categoria = categoriaFinal,           
+                MissingCategoryInExcel = missingCategory, 
                 IsExisting = existingProduct != null,
                 UpdatedAt = existingProduct?.UpdatedAt
             });
@@ -88,7 +91,7 @@ public class ProductImportService : IProductImportService
         return previewList;
     }
 
-    // 2. Método de importación final (Guarda en base de datos - tu lógica actual intacta)
+    // 2. Método de importación final (Guarda en base de datos)
     public async Task<ProductImportResultDto> ImportFromExcelAsync(IFormFile file, Guid tenantId, bool updateExisting)
     {
         var result = new ProductImportResultDto();
@@ -113,27 +116,33 @@ public class ProductImportService : IProductImportService
             currentRowIndex++;
             result.TotalRows++;
 
-            string barcode = row.Cell(1).GetValue<string>().Trim();
+            string barcode = row.Cell(1).GetFormattedString().Trim();
             string name = row.Cell(2).GetValue<string>().Trim();
             string description = row.Cell(3).GetValue<string>().Trim();
             decimal price = row.Cell(4).GetValue<decimal>();
             int stock = row.Cell(5).GetValue<int>();
             int minimumStock = row.Cell(6).GetValue<int>();
 
-            // si viene sin categoria, se le asigna "otros"
             string categoriaStr = row.Cell(7).GetValue<string>().Trim();
-            ProductCategory categoriaFinal = Enum.TryParse<ProductCategory>(categoriaStr, true, out var parsedCategory) 
-                ? parsedCategory 
-                : ProductCategory.Otros;
+            string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
 
-            // Verificamos si el producto ya existe para este Tenant
+            ProductCategory categoriaFinal;
+            if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
+                Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
+            {
+                categoriaFinal = parsedCategory;
+            }
+            else
+            {
+                categoriaFinal = ProductCategory.Otros;
+            }
+
             var existingProduct = await _productRepository.GetByBarcodeAndTenantAsync(barcode, tenantId);
 
             if (existingProduct != null)
             {
                 if (updateExisting)
                 {
-                    // Actualizamos los datos del producto existente, incluyendo la categoría
                     existingProduct.Name = name;
                     existingProduct.Description = description;
                     existingProduct.Price = price;
@@ -147,13 +156,11 @@ public class ProductImportService : IProductImportService
                 }
                 else
                 {
-                    // Si decidió no actualizar, se omite
                     result.SuccessfulRows++; 
                 }
                 continue;
             }
 
-            // Si no existe, creamos uno nuevo asignándole su TenantId y su Categoría
             var product = new Product
             {
                 TenantId = tenantId,
@@ -163,7 +170,7 @@ public class ProductImportService : IProductImportService
                 Price = price,
                 Stock = stock,
                 MinimumStock = minimumStock,
-                Categoria = categoriaFinal, // <--- Asignamos la categoría
+                Categoria = categoriaFinal,
                 IsActive = true,
                 UpdatedAt = DateTime.Now
             };

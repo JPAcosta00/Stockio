@@ -148,6 +148,10 @@ public class InventoryStatsService : IInventoryStatsService
                             c.Item().Text("Reporte de Estadísticas de Inventario").FontSize(18).ExtraBold().FontColor(primaryColor);
                             c.Item().Text($"Generado el: {fechaEmision:dd/MM/yyyy HH:mm}").FontSize(8).FontColor(textMuted);
                         });
+                        row.ConstantItem(100).AlignRight().AlignMiddle().Column(col =>
+                        {
+                            col.Item().Border(1).BorderColor(primaryColor).Padding(5).AlignCenter().Text("Stockio").Bold().FontColor(primaryColor);
+                        });
                     });
 
                     col.Item().PaddingTop(8).Background(bgLight).Border(1).BorderColor(borderLight).Padding(6).Row(row =>

@@ -4,7 +4,7 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianG
 import { TrendingUp } from 'lucide-react';
 
 export default function SalesTimelineChart({ data = [] }) {
-  const { darkMode } = useTheme(); // <-- 2. Reemplazado el soporte estricto oscuro por el hook global
+  const { darkMode } = useTheme(); 
 
   if (!data || data.length === 0) {
     return (
@@ -17,7 +17,7 @@ export default function SalesTimelineChart({ data = [] }) {
     );
   }
 
-  // Definición de colores dinámicos para los ejes y grillas del gráfico Recharts según el tema
+  // Definición de colores del grafico
   const strokeColorGrid = darkMode ? '#27272a' : '#e2e8f0';
   const strokeColorAxis = darkMode ? '#71717a' : '#64748b';
 

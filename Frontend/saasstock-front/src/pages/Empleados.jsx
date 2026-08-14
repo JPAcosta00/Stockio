@@ -270,7 +270,7 @@ export default function EmpleadosPage() {
         </div>
       </div>
 
-      {/* Modal Integrado para Crear/Editar */}
+      {/* Modal para Crear/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className={`w-full max-w-md rounded-2xl shadow-2xl border p-6 transition-colors ${

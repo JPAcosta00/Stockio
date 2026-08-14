@@ -34,7 +34,7 @@ public class UserService : IUserService
         return true; 
     }
 
-    public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto) // O string email
+    public async Task ChangePasswordAsync(Guid userId, ChangePasswordDto dto) 
     {
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null)
@@ -95,7 +95,7 @@ public class UserService : IUserService
         return employee.Id;
     }
 
-    // Método exclusivo para el rol ADMIN (devuelve todos los usuarios del sistema)
+    // Método para el rol ADMIN (devuelve todos los usuarios del sistema)
     public async Task<IEnumerable<EmployeeResponseDto>> GetAllUsersAsync()
     {
         // Traemos todos los usuarios ignorando los filtros globales de tenant

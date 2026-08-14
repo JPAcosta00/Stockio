@@ -3,12 +3,10 @@ import { useTheme } from '../components/DashboardLayout';
 import { X, Loader2 } from 'lucide-react';
 
 export default function VentaDetalleModal({ venta, loading, onClose }) {
-  const { darkMode } = useTheme(); // <-- 2. Reemplazado el soporte estricto oscuro por el hook global
+  const { darkMode } = useTheme(); 
 
-  // Si no hay venta ni está cargando, no mostramos nada
   if (!venta && !loading) return null;
 
-  // Extraemos la lista de items contemplando distintas respuestas del backend
   const items = venta?.items || venta?.details || venta?.saleDetails || [];
 
   return (

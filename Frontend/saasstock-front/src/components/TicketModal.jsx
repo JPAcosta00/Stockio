@@ -1,8 +1,10 @@
 import { useAuth } from '../context/AuthContext';
 import { Printer } from 'lucide-react';
+import { useTheme } from '../components/DashboardLayout'; 
 
 const TicketModal = ({ venta, onClose }) => {
-  const { user } = useAuth(); // Obtenemos el usuario y su info del token
+  const { user } = useAuth(); 
+  const { darkMode } = useTheme();
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
