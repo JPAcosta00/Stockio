@@ -128,9 +128,10 @@ export default function EmpleadosPage() {
   };
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-200 p-4 sm:p-6 flex flex-col space-y-4 ${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'}`}>      
+    <div className={`min-h-screen w-full transition-colors duration-200 p-2 sm:p-6 md:p-8 flex flex-col space-y-6 ${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'}`}>
       {/* Encabezado */}
-      <div className={`w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-5 rounded-2xl ...`}>        <div>
+      <div className={`w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 rounded-2xl border transition-colors shadow-sm ${darkMode ? 'bg-zinc-900/40 border-zinc-800/80' : 'bg-white border-slate-200'}`}>
+        <div>
           <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
             {isAdmin ? 'Gestión Global de Empleados y Empresas' : 'Gestión de Empleados'}
           </h1>
@@ -151,7 +152,7 @@ export default function EmpleadosPage() {
       </div>
 
       {/* Barra de Filtros / Búsqueda */}
-      <div className={`w-full p-3 sm:p-4 rounded-2xl border transition-colors shadow-sm ${darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'}`}>
+      <div className={`w-full p-4 sm:p-5 rounded-2xl border transition-colors shadow-sm ${darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'}`}>
         <div className="relative">
           <Search className={`absolute left-3.5 top-3 h-4 w-4 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
           <input

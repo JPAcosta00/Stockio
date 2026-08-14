@@ -136,65 +136,67 @@ export default function Providers() {
   return (
     <div className="space-y-6">
       
-      {/* Header Principal */}
+      {/* Header Principal (Solo título y descripción) */}
       <div className={`border p-5 sm:p-6 rounded-2xl shadow-xl transition-colors ${
         darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
       }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#1C562A]/15 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
-              <Truck className="w-6 h-6 text-[#5BA535]" />
-            </div>
-            <div>
-              <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
-                Proveedores
-              </h1>
-              <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
-                Gestioná la libreta de proveedores, contactos y saldos de cuentas corrientes.
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#1C562A]/15 border border-[#5BA535]/30 flex items-center justify-center shrink-0">
+            <Truck className="w-6 h-6 text-[#5BA535]" />
           </div>
-          
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => {
-                setSelectedProviderForInvoice(null);
-                setIsInvoiceModalOpen(true);
-              }}
-              className={`inline-flex items-center justify-center gap-2 text-xs font-medium px-3.5 py-2 rounded-xl border transition-all cursor-pointer shadow-sm ${
-                darkMode 
-                  ? 'bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700' 
-                  : 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-200'
-              }`}
-            >
-              <FileText className="w-4 h-4 text-[#5BA535]" />
-              Nueva Factura
-            </button>
-            <button 
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center justify-center gap-2 text-xs bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-3.5 py-2 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Nuevo Proveedor
-            </button>
+          <div>
+            <h1 className={`text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+              Proveedores
+            </h1>
+            <p className={`text-xs mt-0.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>
+              Gestioná la libreta de proveedores, contactos y saldos de cuentas corrientes.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Barra de Búsqueda */}
-      <div className={`flex items-center border rounded-xl px-3.5 py-2.5 max-w-md transition-colors shadow-sm ${
-        darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
-      }`}>
-        <Search className={`w-4.5 h-4.5 mr-2.5 shrink-0 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`} />
-        <input 
-          type="text"
-          placeholder="Buscar por nombre o CUIT..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className={`bg-transparent border-none outline-none text-sm w-full ${
-            darkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
-          }`}
-        />
+      {/* Barra de Búsqueda y Botones de Acción Alineados */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {/* Barra de Búsqueda */}
+        <div className={`flex items-center border rounded-xl px-3.5 py-2.5 w-full sm:max-w-md transition-colors shadow-sm ${
+          darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-100' : 'bg-white border-zinc-200 text-zinc-900'
+        }`}>
+          <Search className={`w-4.5 h-4.5 mr-2.5 shrink-0 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`} />
+          <input 
+            type="text"
+            placeholder="Buscar por nombre o CUIT..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`bg-transparent border-none outline-none text-sm w-full ${
+              darkMode ? 'text-zinc-100 placeholder-zinc-500' : 'text-zinc-900 placeholder-zinc-400'
+            }`}
+          />
+        </div>
+
+        {/* Botones */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => {
+              setSelectedProviderForInvoice(null);
+              setIsInvoiceModalOpen(true);
+            }}
+            className={`inline-flex items-center justify-center gap-2 text-xs font-medium px-3.5 py-2.5 rounded-xl border transition-all cursor-pointer shadow-sm ${
+              darkMode 
+                ? 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-800' 
+                : 'bg-white hover:bg-zinc-100 text-zinc-800 border-zinc-200'
+            }`}
+          >
+            <FileText className="w-4 h-4 text-[#5BA535]" />
+            Nueva Factura
+          </button>
+          <button 
+            onClick={handleOpenCreateModal}
+            className="inline-flex items-center justify-center gap-2 text-xs bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-3.5 py-2.5 rounded-xl shadow-lg shadow-[#5BA535]/15 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            Nuevo Proveedor
+          </button>
+        </div>
       </div>
 
       {/* Tabla de Proveedores */}
