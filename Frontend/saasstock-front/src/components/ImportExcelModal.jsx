@@ -38,16 +38,16 @@ export default function ImportExcelModal({
   useEffect(() => {
     if (isOpen) {
       setListaProductos(productosPreview.map(p => {
-        //  si la categoría es nula, indefinida, vacía, o el índice numérico 0 (Bebida)
-        const catValida = (p.categoria !== undefined && p.categoria !== null && p.categoria !== '' && p.categoria !== 0) 
-          ? p.categoria 
-          : 'Otros';
+        // Obtenemos la categoría ya sea como string o mapeando el número del Enum si viniera numérico
+        const catValue = p.categoria !== undefined && p.categoria !== null ? p.categoria : 'Otros';
+        // Si el backend manda un número de índice del Enum, puedes adaptarlo o asegurarte de que coincida
+        const catValida = categoriasDisponibles.includes(catValue) ? catValue : 'Otros';
 
         return { 
           ...p, 
           precioFinal: Number(p.price || p.Price || 0),
-          nuevoStock: p.stock || 0,
-          nuevoStockMin: p.minStock || 0,
+          nuevoStock: Number(p.stock ?? p.Stock ?? 0),
+          nuevoStockMin: Number(p.minimumStock ?? p.MinimumStock ?? p.minStock ?? 0), // <--- Añadido minimumStock
           categoria: catValida 
         };
       }));
