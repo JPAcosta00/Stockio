@@ -112,7 +112,7 @@ public class ProductImportService : IProductImportService
                 Price = price,
                 Stock = stock,
                 MinimumStock = minStock,
-                Categoria = ParseCategory(categoriaStr),
+                Categoria = ParseCategory(categoriaStr).ToString(),
                 IsExisting = existing != null
             });
         }

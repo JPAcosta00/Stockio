@@ -38,17 +38,20 @@ export default function ImportExcelModal({
   useEffect(() => {
     if (isOpen) {
       setListaProductos(productosPreview.map(p => {
-        // Obtenemos la categoría ya sea como string o mapeando el número del Enum si viniera numérico
-        const catValue = p.categoria !== undefined && p.categoria !== null ? p.categoria : 'Otros';
-        // Si el backend manda un número de índice del Enum, puedes adaptarlo o asegurarte de que coincida
-        const catValida = categoriasDisponibles.includes(catValue) ? catValue : 'Otros';
+        // Limpiamos el texto que viene del backend para compararlo sin importar acentos o mayúsculas
+        const catOriginal = (p.categoria || 'Otros').toString().trim().toLowerCase();
+        
+        // Buscamos si coincide con alguna de nuestras categorías disponibles
+        const categoriaEncontrada = categoriasDisponibles.find(
+          cat => cat.toLowerCase() === catOriginal
+        ) || 'Otros';
 
         return { 
           ...p, 
           precioFinal: Number(p.price || p.Price || 0),
           nuevoStock: Number(p.stock ?? p.Stock ?? 0),
-          nuevoStockMin: Number(p.minimumStock ?? p.MinimumStock ?? p.minStock ?? 0), // <--- Añadido minimumStock
-          categoria: catValida 
+          nuevoStockMin: Number(p.minimumStock ?? p.MinimumStock ?? p.minStock ?? 0),
+          categoria: categoriaEncontrada 
         };
       }));
       document.body.style.overflow = 'hidden'; 
