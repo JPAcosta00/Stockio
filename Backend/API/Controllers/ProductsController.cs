@@ -189,7 +189,8 @@ public class ProductsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest($"Error al procesar la importación: {ex.Message}");
+            var detalle = ex.InnerException != null ? " -> " + ex.InnerException.Message : "";
+            return BadRequest($"Error: {ex.Message}{detalle}");
         }
     }
     
