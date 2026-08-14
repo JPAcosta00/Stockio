@@ -43,14 +43,42 @@ public class ProductImportService : IProductImportService
     {
         if (string.IsNullOrWhiteSpace(categoriaStr)) return ProductCategory.Otros;
 
-        // Limpieza: elimina barras y espacios para coincidir con tu Enum (ej: "Grano/Cereal" -> "GranoCereal")
-        string categoriaSanitized = categoriaStr.Replace("/", "").Replace(" ", "");
+        // Limpieza profunda: quitamos acentos, espacios, barras, guiones y pasamos a minúsculas
+        var normalizedInput = System.Text.RegularExpressions.Regex.Replace(
+            categoriaStr.Normalize(System.Text.NormalizationForm.FormD), 
+            @"\p{Mn}|[\s/\-_.]", 
+            ""
+        ).ToLowerInvariant();
 
-        if (Enum.TryParse<ProductCategory>(categoriaSanitized, true, out var parsedCategory) ||
-            Enum.TryParse<ProductCategory>(categoriaStr, true, out parsedCategory))
+        // Recorremos todos los valores posibles de tu enum ProductCategory para compararlos normalizados
+        foreach (ProductCategory category in Enum.GetValues(typeof(ProductCategory)))
         {
-            return parsedCategory;
+            var normalizedEnumName = category.ToString().ToLowerInvariant();
+            if (normalizedInput == normalizedEnumName)
+            {
+                return category;
+            }
         }
+
+        // Si escribieron algo parecido o específico, puedes mapearlo manualmente aquí:
+        if (normalizedInput.Contains("bebida") || normalizedInput.Contains("refresco") || normalizedInput.Contains("jugo")) 
+            return ProductCategory.Bebida;
+        if (normalizedInput.Contains("fruta") || normalizedInput.Contains("verdura") || normalizedInput.Contains("hortaliza")) 
+            return ProductCategory.FrutaVerdura;
+        if (normalizedInput.Contains("lacteo") || normalizedInput.Contains("leche") || normalizedInput.Contains("queso")) 
+            return ProductCategory.Lacteo;
+        if (normalizedInput.Contains("snack") || normalizedInput.Contains("dulce") || normalizedInput.Contains("golosina")) 
+            return ProductCategory.SnackDulce;
+        if (normalizedInput.Contains("grano") || normalizedInput.Contains("cereal") || normalizedInput.Contains("harina")) 
+            return ProductCategory.GranoCereal;
+        if (normalizedInput.Contains("enlatado") || normalizedInput.Contains("conserva")) 
+            return ProductCategory.EnlatadoConserva;
+        if (normalizedInput.Contains("pan") || normalizedInput.Contains("panaderia") || normalizedInput.Contains("factura")) 
+            return ProductCategory.Panaderia;
+        if (normalizedInput.Contains("limpieza") || normalizedInput.Contains("lavandina") || normalizedInput.Contains("detergente")) 
+            return ProductCategory.Limpieza;
+        if (normalizedInput.Contains("cuidado") || normalizedInput.Contains("personal") || normalizedInput.Contains("higiene")) 
+            return ProductCategory.CuidadoPersonal;
 
         return ProductCategory.Otros;
     }
