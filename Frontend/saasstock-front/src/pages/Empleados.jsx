@@ -177,37 +177,34 @@ export default function EmpleadosPage() {
         </div>
       )}
 
-      {/* Contenedor en Cuadrícula de Tarjetas (Grid Responsive) */}
-      {loading ? (
-        <div className={`p-12 text-center text-xs flex items-center justify-center gap-3 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
-          <Loader2 className="w-5 h-5 animate-spin text-[#5BA535]" />
-          <span>Cargando empleados...</span>
-        </div>
-      ) : filteredEmpleados.length === 0 ? (
-        <div className={`p-12 text-center rounded-2xl border border-dashed text-xs ${
-          darkMode ? 'border-zinc-800 text-zinc-500 bg-zinc-900/30' : 'border-slate-200 text-slate-400 bg-white'
-        }`}>
-          No se encontraron empleados registrados.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredEmpleados.map((emp) => (
+      {/* VISTA MÓVIL: Tarjetas individuales (Visible solo en pantallas pequeñas: block md:hidden) */}
+      <div className="block md:hidden space-y-4">
+        {loading ? (
+          <div className={`p-12 text-center rounded-2xl border text-xs flex items-center justify-center gap-3 ${darkMode ? 'border-zinc-800 bg-zinc-900/70 text-zinc-400' : 'border-slate-200 bg-white text-slate-500'}`}>
+            <Loader2 className="w-5 h-5 animate-spin text-[#5BA535]" />
+            <span>Cargando empleados...</span>
+          </div>
+        ) : filteredEmpleados.length === 0 ? (
+          <div className={`p-12 text-center rounded-2xl border border-dashed text-xs ${
+            darkMode ? 'border-zinc-800 text-zinc-500 bg-zinc-900/30' : 'border-slate-200 text-slate-400 bg-white'
+          }`}>
+            No se encontraron empleados registrados.
+          </div>
+        ) : (
+          filteredEmpleados.map((emp) => (
             <div 
               key={emp.id}
-              className={`border rounded-2xl p-5 shadow-sm transition-all flex flex-col justify-between ${
-                darkMode 
-                  ? 'bg-zinc-900/70 border-zinc-800 hover:border-zinc-700' 
-                  : 'bg-white border-slate-200 hover:border-slate-300'
+              className={`border rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between space-y-4 ${
+                darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'
               }`}
             >
               <div>
-                {/* Header de la Card */}
-                <div className="flex justify-between items-start mb-4 gap-2">
+                <div className="flex justify-between items-start gap-2 mb-3">
                   <div>
-                    <h3 className={`font-bold text-base truncate ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                    <h3 className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>
                       {emp.username}
                     </h3>
-                    <p className={`text-xs truncate mt-0.5 flex items-center gap-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                    <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
                       <Mail className="w-3.5 h-3.5 shrink-0" />
                       {emp.email}
                     </p>
@@ -222,11 +219,10 @@ export default function EmpleadosPage() {
                   </span>
                 </div>
 
-                {/* Info adicional (Rol y Empresa si es Admin) */}
-                <div className="space-y-2 mb-6 text-xs">
+                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-200/40 dark:border-zinc-800/60">
                   <div>
-                    <span className={`block uppercase text-[10px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Rol</span>
-                    <span className={`inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+                    <span className={`block uppercase text-[9px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Rol</span>
+                    <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${
                       darkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-slate-100 text-slate-700'
                     }`}>
                       {emp.role}
@@ -234,9 +230,9 @@ export default function EmpleadosPage() {
                   </div>
                   {isAdmin && (
                     <div>
-                      <span className={`block uppercase text-[10px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Tenant / Empresa</span>
-                      <span className={`font-medium flex items-center gap-1 mt-0.5 ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
-                        <Building2 className="w-3.5 h-3.5 shrink-0" />
+                      <span className={`block uppercase text-[9px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>Empresa</span>
+                      <span className={`font-medium flex items-center gap-1 mt-0.5 truncate ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                        <Building2 className="w-3 h-3 shrink-0" />
                         {emp.tenantName || emp.companyName || 'N/A'}
                       </span>
                     </div>
@@ -244,11 +240,10 @@ export default function EmpleadosPage() {
                 </div>
               </div>
 
-              {/* Botones de Acción */}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-200/50 dark:border-zinc-800/50 text-xs">
+              <div className="flex items-center gap-2 pt-2 border-t border-slate-200/50 dark:border-zinc-800/50 text-xs">
                 <button
                   onClick={() => handleOpenEdit(emp)}
-                  className="flex-1 flex items-center justify-center gap-1.5 text-white bg-[#5BA535] hover:opacity-90 font-medium py-2 px-3 rounded-xl shadow-sm transition-all cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1 text-white bg-[#5BA535] hover:opacity-90 font-medium py-2 px-3 rounded-xl shadow-sm transition-all cursor-pointer"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                   Editar
@@ -265,9 +260,102 @@ export default function EmpleadosPage() {
                 </button>
               </div>
             </div>
-          ))}
+          ))
+        )}
+      </div>
+
+      {/* VISTA ESCRITORIO: Tabla original (Visible solo en PC: hidden md:block) */}
+      <div className={`hidden md:block w-full rounded-2xl border transition-colors shadow-sm overflow-hidden ${darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'}`}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className={`border-b font-semibold uppercase tracking-wider whitespace-nowrap ${
+                darkMode ? 'border-zinc-800/80 bg-zinc-900/50 text-zinc-400' : 'border-slate-200 bg-slate-50 text-slate-500'
+              }`}>
+                <th className="py-3.5 px-4">Nombre</th>
+                <th className="py-3.5 px-4">Email</th>
+                {isAdmin && <th className="py-3.5 px-4">Tenant / Empresa</th>}
+                <th className="py-3.5 px-4">Rol</th>
+                <th className="py-3.5 px-4 text-center">Estado</th>
+                <th className="py-3.5 px-4 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className={`divide-y text-xs ${
+              darkMode ? 'divide-zinc-800/60 text-zinc-300' : 'divide-slate-100 text-slate-700'
+            }`}>
+              {loading ? (
+                <tr>
+                  <td colSpan={isAdmin ? 6 : 5} className="p-12 text-center">
+                    <div className="flex items-center justify-center gap-3">
+                      <Loader2 className="w-5 h-5 animate-spin text-[#5BA535]" />
+                      <span className={`text-xs font-medium ${darkMode ? 'text-zinc-500' : 'text-slate-500'}`}>Cargando empleados...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredEmpleados.length === 0 ? (
+                <tr>
+                  <td colSpan={isAdmin ? 6 : 5} className={`p-12 text-center text-xs ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                    No se encontraron empleados registrados.
+                  </td>
+                </tr>
+              ) : (
+                filteredEmpleados.map((emp) => (
+                  <tr key={emp.id} className={`transition-colors whitespace-nowrap ${
+                    darkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-slate-50/80'
+                  }`}>
+                    <td className={`py-3.5 px-4 font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-800'}`}>
+                      {emp.username}
+                    </td>
+                    <td className={`py-3.5 px-4 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                      {emp.email}
+                    </td>
+                    {isAdmin && (
+                      <td className={`py-3.5 px-4 font-medium ${darkMode ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                        {emp.tenantName || emp.companyName || 'N/A'}
+                      </td>
+                    )}
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium inline-block ${
+                        darkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-slate-100 text-slate-700'
+                      }`}>
+                        {emp.role}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1.5 ${
+                        emp.isActive 
+                          ? (darkMode ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-600 border border-emerald-200')
+                          : (darkMode ? 'bg-red-500/10 text-red-400' : 'bg-red-50 text-red-600 border border-red-200')
+                      }`}>
+                        {emp.isActive ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                        {emp.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center space-x-2">
+                      <button
+                        onClick={() => handleOpenEdit(emp)}
+                        className="text-white bg-[#5BA535] hover:opacity-90 font-medium text-[11px] px-3 py-1.5 rounded-lg shadow-sm transition-all cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleToggleStatus(emp.id)}
+                        className={`font-medium text-[11px] px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                          darkMode 
+                            ? 'text-zinc-400 hover:text-red-400 bg-zinc-800/80 hover:bg-zinc-800' 
+                            : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                        }`}
+                      >
+                        {emp.isActive ? 'Desactivar' : 'Activar'}
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Modal para Crear/Editar */}
       {isModalOpen && (
