@@ -199,100 +199,101 @@ export default function Providers() {
         </div>
       </div>
 
-      {/* Tabla de Proveedores */}
-      <div className={`border rounded-xl overflow-hidden shadow-xl transition-colors ${
-        darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
-      }`}>
-        {loading ? (
-          <div className={`p-12 text-center text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className={`border-b font-semibold uppercase tracking-wider whitespace-nowrap ${
-                  darkMode ? 'border-zinc-800 bg-zinc-900/50 text-zinc-400' : 'border-slate-200 bg-slate-50 text-slate-500'
-                }`}>
-                  <th className="py-3 px-3.5">Nombre</th>
-                  <th className="py-3 px-3.5">Contacto</th>
-                  <th className="py-3 px-3.5">Teléfono</th>
-                  <th className="py-3 px-3.5">CUIT</th>
-                  <th className="py-3 px-3.5">Cuenta Corriente</th>
-                  <th className="py-3 px-3.5 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y text-xs ${
-                darkMode ? 'divide-zinc-800 text-zinc-300' : 'divide-slate-200 text-slate-700'
-              }`}>
-                {filteredProviders.map((provider) => (
-                  <tr 
-                    key={provider.id} 
-                    onClick={() => handleOpenDetailModal(provider)}
-                    className={`transition-colors whitespace-nowrap cursor-pointer ${
-                      darkMode ? 'hover:bg-zinc-800/20' : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <td className={`py-3 px-3.5 font-medium max-w-[180px] truncate whitespace-normal ${darkMode ? 'text-white' : 'text-slate-900'}`}>{provider.name}</td>
-                    <td className={`py-3 px-3.5 truncate max-w-[120px] ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.contactName || '—'}</td>
-                    <td className={`py-3 px-3.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.phone || '—'}</td>
-                    <td className={`py-3 px-3.5 font-mono text-[11px] ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>{provider.cuit || '—'}</td>
-                    <td className={`py-3 px-3.5 font-semibold font-mono ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                      ${provider.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
-                    </td>
-                    <td className="py-3 px-3.5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        onClick={() => {
-                          setSelectedProviderForInvoice(provider.id);
-                          setIsInvoiceModalOpen(true);
-                        }}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer text-[#5BA535] ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
-                        }`}
-                        title="Registrar Factura de Compra"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleOpenDetailModal(provider)}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
-                        }`}
-                        title="Ver Cuenta Corriente y Facturas"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleOpenEditModal(provider)}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                          darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                        }`}
-                        title="Editar"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={(e) => handleDelete(provider.id, e)}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                          darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
-                        }`}
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredProviders.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
-                      No se encontraron proveedores registrados.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Tarjetas de Proveedores en Cuadrícula (Responsive) */}
+      {loading ? (
+        <div className={`p-12 text-center text-sm ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Cargando proveedores...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProviders.map((provider) => (
+            <div 
+              key={provider.id}
+              onClick={() => handleOpenDetailModal(provider)}
+              className={`border rounded-2xl p-5 shadow-sm transition-all cursor-pointer hover:shadow-md flex flex-col justify-between ${
+                darkMode 
+                  ? 'bg-zinc-900 border-zinc-800 hover:border-zinc-700' 
+                  : 'bg-white border-zinc-200 hover:border-zinc-300'
+              }`}
+            >
+              <div>
+                {/* Header de la Card */}
+                <div className="flex justify-between items-start mb-4 gap-2">
+                  <div>
+                    <h3 className={`font-bold text-base truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+                      {provider.name}
+                    </h3>
+                    <p className={`text-xs font-mono mt-0.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                      {provider.cuit || 'CUIT no definido'}
+                    </p>
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0 ${
+                    darkMode ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  }`}>
+                    ${provider.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
+                  </span>
+                </div>
+
+                {/* Info adicional */}
+                <div className="space-y-2 mb-4 text-xs">
+                  <div>
+                    <span className={`block uppercase text-[10px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Contacto</span>
+                    <span className={darkMode ? 'text-zinc-300' : 'text-zinc-600'}>{provider.contactName || '—'}</span>
+                  </div>
+                  <div>
+                    <span className={`block uppercase text-[10px] font-semibold ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Teléfono</span>
+                    <span className={darkMode ? 'text-zinc-300' : 'text-zinc-600'}>{provider.phone || '—'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Acciones */}
+              <div className="flex items-center gap-1.5 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/50" onClick={(e) => e.stopPropagation()}>
+                <button 
+                  onClick={() => { setSelectedProviderForInvoice(provider.id); setIsInvoiceModalOpen(true); }} 
+                  className={`flex-1 flex items-center justify-center py-2 px-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-[#5BA535] ${
+                    darkMode ? 'bg-zinc-800/80 hover:bg-zinc-800' : 'bg-zinc-100 hover:bg-zinc-200'
+                  }`} 
+                  title="Registrar Factura"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={() => handleOpenDetailModal(provider)} 
+                  className={`flex-1 flex items-center justify-center py-2 px-2 rounded-xl text-xs font-medium transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
+                    darkMode ? 'bg-zinc-800/80 hover:bg-zinc-800' : 'bg-zinc-100 hover:bg-zinc-200'
+                  }`} 
+                  title="Ver Cuenta Corriente"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={() => handleOpenEditModal(provider)} 
+                  className={`flex-1 flex items-center justify-center py-2 px-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                    darkMode ? 'bg-zinc-800/80 hover:bg-zinc-800 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-600'
+                  }`} 
+                  title="Editar"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+                <button 
+                  onClick={(e) => handleDelete(provider.id, e)} 
+                  className={`flex-1 flex items-center justify-center py-2 px-2 rounded-xl text-xs font-medium transition-colors cursor-pointer ${
+                    darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
+                  }`} 
+                  title="Eliminar"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {filteredProviders.length === 0 && (
+            <div className={`col-span-full p-12 text-center rounded-2xl border border-dashed ${darkMode ? 'border-zinc-800 text-zinc-500' : 'border-zinc-200 text-zinc-400'}`}>
+              No se encontraron proveedores registrados.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal Crear / Editar Proveedor */}
       {isModalOpen && (
