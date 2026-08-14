@@ -14,7 +14,6 @@ using Microsoft.IdentityModel.Tokens;
 using Infraestructure.Services;
 using QuestPDF.Infrastructure;         //"infrastructure" xq en la libreria se llama asi
 
-// 👈 Solución para el error de inotify en Render (desactiva el monitoreo de cambios en archivos)
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
@@ -142,21 +141,18 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseCors("AllowAll");
+
 // Agrego el manejo de excepciones 
 app.UseExceptionHandler();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseCors("AllowAll");
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
-// los middlewares de seguridad para validar los token
+// Los middlewares de seguridad para validar los tokens
 app.UseAuthentication();
 app.UseAuthorization();
 
