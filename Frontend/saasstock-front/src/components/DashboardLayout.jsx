@@ -52,6 +52,17 @@ export default function DashboardLayout({ children }) {
   // Acepta tanto 'admin' como 'empresa' o 'company'
   const isAdmin = userRole === 'admin' || userRole === 'empresa' || userRole === 'company';
 
+  // Función para mostrar el rol de forma bonita
+  const getFormattedRole = (role) => {
+    if (!role) return 'Usuario';
+    const r = role.toLowerCase();
+    if (r === 'admin') return 'Administrador';
+    if (r === 'empresa' || r === 'company') return 'Empresa';
+    if (r === 'empleado' || r === 'employee') return 'Empleado';
+    // Capitalizar la primera letra por defecto
+    return role.charAt(0).toUpperCase() + role.slice(1);
+  };
+
   // Definir todas las rutas posibles con su respectiva tecla de atajo
   const allNavigationLinks = [
     { name: 'Inicio', href: '/', icon: Home, adminOnly: true, shortcut: '1' },          // Solo Dueño/Admin/Empresa
@@ -147,7 +158,9 @@ export default function DashboardLayout({ children }) {
                 <span className={`text-xs font-semibold truncate ${darkMode ? 'text-zinc-200' : 'text-slate-700'}`}>
                   {user?.email || 'usuario@stockio.com'}
                 </span>
-                <span className="text-[10px] text-emerald-400 font-medium">Activo</span>
+                <span className="text-[10px] text-emerald-400 font-medium bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800/50">
+                  {getFormattedRole(user?.role)}
+                </span>
               </div>
               <Link
                 to="/perfil"
@@ -259,13 +272,6 @@ export default function DashboardLayout({ children }) {
                       <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-[#5BA535]' : (darkMode ? 'text-zinc-500' : 'text-slate-400')}`} />
                       <span>{item.name}</span>
                     </div>
-                    {item.shortcut && (
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
-                        darkMode ? 'bg-zinc-800 text-zinc-400 border border-zinc-700/50' : 'bg-slate-200 text-slate-500 border border-slate-300/50'
-                      }`}>
-                        [{item.shortcut}]
-                      </span>
-                    )}
                   </Link>
                 );
               })}
@@ -342,8 +348,8 @@ export default function DashboardLayout({ children }) {
                   <p className={`text-xs font-semibold truncate ${darkMode ? 'text-zinc-200 group-hover:text-white' : 'text-slate-700 group-hover:text-slate-900'}`}>
                     {user?.email || 'usuario@stockio.com'}
                   </p>
-                  <p className="text-[10px] text-emerald-400/80 font-medium tracking-wide mt-0.5">
-                    Sesión activa
+                  <p className="text-[10px] text-emerald-400/90 font-medium tracking-wide mt-0.5 truncate">
+                    {getFormattedRole(user?.role)}
                   </p>
                 </div>
               </div>

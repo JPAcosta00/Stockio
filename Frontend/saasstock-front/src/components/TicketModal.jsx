@@ -7,7 +7,8 @@ const TicketModal = ({ venta, onClose }) => {
   const { darkMode } = useTheme();
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+    /* Agregamos ${darkMode ? 'dark' : ''} para forzar la clase dark en el nivel superior del modal */
+    <div className={`fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in ${darkMode ? 'dark' : ''}`}>
       <div className="bg-white dark:bg-zinc-900 p-3.5 sm:p-4 rounded-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl text-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-800 flex flex-col space-y-3 sm:space-y-4">
         
         {/* ENCABEZADO */}
@@ -15,8 +16,8 @@ const TicketModal = ({ venta, onClose }) => {
           <h2 className="text-xs sm:text-base font-extrabold tracking-wide uppercase">
             {user?.companyName || "MI NEGOCIO"}
           </h2>
-          <p className="text-[10px] text-zinc-500">Comprobante de Venta</p>
-          <p className="text-[10px] font-mono text-zinc-400">ID Venta: #{venta?.id}</p>
+          <p className="text-[10px] text-zinc-500 dark:text-zinc-400">Comprobante de Venta</p>
+          <p className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500">ID Venta: #{venta?.id}</p>
         </div>
 
         <hr className="border-dashed border-zinc-300 dark:border-zinc-800" />
@@ -27,7 +28,7 @@ const TicketModal = ({ venta, onClose }) => {
             <div key={index} className="flex justify-between items-start">
               <div>
                 <p className="font-medium text-xs sm:text-sm">{item.name}</p>
-                <p className="text-[10px] text-zinc-500 font-mono">
+                <p className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">
                   {item.quantity}un. x ${item.unitPrice?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
                 </p>
               </div>

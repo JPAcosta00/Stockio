@@ -55,22 +55,22 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
     <div className={`border rounded-xl overflow-hidden shadow-xl transition-colors ${
       darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'
     }`}>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
+      <div className="w-full max-w-full overflow-x-hidden">
+        <table className="w-full table-fixed text-left border-collapse text-xs">
           <thead>
             <tr className={`border-b font-semibold uppercase tracking-wider whitespace-nowrap ${
               darkMode ? 'border-zinc-800 bg-zinc-900/50 text-zinc-400' : 'border-slate-200 bg-slate-50 text-slate-500'
             }`}>
-              <th className="py-3 px-3.5">Código</th>
-              <th className="py-3 px-3.5">Producto</th>
-              <th className="py-3 px-3.5">Descripción</th>
-              <th className="py-3 px-3.5">Categoría</th>
-              <th className="py-3 px-3.5">Proveedor</th>
-              <th className="py-3 px-3.5 text-right">Precio</th>
-              <th className="py-3 px-3.5 text-center">Stock</th>
-              <th className="py-3 px-3.5 text-center">Mín.</th>
-              <th className="py-3 px-3.5 text-right">Modificación</th>
-              {!isEmpleado && <th className="py-3 px-3.5 text-center">Acciones</th>}
+              <th className="py-3 px-3.5 w-24">Código</th>
+              <th className="py-3 px-3.5 w-44">Producto</th>
+              <th className="py-3 px-3.5 w-44">Descripción</th>
+              <th className="py-3 px-3.5 w-28">Categoría</th>
+              <th className="py-3 px-3.5 w-28">Proveedor</th>
+              <th className="py-3 px-3.5 text-right w-20">Precio</th>
+              <th className="py-3 px-3.5 text-center w-16">Stock</th>
+              <th className="py-3 px-3.5 text-center w-16">Mín.</th>
+              <th className="py-3 px-3.5 text-right w-28">Modificación</th>
+              {!isEmpleado && <th className="py-3 px-3.5 text-center w-28">Acciones</th>}
             </tr>
           </thead>
           <tbody className={`divide-y text-xs ${
@@ -78,7 +78,7 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
           }`}>
             {productos.length === 0 ? (
               <tr>
-                <td colSpan={totalColumnas} className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
+                <td colSpan={10} className={`p-8 text-center ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>
                   No se encontraron productos cargados.
                 </td>
               </tr>
@@ -108,31 +108,32 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
                   <tr key={prod.id || prod.Id} className={`transition-colors whitespace-nowrap ${
                     darkMode ? 'hover:bg-zinc-800/20' : 'hover:bg-slate-50'
                   }`}>
-                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 font-mono text-[11px] cursor-pointer ${
+                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 font-mono text-[11px] truncate cursor-pointer ${
                       darkMode ? 'text-zinc-400 hover:text-emerald-400' : 'text-slate-500 hover:text-[#5BA535]'
                     }`}>{barcode}</td>
                     
-                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 font-medium max-w-[180px] truncate whitespace-normal cursor-pointer ${
+                    {/* Usamos truncate estricto para que respete el ancho de la columna */}
+                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 font-medium truncate cursor-pointer ${
                       darkMode ? 'text-white hover:text-emerald-400' : 'text-slate-900 hover:text-[#5BA535]'
                     }`}>{name}</td>
                     
-                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 max-w-[180px] truncate whitespace-normal cursor-pointer ${
+                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 truncate cursor-pointer ${
                       darkMode ? 'text-zinc-400 hover:text-emerald-400' : 'text-slate-500 hover:text-[#5BA535]'
                     }`}>{description}</td>
 
-                    <td onClick={() => onOpenRow(prod, 'view')} className="py-3 px-3.5 cursor-pointer">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${
+                    <td onClick={() => onOpenRow(prod, 'view')} className="py-3 px-3.5 truncate cursor-pointer">
+                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium inline-block truncate max-w-full ${
                         darkMode ? 'bg-zinc-800 text-zinc-300' : 'bg-slate-100 text-slate-700'
                       }`}>
                         {categoria}
                       </span>
                     </td>
                     
-                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 truncate max-w-[120px] cursor-pointer ${
+                    <td onClick={() => onOpenRow(prod, 'view')} className={`py-3 px-3.5 truncate cursor-pointer ${
                       darkMode ? 'text-zinc-400 hover:text-emerald-400' : 'text-slate-500 hover:text-[#5BA535]'
                     }`}>{providerName}</td>
                     
-                    <td className={`py-3 px-3.5 text-right font-mono ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
+                    <td className={`py-3 px-3.5 text-right font-mono truncate ${darkMode ? 'text-zinc-100' : 'text-slate-900'}`}>
                       ${Number(price).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     
@@ -146,11 +147,11 @@ export default function InventarioTable({ productos, onOpenRow, onDelete, provid
                       </span>
                     </td>
                     
-                    <td className={`py-3 px-3.5 text-center font-medium ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{minimumStock}</td>
-                    <td className={`py-3 px-3.5 text-right text-[11px] ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{formatearFecha(rawDate)}</td>
+                    <td className={`py-3 px-3.5 text-center font-medium truncate ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{minimumStock}</td>
+                    <td className={`py-3 px-3.5 text-right text-[11px] truncate ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`}>{formatearFecha(rawDate)}</td>
                     
                     {!isEmpleado && (
-                      <td className="py-3 px-3.5 text-center space-x-2">
+                      <td className="py-3 px-3.5 text-center space-x-1">
                         <button
                           onClick={() => onOpenRow(prod, 'edit')}
                           className="text-white bg-[#5BA535] hover:bg-[#1C562A] font-medium text-[11px] px-2.5 py-1.5 rounded-md shadow transition-colors cursor-pointer"
