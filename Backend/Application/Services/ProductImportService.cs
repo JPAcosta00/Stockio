@@ -177,7 +177,7 @@ public class ProductImportService : IProductImportService
             {
                 var nuevo = new Product {
                     TenantId = tenantId,
-                    Barcode = dto.Barcode ?? Guid.NewGuid().ToString().Substring(0, 8), // Generar si falta
+                    Barcode = string.IsNullOrWhiteSpace(dto.Barcode) ? "GEN-" + Guid.NewGuid().ToString() : dto.Barcode,
                     Name = dto.Name,
                     Description = dto.Description ?? "",
                     Price = dto.PrecioFinal,
