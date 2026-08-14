@@ -87,23 +87,26 @@ export default function Perfil() {
         {/* MENÚ LATERAL RESPONSIVO */}
         <div className="w-full lg:w-64 flex flex-col gap-3 shrink-0">
           
-          {/* Tarjeta de información rápida del usuario (Email y Rol) */}
+          {/* Tarjeta de información rápida del usuario */}
           <div className={`border rounded-2xl p-4 shadow-xl space-y-2 transition-colors ${
-            darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-zinc-200 text-zinc-700'
+            darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-zinc-200 text-slate-800'
           }`}>
-            <div className="flex items-center gap-2 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-[#5BA535]/20 flex items-center justify-center text-[#5BA535] font-bold shrink-0">
-                {name ? name.charAt(0).toUpperCase() : 'U'}
+            <div className="flex items-center gap-3 overflow-hidden">
+              {/* Avatar con iniciales del mail */}
+              <div className="w-9 h-9 rounded-full bg-[#5BA535]/20 flex items-center justify-center text-[#5BA535] font-bold text-sm shrink-0 uppercase">
+                {email 
+                  ? email.split('@')[0].split('.').map(part => part.charAt(0)).join('').substring(0, 2) 
+                  : 'U'}
               </div>
-              <div className="overflow-hidden">
-                {/* Ahora el email va arriba con fuente destacada */}
-                <p className={`text-xs font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{email || 'Sin correo'}</p>
                 
-                {/* El nombre/rol va abajo con opacidad */}
-                <p className="text-[11px] truncate opacity-70">{name || 'Usuario'}</p>
+              <div className="overflow-hidden">
+                {/* Email en negrita */}
+                <p className={`text-sm font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
+                  {email || 'Sin correo'}
+                </p>
               </div>
             </div>
-          
+                
             {/* Sección del Rol */}
             {role && (
               <div className="pt-2 border-t border-zinc-500/10 flex items-center justify-between text-xs">
