@@ -96,10 +96,15 @@ export default function Perfil() {
                 {name ? name.charAt(0).toUpperCase() : 'U'}
               </div>
               <div className="overflow-hidden">
-                <p className={`text-xs font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{name || 'Usuario'}</p>
-                <p className="text-[11px] truncate opacity-70">{email || 'Sin correo'}</p>
+                {/* Ahora el email va arriba con fuente destacada */}
+                <p className={`text-xs font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>{email || 'Sin correo'}</p>
+                
+                {/* El nombre/rol va abajo con opacidad */}
+                <p className="text-[11px] truncate opacity-70">{name || 'Usuario'}</p>
               </div>
             </div>
+          
+            {/* Sección del Rol */}
             {role && (
               <div className="pt-2 border-t border-zinc-500/10 flex items-center justify-between text-xs">
                 <span className="opacity-60 flex items-center gap-1">
