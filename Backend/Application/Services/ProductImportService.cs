@@ -5,6 +5,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
+using System.Text.RegularExpressions;
 
 namespace Application.Services;
 
@@ -24,10 +25,15 @@ public class ProductImportService : IProductImportService
         var mappings = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var cell in headerRow.Cells())
         {
-            var headerName = cell.GetValue<string>().Trim();
-            if (!string.IsNullOrEmpty(headerName) && !mappings.ContainsKey(headerName))
+            var rawHeader = cell.GetValue<string>();
+            if (string.IsNullOrWhiteSpace(rawHeader)) continue;
+
+            // Normalizamos el encabezado: minúsculas, sin espacios, sin acentos, sin guiones ni barras
+            var normalizedHeader = Regex.Replace(rawHeader.ToLowerInvariant(), @"[\s/\-_.]", "");
+
+            if (!mappings.ContainsKey(normalizedHeader))
             {
-                mappings[headerName] = cell.Address.ColumnNumber;
+                mappings[normalizedHeader] = cell.Address.ColumnNumber;
             }
         }
         return mappings;
@@ -70,9 +76,29 @@ public class ProductImportService : IProductImportService
 
         foreach (var row in rows)
         {
-            // Obtener datos de la fila de forma segura
-            string bc = mappings.ContainsKey("barcode") ? row.Cell(mappings["barcode"]).GetFormattedString().Trim() : "";
+            // Búsqueda flexible de columnas con normalización
+            string bc = mappings.ContainsKey("barcode") ? row.Cell(mappings["barcode"]).GetFormattedString().Trim() : 
+                        mappings.ContainsKey("codigo") ? row.Cell(mappings["codigo"]).GetFormattedString().Trim() : "";
             
+            string name = mappings.ContainsKey("name") ? row.Cell(mappings["name"]).GetValue<string>() :
+                          mappings.ContainsKey("nombredelproducto") ? row.Cell(mappings["nombredelproducto"]).GetValue<string>() :
+                          mappings.ContainsKey("nombre") ? row.Cell(mappings["nombre"]).GetValue<string>() : "Sin nombre";
+
+            string description = mappings.ContainsKey("description") ? row.Cell(mappings["description"]).GetValue<string>() :
+                                 mappings.ContainsKey("descripcion") ? row.Cell(mappings["descripcion"]).GetValue<string>() : "";
+
+            decimal price = mappings.ContainsKey("price") ? row.Cell(mappings["price"]).GetValue<decimal>() :
+                            mappings.ContainsKey("precio") ? row.Cell(mappings["precio"]).GetValue<decimal>() : 0;
+
+            int stock = mappings.ContainsKey("stock") ? row.Cell(mappings["stock"]).GetValue<int>() : 0;
+
+            int minStock = mappings.ContainsKey("minimumstock") ? row.Cell(mappings["minimumstock"]).GetValue<int>() :
+                           mappings.ContainsKey("stockminimo") ? row.Cell(mappings["stockminimo"]).GetValue<int>() :
+                           mappings.ContainsKey("stockmin") ? row.Cell(mappings["stockmin"]).GetValue<int>() : 0;
+
+            string categoriaStr = mappings.ContainsKey("categoria") ? row.Cell(mappings["categoria"]).GetValue<string>() :
+                                  mappings.ContainsKey("category") ? row.Cell(mappings["category"]).GetValue<string>() : "Otros";
+
             // Verificar si el producto ya existe en la DB
             var existing = !string.IsNullOrEmpty(bc) 
                 ? await _productRepository.GetByBarcodeAndTenantAsync(bc, tenantId) 
@@ -81,14 +107,12 @@ public class ProductImportService : IProductImportService
             list.Add(new ProductPreviewDto
             {
                 Barcode = bc,
-                Name = mappings.ContainsKey("name") ? row.Cell(mappings["name"]).GetValue<string>() : "Sin nombre",
-                Description = mappings.ContainsKey("description") ? row.Cell(mappings["description"]).GetValue<string>() : "",
-                Price = mappings.ContainsKey("price") ? row.Cell(mappings["price"]).GetValue<decimal>() : 0,
-                Stock = mappings.ContainsKey("stock") ? row.Cell(mappings["stock"]).GetValue<int>() : 0,
-                MinimumStock = mappings.ContainsKey("minimumStock") ? row.Cell(mappings["minimumStock"]).GetValue<int>() : 0, // <--- Aquí corregido de MinStock a MinimumStock
-                Categoria = mappings.ContainsKey("categoria") 
-                    ? ParseCategory(row.Cell(mappings["categoria"]).GetValue<string>()) 
-                    : ProductCategory.Otros,
+                Name = name,
+                Description = description,
+                Price = price,
+                Stock = stock,
+                MinimumStock = minStock,
+                Categoria = ParseCategory(categoriaStr),
                 IsExisting = existing != null
             });
         }
