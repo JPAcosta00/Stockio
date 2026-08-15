@@ -12,7 +12,8 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Infraestructure.Services;
-using QuestPDF.Infrastructure;         //"infrastructure" xq en la libreria se llama asi
+using QuestPDF.Infrastructure;
+using Resend;         //"infrastructure" xq en la libreria se llama asi
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -117,6 +118,15 @@ builder.Services.AddScoped<IProviderRepository, ProviderRepository>();
 builder.Services.AddScoped<IProviderService, ProviderService>();
 builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
 builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
+
+// Configuración de Resend
+builder.Services.AddTransient<IResend, ResendClient>();
+builder.Services.AddHttpClient<ResendClient>();
+builder.Services.Configure<ResendClientOptions>(options =>
+{
+    options.ApiToken = builder.Configuration["ResendSettings:ApiKey"]!;
+});
+builder.Services.AddScoped<IEmailService, ResendEmailService>();
 
 builder.Services.AddHttpClient();
 

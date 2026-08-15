@@ -17,13 +17,15 @@ public class AuthService : IAuthService
     private readonly IJwtTokenBuilder _tokenBuilder;
     private readonly IConfiguration _configuration;
     private readonly IGenericRepository<Tenant> _tenantRepository;
+    private readonly IEmailService _emailService;
 
-    public AuthService(IUserRepository userRepository, IGenericRepository<Tenant> tenantRepository,IConfiguration configuration, IJwtTokenBuilder tokenBuilder)
+    public AuthService(IUserRepository userRepository, IGenericRepository<Tenant> tenantRepository,IConfiguration configuration, IJwtTokenBuilder tokenBuilder, IEmailService emailService)
     {
         _userRepository = userRepository;
         _configuration = configuration;
         _tokenBuilder = tokenBuilder;
         _tenantRepository = tenantRepository;
+        _emailService = emailService;
     }
 
     public async Task<Guid> RegisterAsync(RegisterDto dto){
@@ -110,7 +112,8 @@ public class AuthService : IAuthService
         await _userRepository.SaveChangesAsync();
     }
 
-    public async Task GenerateResetTokenAsync(string email){
+    public async Task GenerateResetTokenAsync(string email)
+    {
         // Usa GetByEmailAsync que ignora QueryFilters por si el usuario aún no tiene tenant resoluble
         var user = await _userRepository.GetByEmailAsync(email);
 
@@ -129,9 +132,23 @@ public class AuthService : IAuthService
 
         await _userRepository.SaveChangesAsync();
 
-        // TODO: Enviar correo electrónico con el token o enlace
-        // Ej: https://tu-frontend.com/reset-password?token={token}
-        Console.WriteLine($"Token de recuperación para {user.Email}: {token}");
+        var resetLink = $"https://sistema-stock-saa-s-gjff-gl43v0jfw-jpacosta00s-projects.vercel.app/reset-password?token={token}";
+
+        var subject = "Recuperación de Contraseña - Stockio";
+        var body = $@"
+            <div style='font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
+                <h2 style='color: #5BA535;'>Recuperación de Contraseña</h2>
+                <p>Hola, <strong>{user.Username ?? "Usuario"}</strong>.</p>
+                <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
+                <p>Hacé clic en el siguiente botón para crear una nueva contraseña (este enlace expira en 1 hora):</p>
+                <div style='text-align: center; margin: 30px 0;'>
+                    <a href='{resetLink}' style='background-color: #5BA535; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Restablecer Contraseña</a>
+                </div>
+                <p style='color: #666; font-size: 12px;'>Si no solicitaste este cambio, podés ignorar este correo de forma segura.</p>
+            </div>
+        ";
+
+        await _emailService.SendEmailAsync(user.Email, subject, body);
     }
     
     public async Task<bool> ResetPasswordAsync(ResetPasswordDto dto)
