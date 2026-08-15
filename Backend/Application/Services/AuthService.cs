@@ -133,7 +133,7 @@ public class AuthService : IAuthService
         await _userRepository.SaveChangesAsync();
 
         var resetLink = $"https://sistema-stock-saa-s-gjff-gl43v0jfw-jpacosta00s-projects.vercel.app/reset-password?token={token}";
-
+        
         var subject = "Recuperación de Contraseña - Stockio";
         var body = $@"
             <div style='font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
