@@ -24,25 +24,35 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [resetEmail, setResetEmail] = useState('');
-  const [token, setToken] = useState('');
+
+  // 1. Inicializamos 'token' y 'view' síncronamente desde el primer render leyendo la URL
+  const [token, setToken] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token') || '';
+  });
+
   const [newPassword, setNewPassword] = useState('');
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const [view, setView] = useState('login');
+  const [view, setView] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('token') ? 'reset' : 'login';
+  });
 
   const { login } = useAuth();
   const { darkMode } = useTheme();
 
-  // Detectar si el usuario llegó mediante el enlace del correo con un token en la URL
+  // Mantenemos el useEffect como respaldo por si la navegación interna cambia la URL
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const tokenUrl = queryParams.get('token');
+    
     if (tokenUrl) {
       setToken(tokenUrl);
-      setView('reset'); // Cambia automáticamente a la vista de nueva contraseña
+      setView('reset');
     }
   }, []);
 
@@ -81,7 +91,6 @@ export default function Login() {
     try {
       const response = await apiClient.post('/auth/forgot-password', { email: resetEmail });
       setSuccessMsg(response.data?.message || 'Si el correo está registrado, recibirás las instrucciones.');
-      // Opcional: limpiar el campo de email de recuperación
       setResetEmail('');
     } catch (err) {
       console.error(err);
