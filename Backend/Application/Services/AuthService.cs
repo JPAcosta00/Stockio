@@ -116,37 +116,40 @@ public class AuthService : IAuthService
     {
         // Usa GetByEmailAsync que ignora QueryFilters por si el usuario aún no tiene tenant resoluble
         var user = await _userRepository.GetByEmailAsync(email);
-
+    
         if (user == null || !user.IsActive) 
         {
             // Retornamos sin lanzar excepción por motivos de seguridad (evitar enumeración de emails)
             return; 
         }
-
-        // Genera un token aleatorio seguro de 64 bytes codificado en Base64 URL-safe
+    
+        // Genera un token aleatorio seguro de 64 bytes codificado en Hexadecimal
         var tokenBytes = RandomNumberGenerator.GetBytes(64);
         var token = Convert.ToHexString(tokenBytes);
-
+    
         // Asigna el token y define expiración (ej. 1 hora)
         user.SetResetToken(token, DateTime.UtcNow.AddHours(1));
-
+    
         await _userRepository.SaveChangesAsync();
-
-        var resetLink = $"https://sistema-stock-saa-s-gjff-gl43v0jfw-jpacosta00s-projects.vercel.app/?token={token}";        
+    
+        // El cuerpo ahora contiene el token en texto plano sin enlaces
         var subject = "Recuperación de Contraseña - Stockio";
         var body = $@"
             <div style='font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
                 <h2 style='color: #5BA535;'>Recuperación de Contraseña</h2>
                 <p>Hola, <strong>{user.Username ?? "Usuario"}</strong>.</p>
                 <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
-                <p>Hacé clic en el siguiente botón para crear una nueva contraseña (este enlace expira en 1 hora):</p>
-                <div style='text-align: center; margin: 30px 0;'>
-                    <a href='{resetLink}' style='background-color: #5BA535; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Restablecer Contraseña</a>
+                <p>Tu código de seguridad para restablecer la contraseña es:</p>
+                
+                <div style='text-align: center; margin: 30px 0; padding: 20px; background-color: #f4f4f4; border: 2px dashed #5BA535; border-radius: 8px;'>
+                    <span style='font-size: 24px; font-weight: bold; color: #333; letter-spacing: 2px;'>{token}</span>
                 </div>
+                
+                <p>Copiá este código y pegalo en la pantalla de recuperación de la aplicación. Este código expira en 1 hora.</p>
                 <p style='color: #666; font-size: 12px;'>Si no solicitaste este cambio, podés ignorar este correo de forma segura.</p>
             </div>
         ";
-
+    
         await _emailService.SendEmailAsync(user.Email, subject, body);
     }
     

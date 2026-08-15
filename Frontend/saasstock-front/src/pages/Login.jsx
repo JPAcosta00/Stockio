@@ -90,8 +90,13 @@ export default function Login() {
 
     try {
       const response = await apiClient.post('/auth/forgot-password', { email: resetEmail });
-      setSuccessMsg(response.data?.message || 'Si el correo está registrado, recibirás las instrucciones.');
-      setResetEmail('');
+      setSuccessMsg('¡Correo enviado! Revisá tu bandeja de entrada para ver el código.');
+      
+      setTimeout(() => {
+        setView('reset');
+        setSuccessMsg('');
+      }, 1500);
+
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Error al procesar la solicitud.');
