@@ -116,22 +116,22 @@ public class AuthService : IAuthService
     {
         // Usa GetByEmailAsync que ignora QueryFilters por si el usuario aún no tiene tenant resoluble
         var user = await _userRepository.GetByEmailAsync(email);
-    
+
         if (user == null || !user.IsActive) 
         {
             // Retornamos sin lanzar excepción por motivos de seguridad (evitar enumeración de emails)
             return; 
         }
-    
+
         // Genera un token aleatorio seguro de 64 bytes codificado en Hexadecimal
         var tokenBytes = RandomNumberGenerator.GetBytes(64);
         var token = Convert.ToHexString(tokenBytes);
-    
+
         // Asigna el token y define expiración (ej. 1 hora)
         user.SetResetToken(token, DateTime.UtcNow.AddHours(1));
-    
+
         await _userRepository.SaveChangesAsync();
-    
+
         // El cuerpo ahora contiene el token en texto plano sin enlaces
         var subject = "Recuperación de Contraseña - Stockio";
         var body = $@"
@@ -140,16 +140,17 @@ public class AuthService : IAuthService
                 <p>Hola, <strong>{user.Username ?? "Usuario"}</strong>.</p>
                 <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta.</p>
                 <p>Tu código de seguridad para restablecer la contraseña es:</p>
-                
+                <h2 style='color: red;'>¡TEST: ESTA ES LA NUEVA VERSIÓN DEL CORREO!</h2>
+
                 <div style='text-align: center; margin: 30px 0; padding: 20px; background-color: #f4f4f4; border: 2px dashed #5BA535; border-radius: 8px;'>
                     <span style='font-size: 24px; font-weight: bold; color: #333; letter-spacing: 2px;'>{token}</span>
                 </div>
-                
+
                 <p>Copiá este código y pegalo en la pantalla de recuperación de la aplicación. Este código expira en 1 hora.</p>
                 <p style='color: #666; font-size: 12px;'>Si no solicitaste este cambio, podés ignorar este correo de forma segura.</p>
             </div>
         ";
-    
+
         await _emailService.SendEmailAsync(user.Email, subject, body);
     }
     
