@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import apiClient from '../api/apiClient';
@@ -36,6 +36,16 @@ export default function Login() {
   const { login } = useAuth();
   const { darkMode } = useTheme();
 
+  // Detectar si el usuario llegó mediante el enlace del correo con un token en la URL
+  useEffect(() => {
+    const queryParams = new URLSearchParams(window.location.search);
+    const tokenUrl = queryParams.get('token');
+    if (tokenUrl) {
+      setToken(tokenUrl);
+      setView('reset'); // Cambia automáticamente a la vista de nueva contraseña
+    }
+  }, []);
+
   const switchView = (newView) => {
     setError('');
     setSuccessMsg('');
@@ -71,7 +81,8 @@ export default function Login() {
     try {
       const response = await apiClient.post('/auth/forgot-password', { email: resetEmail });
       setSuccessMsg(response.data?.message || 'Si el correo está registrado, recibirás las instrucciones.');
-      setView('reset');
+      // Opcional: limpiar el campo de email de recuperación
+      setResetEmail('');
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'Error al procesar la solicitud.');
@@ -94,7 +105,11 @@ export default function Login() {
       setSuccessMsg('¡Contraseña actualizada correctamente! Ya podés iniciar sesión.');
       setToken('');
       setNewPassword('');
-      switchView('login');
+      // Limpiar la URL para quitar el token por seguridad/estética
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => {
+        switchView('login');
+      }, 3000);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.message || 'El token es inválido o ha expirado.');
@@ -107,7 +122,7 @@ export default function Login() {
     <div 
       className="min-h-screen w-full flex flex-col lg:flex-row items-center justify-between bg-cover bg-center bg-no-repeat p-4 md:p-8 lg:p-12 relative overflow-y-auto text-zinc-900 dark:text-zinc-100 selection:bg-[#5BA535] selection:text-white transition-colors duration-300"
       style={{ backgroundImage: `url(${bgLogin})` }}
-    >    
+    >   
       {/* ESPACIO PARA PC: SECCIÓN IZQUIERDA AMPLIADA PARA EMPUJAR MÁS EL MODAL A LA DERECHA */}
       <div className="w-full lg:w-[50%] hidden lg:block" aria-hidden="true" />
 
@@ -242,13 +257,13 @@ export default function Login() {
             </>
           )}
 
-          {/* VISTA 2: RECUPERACIÓN */}
+          {/* VISTA 2: RECUPERACIÓN (Pide el email para mandar el correo) */}
           {view === 'forgot' && (
             <>
               <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-white tracking-tight">Recuperar Contraseña</h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Ingresá tu correo para enviarte el código de recuperación.
+                  Ingresá tu correo para enviarte las instrucciones.
                 </p>
               </div>
 
@@ -278,7 +293,7 @@ export default function Login() {
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Enviando código...</span>
+                      <span>Enviando correo...</span>
                     </>
                   ) : (
                     'Solicitar Recuperación'
@@ -299,20 +314,20 @@ export default function Login() {
             </>
           )}
 
-          {/* VISTA 3: NUEVA CONTRASEÑA */}
+          {/* VISTA 3: NUEVA CONTRASEÑA (Llega aquí automáticamente al hacer clic en el mail) */}
           {view === 'reset' && (
             <>
               <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-white tracking-tight">Nueva Contraseña</h2>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Ingresá el token recibido y definí tu nueva clave.
+                  Definí tu nueva clave de acceso.
                 </p>
               </div>
 
               <form onSubmit={handleResetPasswordSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-zinc-400 mb-1.5 uppercase tracking-wider">
-                    Código de Recuperación
+                    Código / Token de Recuperación
                   </label>
                   <div className="relative">
                     <KeyRound className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -320,7 +335,7 @@ export default function Login() {
                       type="text"
                       required
                       className="w-full bg-[#09090B] border border-zinc-800 text-zinc-100 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-[#5BA535] transition-all placeholder:text-zinc-600"
-                      placeholder="Pegá el token aquí"
+                      placeholder="Token detectado automáticamente"
                       value={token}
                       onChange={(e) => setToken(e.target.value)}
                     />
