@@ -35,34 +35,43 @@ public class CajaService : ICajaService
 
     public async Task<CajaActivaResponseDto> AbrirCajaAsync(Guid tenantId, Guid usuarioId, decimal montoInicial)
     {
-        // Validar que no exista una caja abierta activa para este Tenant
-        var cajaExistente = await _cajaRepository.GetActivaByTenantAsync(tenantId);
-        if (cajaExistente != null)
+        try
         {
-            throw new InvalidOperationException("Ya existe una caja abierta para este negocio.");
+            // 1. Validar que no exista una caja abierta activa para este Tenant
+            var cajaExistente = await _cajaRepository.GetActivaByTenantAsync(tenantId);
+            if (cajaExistente != null)
+            {
+                throw new InvalidOperationException("Ya existe una caja abierta para este negocio.");
+            }
+    
+            if (montoInicial < 0)
+            {
+                throw new InvalidOperationException("El monto inicial no puede ser negativo.");
+            }
+    
+            // Crear la entidad Caja
+            var nuevaCaja = new Caja
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                UsuarioId = usuarioId,
+                IsOpen = true,
+                MontoInicial = montoInicial,
+                FechaApertura = DateTime.UtcNow,
+                Movimientos = new List<MovimientoCaja>()
+            };
+    
+            await _cajaRepository.AddAsync(nuevaCaja);
+            await _cajaRepository.SaveChangesAsync();
+    
+            return MapearACajaActivaDto(nuevaCaja, 0, 0, 0);
         }
-
-        if (montoInicial < 0)
+        catch (Exception ex)
         {
-            throw new InvalidOperationException("El monto inicial no puede ser negativo.");
+            // 👈 ESTO TE VA A TIRAR LA VERDAD EN LA CONSOLA DE VISUAL STUDIO / TERMINAL
+            System.Diagnostics.Debug.WriteLine($"ERROR REAL EN ABRIR CAJA: {ex.Message} --- INNER: {ex.InnerException?.Message}");
+            throw; // Deja que siga tirando el 500 pero ya lo habrás visto impreso
         }
-
-        // Crear la entidad Caja
-        var nuevaCaja = new Caja
-        {
-            Id = Guid.NewGuid(),
-            TenantId = tenantId,
-            UsuarioId = usuarioId,
-            IsOpen = true,
-            MontoInicial = montoInicial,
-            FechaApertura = DateTime.UtcNow,
-            Movimientos = new List<MovimientoCaja>()
-        };
-
-        await _cajaRepository.AddAsync(nuevaCaja);
-        await _cajaRepository.SaveChangesAsync();
-
-        return MapearACajaActivaDto(nuevaCaja, 0, 0, 0);
     }
 
     public async Task<CajaHistorialDto> CerrarCajaAsync(Guid tenantId, Guid usuarioId, CerrarCajaDto datosDeCierre)

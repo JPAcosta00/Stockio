@@ -14,14 +14,16 @@ public class GlobalExceptionHandler : IExceptionHandler
         _logger = logger;
     }
 
-    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,CancellationToken cancellationToken){
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
         var statusCode = (int)HttpStatusCode.InternalServerError;
         var title = "Error Interno del Servidor";
         var detail = "Ocurrió un error inesperado en nuestro sistema. Por favor, intente más tarde.";
         Dictionary<string, string[]>? validationErrors = null;
 
         // Manejo de errores de validación de datos 
-        if (exception is ValidationException validationException){
+        if (exception is ValidationException validationException)
+        {
             statusCode = (int)HttpStatusCode.BadRequest;
             title = "Error de Validación";
             detail = "Uno o más campos no cumplen con las reglas del sistema.";
@@ -34,7 +36,7 @@ public class GlobalExceptionHandler : IExceptionHandler
                     g => g.Select(e => e.ErrorMessage).ToArray()
                 );
         }
-        //Manejo de accesos no autorizados
+        // Manejo de accesos no autorizados
         else if (exception is UnauthorizedAccessException)
         {
             statusCode = (int)HttpStatusCode.Unauthorized;
@@ -48,13 +50,20 @@ public class GlobalExceptionHandler : IExceptionHandler
             title = "Registro Duplicado";
             detail = "El código de barras ya se encuentra registrado para este comercio.";
         }
-        // Cualquier otro error inesperado de código o base de datos
+        // Cualquier otro error inesperado de código o base de datos (MODIFICADO PARA VER EL ERROR REAL)
         else
         {
             _logger.LogError(exception, "Excepción no controlada: {Message}", exception.Message);
+            
+            // Muestra el error exacto y su InnerException en la respuesta para facilitar la depuración
+            detail = exception.Message;
+            if (exception.InnerException != null)
+            {
+                detail += " -> Inner: " + exception.InnerException.Message;
+            }
         }
 
-        // estructura estándar de errores
+        // Estructura estándar de errores
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
@@ -64,7 +73,8 @@ public class GlobalExceptionHandler : IExceptionHandler
         };
 
         // Si existen errores de FluentValidation, se inyectan en la respuesta
-        if (validationErrors != null){
+        if (validationErrors != null)
+        {
             problemDetails.Extensions["errors"] = validationErrors;
         }
 
