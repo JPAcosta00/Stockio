@@ -33,7 +33,7 @@ namespace Application.Services
 
             // 2. Verificar si ya existe uno con el mismo nombre y teléfono (o puedes ajustar la regla si es O / AND)
             bool providerExists = existingProviders.Any(p => 
-                p.Name.Equals(provider.Name, StringComparison.OrdinalIgnoreCase) && 
+                p.Name.Equals(provider.Name, StringComparison.OrdinalIgnoreCase) || 
                 p.Phone == provider.Phone);
 
             if (providerExists)
