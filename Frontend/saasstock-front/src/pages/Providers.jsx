@@ -266,51 +266,53 @@ export default function Providers() {
                         <td className={`py-3 px-3.5 font-semibold font-mono ${darkMode ? 'text-emerald-400' : 'text-emerald-600'}`}>
                           ${provider.accountBalance?.toLocaleString('es-AR', { minimumFractionDigits: 2 }) ?? '0.00'}
                         </td>
-                        <td className="py-3 px-3.5 text-right space-x-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button 
-                            onClick={() => {
-                              setSelectedProviderForInvoice(provider.id);
-                              setIsInvoiceModalOpen(true);
-                            }}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer text-[#5BA535] ${
-                              darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
-                            }`}
-                            title="Registrar Factura de Compra"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleOpenDetailModal(provider)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
-                              darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
-                            }`}
-                            title="Ver Cuenta Corriente y Facturas"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleOpenEditModal(provider)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                            }`}
-                            title="Editar"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </button>
-                          <button 
+                        <td className="py-3 px-3.5 text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button 
+                              onClick={() => {
+                                setSelectedProviderForInvoice(provider.id);
+                                setIsInvoiceModalOpen(true);
+                              }}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer text-[#5BA535] ${
+                                darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
+                              }`}
+                              title="Registrar Factura de Compra"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleOpenDetailModal(provider)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 ${
+                                darkMode ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-slate-100 hover:bg-slate-200'
+                              }`}
+                              title="Ver Cuenta Corriente y Facturas"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleOpenEditModal(provider)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                              }`}
+                              title="Editar"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
                               onClick={(e) => handleDelete(provider.id, e)}
                               className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
                                   deletingId === provider.id 
                                       ? (darkMode ? 'bg-rose-600 text-white animate-pulse' : 'bg-rose-600 text-white animate-pulse') 
                                       : (darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600')
                               }`}
-                              title={deletingId === provider.Id ? "Haz clic de nuevo para confirmar" : "Eliminar"}
-                          >
+                              title={deletingId === provider.id ? "Haz clic de nuevo para confirmar" : "Eliminar"}
+                            >
                               <Trash2 className="w-4 h-4" />
                               {deletingId === provider.id && (
                                   <span className="text-xs font-semibold pr-1">¿Confirmar?</span>
                               )}
-                          </button>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
