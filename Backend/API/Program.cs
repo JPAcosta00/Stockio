@@ -26,12 +26,22 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Configuration.Sources.Clear();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false) // <-- Cambiado a false para evitar problemas en Docker/Render
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false) // <-- Cambiado a false
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
     .AddEnvironmentVariables();
 
 // --- CONFIGURACIÓN DUAL DE BASE DE DATOS (MySQL / SQLite) ---
-var dbProvider = builder.Configuration["DatabaseSettings:Provider"] ?? "Sqlite";
+var dbProvider = builder.Configuration["DatabaseSettings:Provider"];
+
+// Si estamos en Producción (Render) y no está especificado, forzamos MySql de forma segura
+if (builder.Environment.IsProduction() && string.IsNullOrEmpty(dbProvider))
+{
+    dbProvider = "MySql";
+}
+else if (string.IsNullOrEmpty(dbProvider))
+{
+    dbProvider = "Sqlite";
+}
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -45,7 +55,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     }
     else
     {
-        // Creamos la ruta absoluta y segura en la carpeta de datos del usuario
+        // Creamos la ruta absoluta y segura en la carpeta de datos del usuario para el .exe offline
         var folder = Environment.SpecialFolder.LocalApplicationData;
         var path = Environment.GetFolderPath(folder);
         var dbDirectory = Path.Combine(path, "Stockio");
