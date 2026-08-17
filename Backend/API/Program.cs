@@ -15,7 +15,7 @@ using Infraestructure.Services;
 using QuestPDF.Infrastructure;
 using Infraestructure;
 using Resend;
-using Microsoft.Extensions.FileProviders; // <-- Necesario para la ruta física del wwwroot
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -50,10 +50,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         var path = Environment.GetFolderPath(folder);
         var dbDirectory = Path.Combine(path, "Stockio");
         
-        // Nos aseguramos de que la carpeta física exista
         Directory.CreateDirectory(dbDirectory);
         
-        // Usamos el nombre que tenías en tu appsettings ("stockio_offline.db") pero en una ruta con permisos
         var dbPath = Path.Combine(dbDirectory, "stockio_offline.db");
         options.UseSqlite($"Data Source={dbPath}");
     }
@@ -112,12 +110,8 @@ builder.Services.AddAuthentication(options =>
             System.Text.Encoding.UTF8.GetBytes(jwtSettings["Secret"]!))
     };
 });
+
 builder.Services.AddControllers();
-// La API no sabe qué base de datos es, solo le pide a Infrastructure que se configure
-builder.Services.AddInfrastructureServices(builder.Configuration);
-// Para múltiples tenants
-builder.Services.AddHttpContextAccessor(); 
-builder.Services.AddScoped<ITenantProvider, TenantProvider>();
 
 // --- REPOSITORIOS Y SERVICIOS ---
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -138,6 +132,9 @@ builder.Services.AddScoped<IProviderRepository, ProviderRepository>();
 builder.Services.AddScoped<IProviderService, ProviderService>();
 builder.Services.AddScoped<IPurchaseInvoiceRepository, PurchaseInvoiceRepository>();
 builder.Services.AddScoped<IPurchaseInvoiceService, PurchaseInvoiceService>();
+
+builder.Services.AddHttpContextAccessor(); 
+builder.Services.AddScoped<ITenantProvider, TenantProvider>();
 
 // Configuración de Resend
 builder.Services.AddTransient<IResend, ResendClient>();
@@ -171,10 +168,10 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Inicialización automática de la base de datos local o en la nube
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // Si usas SQLite y el archivo no existe, creará el archivo y las tablas por ti
     dbContext.Database.EnsureCreated(); 
 }
 
@@ -182,15 +179,13 @@ app.UseCors("AllowAll");
 
 app.UseExceptionHandler();
 
+// Opcional: si quieres que Swagger solo esté disponible en desarrollo, puedes envolverlo en if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
-// Redirige cualquier ruta desconocida al index.html para que React maneje el enrutamiento
-app.MapFallbackToFile("index.html");
 
 // --- CONFIGURACIÓN ROBUSTA DE ARCHIVOS ESTÁTICOS Y SPA ---
-// Asegura que lea la carpeta wwwroot exactamente donde corre el ejecutable compilado (.exe)
 var webRootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
 if (Directory.Exists(webRootPath))
 {
@@ -202,7 +197,7 @@ if (Directory.Exists(webRootPath))
 }
 else
 {
-    app.UseStaticFiles(); // Comportamiento por defecto como respaldo
+    app.UseStaticFiles();
 }
 
 app.UseRouting();
@@ -212,7 +207,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// Fallback SPA para el enrutamiento de React (redirige al index.html si no es una ruta de API)
+// Fallback SPA para el enrutamiento de React
 app.MapFallbackToFile("index.html", new StaticFileOptions
 {
     FileProvider = Directory.Exists(webRootPath) ? new PhysicalFileProvider(webRootPath) : app.Environment.WebRootFileProvider

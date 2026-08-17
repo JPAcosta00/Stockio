@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq; // <-- ¡Este era el que faltaba para usar .Any()!
 using System.Threading.Tasks;
 using Domain.Entities;
 using Domain.Interfaces;
-using Application.Interfaces; // Asegurate de importar la interfaz del servicio
+using Application.Interfaces;
 
 namespace Application.Services
 {
@@ -28,20 +29,28 @@ namespace Application.Services
 
         public async Task CreateProviderAsync(Provider provider, Guid tenantId)
         {
-            // 1. Obtener todos los proveedores actuales del tenant para validar duplicados
+            // 1. Obtener todos los proveedores actuales del tenant
             var existingProviders = await _providerRepository.GetAllAsync(tenantId);
 
-            // 2. Verificar si ya existe uno con el mismo nombre y teléfono (o puedes ajustar la regla si es O / AND)
-            bool providerExists = existingProviders.Any(p => 
-                p.Name.Equals(provider.Name, StringComparison.OrdinalIgnoreCase) || 
-                p.Phone == provider.Phone);
+            // 2. Verificar duplicados (Validando que el teléfono no se repita)
+            // Nota: Agregamos una verificación para asegurarnos de que el teléfono no sea nulo o vacío si permites varios vacíos.
+            bool phoneExists = !string.IsNullOrWhiteSpace(provider.Phone) && 
+                               existingProviders.Any(p => p.Phone == provider.Phone);
 
-            if (providerExists)
+            bool nameExists = existingProviders.Any(p => 
+                               p.Name.Equals(provider.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (phoneExists)
             {
-                throw new InvalidOperationException("Ya existe un proveedor registrado con ese mismo nombre y número de teléfono.");
+                throw new InvalidOperationException("Ya existe un proveedor registrado con ese mismo número de teléfono.");
             }
 
-            // 3. Si no existe, continúa con la creación normal
+            if (nameExists)
+            {
+                throw new InvalidOperationException("Ya existe un proveedor registrado con ese mismo nombre.");
+            }
+
+            // 3. Si pasa las validaciones, continúa con la creación
             provider.Id = Guid.NewGuid();
             provider.TenantId = tenantId;
             provider.CreatedAt = DateTime.UtcNow;
@@ -55,6 +64,9 @@ namespace Application.Services
             var existing = await _providerRepository.GetByIdAsync(provider.Id, tenantId);
             if (existing == null)
                 throw new Exception("Proveedor no encontrado");
+
+            // Opcional: Podrías agregar validación de teléfono duplicado también aquí al actualizar,
+            // asegurándote de que el teléfono pertenezca al mismo proveedor o no esté en uso por otro.
 
             existing.Name = provider.Name;
             existing.ContactName = provider.ContactName;

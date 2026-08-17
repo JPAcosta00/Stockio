@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout'; 
 import apiClient from '../api/apiClient';
-import { User, Shield, LogOut, Loader2, BadgeCheck } from "lucide-react";
+import { User, Shield, LogOut, Loader2, BadgeCheck, Download, Database } from "lucide-react";
 
 export default function Perfil() {
   const { user, logout } = useAuth();
@@ -20,12 +20,12 @@ export default function Perfil() {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [loading, setLoading] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       setName(user.name || '');
       setEmail(user.email || '');
-      // Extraemos el rol del token/usuario (adaptado según cómo lo guardes: role, rol, etc.)
       const userRole = user.role || user.rol || '';
       setRole(userRole);
     }
@@ -68,6 +68,29 @@ export default function Perfil() {
     }
   };
 
+  const handleDownloadBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const response = await apiClient.get('/backup/download', {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `stockio_backup_${new Date().toISOString().slice(0, 10)}.db`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      showAlert('Respaldo descargado con éxito.', 'success');
+    } catch (err) {
+      showAlert(err.response?.data?.message || 'Error al descargar el respaldo o no estás usando la versión offline.', 'error');
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -92,7 +115,6 @@ export default function Perfil() {
             darkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-300' : 'bg-white border-zinc-200 text-slate-800'
           }`}>
             <div className="flex items-center gap-3 overflow-hidden">
-              {/* Avatar con iniciales del mail */}
               <div className="w-9 h-9 rounded-full bg-[#5BA535]/20 flex items-center justify-center text-[#5BA535] font-bold text-sm shrink-0 uppercase">
                 {email 
                   ? email.split('@')[0].split('.').map(part => part.charAt(0)).join('').substring(0, 2) 
@@ -100,14 +122,12 @@ export default function Perfil() {
               </div>
                 
               <div className="overflow-hidden">
-                {/* Email en negrita */}
                 <p className={`text-sm font-bold truncate ${darkMode ? 'text-white' : 'text-zinc-900'}`}>
                   {email || 'Sin correo'}
                 </p>
               </div>
             </div>
                 
-            {/* Sección del Rol */}
             {role && (
               <div className="pt-2 border-t border-zinc-500/10 flex items-center justify-between text-xs">
                 <span className="opacity-60 flex items-center gap-1">
@@ -149,6 +169,20 @@ export default function Perfil() {
             >
               <Shield className="w-4 h-4" />
               <span>Seguridad</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('backup')}
+              className={`flex-1 lg:flex-none flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                activeTab === 'backup' 
+                  ? 'bg-[#5BA535]/15 text-[#5BA535] border border-[#5BA535]/30' 
+                  : darkMode 
+                    ? 'text-zinc-400 hover:text-white hover:bg-zinc-800/50' 
+                    : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              <span>Respaldo</span>
             </button>
           </div>
 
@@ -270,6 +304,38 @@ export default function Perfil() {
               </form>
             </div>
           )}
+
+          {activeTab === 'backup' && (
+            <div className="space-y-6">
+              <h3 className={`text-lg font-bold tracking-tight border-b pb-4 ${
+                darkMode ? 'text-white border-zinc-800' : 'text-zinc-900 border-zinc-200'
+              }`}>Respaldo de Base de Datos Offline</h3>
+              
+              <div className="space-y-4">
+                <p className={`text-sm ${darkMode ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                  Descarga una copia de seguridad de tu base de datos local (<code className="text-[#5BA535] font-mono">.db</code>). Esta opción está disponible cuando ejecutas el sistema en modo sin internet (SQLite).
+                </p>
+
+                <div className={`p-4 rounded-xl border ${darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-400' : 'bg-zinc-50 border-zinc-200 text-zinc-500'} text-xs space-y-1`}>
+                  <p className="font-semibold">💡 Consejo:</p>
+                  <p>Guarda este archivo en un pendrive o ubicación segura regularmente para no perder registros de stock ni ventas si la computadora sufre algún daño.</p>
+                </div>
+
+                <div className={`flex justify-end pt-4 border-t ${darkMode ? 'border-zinc-800' : 'border-zinc-200'}`}>
+                  <button 
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    disabled={backupLoading} 
+                    className="bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-95 text-white font-medium px-5 py-2.5 rounded-xl transition-all text-sm flex items-center gap-2 shadow-lg shadow-[#5BA535]/15 cursor-pointer disabled:opacity-50"
+                  >
+                    {backupLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    {backupLoading ? 'Generando Respaldo...' : 'Descargar Respaldo (.db)'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

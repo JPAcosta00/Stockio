@@ -1,7 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// El tiempo de inactividad por defecto es de 10 minutos
 const TIMEOUT_IN_MS = 10 * 60 * 1000; 
 
 export default function useAutoLogout() {
@@ -9,32 +8,31 @@ export default function useAutoLogout() {
 
   const logout = useCallback(() => {
     console.log("Cerrando sesión por inactividad...");
-
-    //Se limpian las credenciales almacenadas
     localStorage.removeItem('token');
     localStorage.removeItem('user'); 
-    
-    // se redirige al Login
     navigate('/login');
-    
-    
     window.location.reload(); 
   }, [navigate]);
 
   useEffect(() => {
-    // Si no hay un token guardado, no tiene sentido activar el control
+    // 1. SI ESTÁ DESACTIVADO POR CONFIGURACIÓN, NO HACE NADA
+    // (Puedes controlar esto desde tu archivo .env con VITE_ENABLE_AUTO_LOGOUT=false)
+    const enableAutoLogout = import.meta.env.VITE_ENABLE_AUTO_LOGOUT;
+    if (enableAutoLogout === 'false') {
+      return; 
+    }
+
+    // 2. Si no hay un token guardado, tampoco tiene sentido
     const token = localStorage.getItem('token');
     if (!token) return;
 
     let timer;
 
-    // Función para reiniciar el contador de tiempo
     const resetTimer = () => {
       if (timer) clearTimeout(timer);
       timer = setTimeout(logout, TIMEOUT_IN_MS);
     };
 
-    // Eventos que muestran actividad del usuario
     const events = [
       'mousedown',
       'mousemove',
@@ -43,15 +41,12 @@ export default function useAutoLogout() {
       'touchstart'
     ];
 
-    // Registra los eventos en la ventana
     events.forEach(event => {
       window.addEventListener(event, resetTimer);
     });
 
-    //inicializa el contador cuando se monta el componente
     resetTimer();
 
-    // Limpia cuando se desmonta el componente 
     return () => {
       if (timer) clearTimeout(timer);
       events.forEach(event => {

@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Crea la instancia base de Axios apuntando a la API de .NET
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:7046/api', 
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', 
   headers: {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',

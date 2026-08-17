@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         username,
         email,
         password,
-        companyName
+        businessName: companyName
       });
     
       return { success: true, data: response.data };

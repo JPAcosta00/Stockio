@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite' // importo tailwind
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './', //  Permite que los archivos estáticos carguen bien desde wwwroot en .NET
   plugins: [
     react(),
     tailwindcss(),
