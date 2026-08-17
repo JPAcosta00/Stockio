@@ -29,6 +29,7 @@ export default function Providers() {
   const [selectedProvider, setSelectedProvider] = useState(null);
   const [providerInvoices, setProviderInvoices] = useState([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   // Estados para el modal de Carga de Factura de Compra
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -100,17 +101,31 @@ export default function Providers() {
   };
 
   const handleDelete = async (id, e) => {
-    e.stopPropagation();
-    if (!window.confirm('¿Estás seguro de eliminar este proveedor?')) return;
+      e.stopPropagation();
 
-    try {
-      await apiClient.delete(`/providers/${id}`);
-      showAlert('Proveedor eliminado correctamente', 'success');
-      fetchProviders();
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || err.message || 'No se pudo eliminar el proveedor';
-      showAlert(errorMsg, 'error');
-    }
+      // Si todavía no confirmó, activamos el estado de confirmación
+      if (deletingId !== id) {
+          setDeletingId(id);
+          showAlert('Haz clic de nuevo en eliminar para confirmar.', 'warning');
+
+          // Opcional: si pasa de 4 segundos sin reconfirmar, se le pasa el estado
+          setTimeout(() => {
+              setDeletingId((prev) => (prev === id ? null : prev));
+          }, 4000);
+          return;
+      }
+
+      // Si ya había hecho clic antes, procedemos a borrar
+      try {
+          await apiClient.delete(`/providers/${id}`);
+          showAlert('Proveedor eliminado correctamente', 'success');
+          setDeletingId(null);
+          fetchProviders();
+      } catch (err) {
+          const errorMsg = err.response?.data?.message || err.message || 'No se pudo eliminar el proveedor';
+          showAlert(errorMsg, 'error');
+          setDeletingId(null);
+      }
   };
 
   const handleMarkAsPaid = async (invoiceId) => {
@@ -283,13 +298,18 @@ export default function Providers() {
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={(e) => handleDelete(provider.id, e)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600'
-                            }`}
-                            title="Eliminar"
+                              onClick={(e) => handleDelete(provider.id, e)}
+                              className={`p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                                  deletingId === provider.id 
+                                      ? (darkMode ? 'bg-rose-600 text-white animate-pulse' : 'bg-rose-600 text-white animate-pulse') 
+                                      : (darkMode ? 'bg-red-950/40 hover:bg-red-900/60 text-red-400' : 'bg-red-50 hover:bg-red-100 text-red-600')
+                              }`}
+                              title={deletingId === provider.Id ? "Haz clic de nuevo para confirmar" : "Eliminar"}
                           >
-                            <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" />
+                              {deletingId === provider.id && (
+                                  <span className="text-xs font-semibold pr-1">¿Confirmar?</span>
+                              )}
                           </button>
                         </td>
                       </tr>
