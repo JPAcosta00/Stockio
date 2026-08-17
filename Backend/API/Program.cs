@@ -26,8 +26,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Configuration.Sources.Clear();
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false) // <-- Cambiado a false para evitar problemas en Docker/Render
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false) // <-- Cambiado a false
     .AddEnvironmentVariables();
 
 // --- CONFIGURACIÓN DUAL DE BASE DE DATOS (MySQL / SQLite) ---
@@ -179,7 +179,6 @@ app.UseCors("AllowAll");
 
 app.UseExceptionHandler();
 
-// Opcional: si quieres que Swagger solo esté disponible en desarrollo, puedes envolverlo en if (app.Environment.IsDevelopment())
 app.UseSwagger();
 app.UseSwaggerUI();
 
