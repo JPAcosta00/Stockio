@@ -53,8 +53,8 @@ const TicketModal = ({ venta, onClose }) => {
             </span>
           </div>
 
-          {/* ACCIONES */}
-          <div className="flex gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+          {/* ACCIONES - Se ocultan automáticamente al imprimir con print:hidden */}
+          <div className="flex gap-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 print:hidden">
             <button
               onClick={() => window.print()}
               className="flex-1 bg-gradient-to-r from-[#5BA535] to-[#1C562A] hover:opacity-90 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
@@ -74,4 +74,5 @@ const TicketModal = ({ venta, onClose }) => {
     </div>
   );
 };
+
 export default TicketModal;

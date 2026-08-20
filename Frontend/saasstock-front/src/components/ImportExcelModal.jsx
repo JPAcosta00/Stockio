@@ -38,16 +38,16 @@ export default function ImportExcelModal({
   useEffect(() => {
     if (isOpen) {
       setListaProductos(productosPreview.map(p => {
-        // Limpiamos el texto que viene del backend para compararlo sin importar acentos o mayúsculas
         const catOriginal = (p.categoria || 'Otros').toString().trim().toLowerCase();
         
-        // Buscamos si coincide con alguna de nuestras categorías disponibles
         const categoriaEncontrada = categoriasDisponibles.find(
           cat => cat.toLowerCase() === catOriginal
         ) || 'Otros';
 
         return { 
           ...p, 
+          // Forzamos el name a string aquí por si acaso viene como objeto o número
+          name: p.name ? String(p.name) : "", 
           precioFinal: Number(p.price || p.Price || 0),
           nuevoStock: Number(p.stock ?? p.Stock ?? 0),
           nuevoStockMin: Number(p.minimumStock ?? p.MinimumStock ?? p.minStock ?? 0),
@@ -79,16 +79,16 @@ export default function ImportExcelModal({
  const handleConfirmarImportacion = async () => {
     setImportando(true);
     try {
-      // Estructura adaptada al ProductImportDto del backend
       const payload = {
         productos: listaProductos.map(p => ({
           barcode: p.barcode,
-          name: p.name,
-          description: p.description || "",
+          // Aquí nos aseguramos de convertirlo a string antes de enviarlo al backend
+          name: String(p.name || ""), 
+          description: p.description ? String(p.description) : "",
           precioFinal: Number(p.precioFinal),
           nuevoStock: Number(p.nuevoStock),
           nuevoStockMin: Number(p.nuevoStockMin),
-          categoria: p.categoria // Envía el string (ej: "Bebida", "Lacteo", etc.)
+          categoria: p.categoria 
         })),
         actualizarExistentes: actualizarExistentes
       };
@@ -96,11 +96,7 @@ export default function ImportExcelModal({
       await apiClient.post('/products/import', payload);
 
       showAlert('Productos importados correctamente', 'success');
-      
-      if (onImportSuccess) {
-        onImportSuccess();
-      }
-      
+      if (onImportSuccess) onImportSuccess();
       onClose();
     } catch (error) {
       console.error(error);

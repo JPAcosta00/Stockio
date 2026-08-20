@@ -16,7 +16,9 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  TrendingUp
+  TrendingUp,
+  Plus,
+  Minus
 } from 'lucide-react';
 
 const getCartStorageKey = () => {
@@ -230,13 +232,27 @@ export default function Ventas() {
     const codigoLimpio = barcodeInput.trim();
     if (!codigoLimpio) return;
 
+    // Si hay sugerencias activas y el usuario hizo clic en "Añadir" sin elegir una,
+    // evitamos que rompa buscando un código de barras que es solo una letra.
+    if (sugerencias.length > 0) {
+      if (sugerencias.length === 1) {
+        agregarProductoAlCarrito(sugerencias[0]);
+      } else {
+        mostrarAlerta('Por favor, seleccione un producto específico de la lista desplegable.', 'warning');
+        setMostrarDropdown(true);
+      }
+      return;
+    }
+
     try {
       setBuscandoProducto(true);
       const response = await apiClient.get(`/products/barcode/${codigoLimpio}`);
-      agregarProductoAlCarrito(response.data);
+      if (response.data) {
+        agregarProductoAlCarrito(response.data);
+      }
     } catch (error) {
       console.error('Error al buscar por código:', error);
-      mostrarAlerta(error.response?.data?.message || 'El producto no existe o hubo un error.', 'error');
+      mostrarAlerta('El producto no existe o el código ingresado no es válido.', 'error');
     } finally {
       setBuscandoProducto(false);
       if (barcodeRef.current) barcodeRef.current.focus();
@@ -253,8 +269,9 @@ export default function Ventas() {
         return prevCarrito;
       }
 
-      if (nuevaCantidad <= 0) {
-        return prevCarrito.filter((i) => i.productId !== productId);
+      // El límite inferior es 1, no se borra al llegar a 0
+      if (nuevaCantidad < 1) {
+        return prevCarrito.map((i) => (i.productId === productId ? { ...i, quantity: 1 } : i));
       }
 
       return prevCarrito.map((i) => (i.productId === productId ? { ...i, quantity: nuevaCantidad } : i));
@@ -373,7 +390,7 @@ export default function Ventas() {
       
       {/* Alertas dinámicas */}
       {alerta && (
-        <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-lg transition-all animate-fade-in ${
+        <div className={`p-4 rounded-2xl border flex items-center justify-between gap-3 text-xs shadow-lg transition-all animate-fade-in[cite: 1] ${
           alerta.type === 'success' 
             ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' 
             : alerta.type === 'warning'
@@ -398,7 +415,7 @@ export default function Ventas() {
       )}
 
       {/* Header Unificado */}
-      <div className={`border p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors ${
+      <div className={`border p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-colors[cite: 1] ${
         darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
       }`}>
         <div className="flex items-center gap-4">
@@ -424,12 +441,12 @@ export default function Ventas() {
       {/* Main POS Interface */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Columna Izquierda: Input y Buscador de Artículos */}
-        <div className={`lg:col-span-4 border p-5 rounded-2xl h-fit space-y-5 relative shadow-xl transition-colors ${
+        {/* Columna Izquierda: Input y Buscador de Artículos (Buscador agrandado) */}
+        <div className={`lg:col-span-4 border p-5 rounded-2xl h-fit space-y-5 relative shadow-xl transition-colors[cite: 1] ${
           darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
         }`} ref={dropdownRef}>
           <div>
-            <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Busqueda de Producto</h2>
+            <h2 className={`text-xs font-bold uppercase tracking-wider ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>Búsqueda de Producto</h2>
             <p className={`text-[11px] mt-0.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>Escanee o busque por nombre.</p>
           </div>
 
@@ -437,7 +454,7 @@ export default function Ventas() {
             <div className="relative">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Barcode className="w-4 h-4 text-emerald-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Barcode className="w-5 h-5 text-emerald-500 absolute left-4 top-1/2 -translate-y-1/2" />
                   <input
                     ref={barcodeRef}
                     type="text"
@@ -446,7 +463,7 @@ export default function Ventas() {
                     onChange={(e) => setBarcodeInput(e.target.value)}
                     onFocus={() => sugerencias.length > 0 && setMostrarDropdown(true)}
                     disabled={enviando || buscandoProducto}
-                    className={`w-full pl-10 pr-3 py-3 rounded-xl border text-xs focus:outline-none focus:border-emerald-500 font-mono tracking-wider transition-colors ${
+                    className={`w-full pl-12 pr-4 py-4 rounded-xl border text-sm focus:outline-none focus:border-emerald-500 font-mono tracking-wider transition-colors[cite: 1] ${
                       darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 placeholder-zinc-600' : 'bg-zinc-50 border-zinc-200 text-zinc-900 placeholder-zinc-400'
                     }`}
                   />
@@ -454,15 +471,15 @@ export default function Ventas() {
                 <button
                   type="submit"
                   disabled={!barcodeInput.trim() || buscandoProducto || enviando}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-3 rounded-xl text-xs font-semibold transition-colors disabled:opacity-30 cursor-pointer shadow-lg shadow-emerald-600/15 shrink-0"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-xl text-sm font-semibold transition-colors disabled:opacity-30 cursor-pointer shadow-lg shadow-emerald-600/15 shrink-0 flex items-center justify-center"
                 >
-                  {buscandoProducto ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Añadir'}
+                  {buscandoProducto ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Añadir'}
                 </button>
               </div>
 
               {/* Dropdown de Sugerencias */}
               {mostrarDropdown && (
-                <div className={`absolute left-0 right-0 top-full mt-2 border rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto divide-y transition-colors ${
+                <div className={`absolute left-0 right-0 top-full mt-2 border rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto divide-y transition-colors[cite: 1] ${
                   darkMode ? 'bg-zinc-900 border-zinc-800 divide-zinc-800' : 'bg-white border-zinc-200 divide-zinc-100'
                 }`}>
                   {buscandoSugerencias ? (
@@ -509,7 +526,7 @@ export default function Ventas() {
         </div>
 
         {/* Columna Derecha: Mostrador Actual (Carrito) */}
-        <div className={`lg:col-span-8 border p-5 rounded-2xl flex flex-col justify-between shadow-xl transition-colors ${
+        <div className={`lg:col-span-8 border p-5 rounded-2xl flex flex-col justify-between shadow-xl transition-colors[cite: 1] ${
           darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
         }`}>
           <div className="flex flex-col">
@@ -588,14 +605,29 @@ export default function Ventas() {
                           {item.name} <span className={`block text-[10px] font-mono mt-0.5 ${darkMode ? 'text-zinc-500' : 'text-zinc-400'}`}>{item.barcode || 'S/C'}</span>
                         </td>
                         <td className="py-3 px-2 text-center">
-                          <input
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => modificarCantidad(item.productId, parseInt(e.target.value) || 0)}
-                            className={`w-16 text-center border rounded-xl p-1.5 font-mono text-xs focus:outline-none focus:border-emerald-500 ${
-                              darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-200' : 'bg-zinc-50 border-zinc-200 text-zinc-800'
-                            }`}
-                          />
+                          <div className="inline-flex items-center border rounded-xl overflow-hidden font-mono text-xs">
+                            <button
+                              type="button"
+                              onClick={() => modificarCantidad(item.productId, item.quantity - 1)}
+                              className={`p-1.5 transition-colors cursor-pointer ${
+                                darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                              }`}
+                            >
+                              <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className={`px-3 py-1 min-w-[32px] text-center font-bold ${darkMode ? 'bg-zinc-950 text-zinc-200' : 'bg-white text-zinc-800'}`}>
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => modificarCantidad(item.productId, item.quantity + 1)}
+                              className={`p-1.5 transition-colors cursor-pointer ${
+                                darkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                              }`}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </td>
                         <td className={`py-3 px-2 text-right font-mono ${darkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                         <td className={`py-3 px-2 text-right font-mono font-bold ${darkMode ? 'text-zinc-100' : 'text-zinc-900'}`}>${(item.quantity * item.unitPrice).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
@@ -626,7 +658,6 @@ export default function Ventas() {
             <button
               type="button"
               onClick={() => {
-                console.log('Abriendo modal de cobro...'); // Para verificar en consola (F12)
                 setMostrarModalCobro(true);
               }}
               disabled={carrito.length === 0 || enviando}
@@ -643,7 +674,7 @@ export default function Ventas() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Mitad Izquierda: Historial de Ventas */}
-        <div className={`border rounded-2xl p-5 space-y-4 shadow-xl transition-colors flex flex-col justify-between ${
+        <div className={`border rounded-2xl p-5 space-y-4 shadow-xl transition-colors flex flex-col justify-between[cite: 1] ${
           darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'
         }`}>
           <div>

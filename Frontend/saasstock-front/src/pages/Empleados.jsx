@@ -15,12 +15,10 @@ export default function EmpleadosPage() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Estados para Modal (Crear / Editar)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create');
   const [currentEmployeeId, setCurrentEmployeeId] = useState(null);
   
-  // Campos del formulario
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +29,6 @@ export default function EmpleadosPage() {
   const userRole = user?.role?.toLowerCase() || '';
   const isAdmin = userRole === 'admin';
 
-  // Cargar empleados al montar la página
   const fetchEmpleados = async () => {
     try {
       setLoading(true);
@@ -51,7 +48,6 @@ export default function EmpleadosPage() {
     fetchEmpleados();
   }, []);
 
-  // Filtrar empleados según la barra de búsqueda local
   const filteredEmpleados = empleados.filter((emp) => {
     const term = searchTerm.toLowerCase();
     const matchesName = emp.username?.toLowerCase().includes(term);
@@ -60,7 +56,6 @@ export default function EmpleadosPage() {
     return matchesName || matchesEmail || matchesCompany;
   });
 
-  // Abrir modal para Crear
   const handleOpenCreate = () => {
     setModalMode('create');
     setUsername('');
@@ -71,7 +66,6 @@ export default function EmpleadosPage() {
     setIsModalOpen(true);
   };
 
-  // Abrir modal para Editar
   const handleOpenEdit = (emp) => {
     setModalMode('edit');
     setCurrentEmployeeId(emp.id);
@@ -83,10 +77,16 @@ export default function EmpleadosPage() {
     setIsModalOpen(true);
   };
 
-  // Guardar (Crear o Editar)
   const handleSubmitForm = async (e) => {
     e.preventDefault();
     setFormError('');
+
+    // Validación estricta de tipos convertidos a String para evitar problemas entre number y string
+    if (modalMode === 'edit' && String(currentEmployeeId) === String(user?.id) && !isActive) {
+      setFormError('No puedes desactivar tu propio usuario activo.');
+      showAlert('No puedes desactivar tu propio usuario activo.', 'error');
+      return;
+    }
 
     try {
       if (modalMode === 'create') {
@@ -94,7 +94,7 @@ export default function EmpleadosPage() {
           username,
           email,
           password,
-          role: 'Empleado' // Forzado estáticamente por seguridad
+          role: 'Empleado'
         });
         showAlert("¡Empleado registrado con éxito!", "success");
       } else {
@@ -116,8 +116,12 @@ export default function EmpleadosPage() {
     }
   };
 
-  // Cambiar estado Activo/Inactivo
   const handleToggleStatus = async (id) => {
+    if (String(id) === String(user?.id)) {
+      showAlert("No puedes cambiar el estado de tu propio usuario activo.", "error");
+      return;
+    }
+
     try {
       await apiClient.patch(`/user/employees/${id}/toggle-status`, {});
       showAlert("Estado del empleado modificado con éxito.", "success");
@@ -130,7 +134,6 @@ export default function EmpleadosPage() {
   return (
     <div className={`min-h-screen w-full transition-colors duration-200 p-2 sm:p-6 md:p-8 flex flex-col space-y-6 ${darkMode ? 'bg-zinc-950 text-zinc-100' : 'bg-slate-50 text-slate-800'}`}>
       
-      {/* Encabezado */}
       <div className={`w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 sm:p-6 rounded-2xl border transition-colors shadow-sm ${darkMode ? 'bg-zinc-900/40 border-zinc-800/80' : 'bg-white border-slate-200'}`}>
         <div>
           <h1 className={`text-xl sm:text-2xl font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-slate-900'}`}>
@@ -152,7 +155,6 @@ export default function EmpleadosPage() {
         </button>
       </div>
 
-      {/* Barra de Filtros / Búsqueda */}
       <div className={`w-full p-4 sm:p-5 rounded-2xl border transition-colors shadow-sm ${darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'}`}>
         <div className="relative">
           <Search className={`absolute left-3.5 top-3 h-4 w-4 ${darkMode ? 'text-zinc-500' : 'text-slate-400'}`} />
@@ -170,14 +172,13 @@ export default function EmpleadosPage() {
         </div>
       </div>
 
-      {/* Error global de carga */}
       {error && (
         <div className="bg-red-950/25 border border-red-900/50 text-red-400 p-4 rounded-xl text-center text-xs font-medium">
           {error}
         </div>
       )}
 
-      {/* VISTA MÓVIL: Tarjetas individuales (Visible solo en pantallas pequeñas: block md:hidden) */}
+      {/* VISTA MÓVIL */}
       <div className="block md:hidden space-y-4">
         {loading ? (
           <div className={`p-12 text-center rounded-2xl border text-xs flex items-center justify-center gap-3 ${darkMode ? 'border-zinc-800 bg-zinc-900/70 text-zinc-400' : 'border-slate-200 bg-white text-slate-500'}`}>
@@ -202,7 +203,7 @@ export default function EmpleadosPage() {
                 <div className="flex justify-between items-start gap-2 mb-3">
                   <div>
                     <h3 className={`font-bold text-sm ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                      {emp.username}
+                      {emp.username} {String(emp.id) === String(user?.id) && <span className="text-[10px] ml-2 opacity-60">(Tú)</span>}
                     </h3>
                     <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
                       <Mail className="w-3.5 h-3.5 shrink-0" />
@@ -240,6 +241,7 @@ export default function EmpleadosPage() {
                 </div>
               </div>
 
+              {/* Acciones */}
               <div className="flex items-center gap-2 pt-2 border-t border-slate-200/50 dark:border-zinc-800/50 text-xs">
                 <button
                   onClick={() => handleOpenEdit(emp)}
@@ -248,23 +250,25 @@ export default function EmpleadosPage() {
                   <Edit2 className="w-3.5 h-3.5" />
                   Editar
                 </button>
-                <button
-                  onClick={() => handleToggleStatus(emp.id)}
-                  className={`flex-1 font-medium py-2 px-3 rounded-xl transition-colors cursor-pointer text-center ${
-                    darkMode 
-                      ? 'text-zinc-300 hover:text-red-400 bg-zinc-800/80 hover:bg-zinc-800' 
-                      : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
-                  }`}
-                >
-                  {emp.isActive ? 'Desactivar' : 'Activar'}
-                </button>
+                {String(emp.id) !== String(user?.id) && (
+                  <button
+                    onClick={() => handleToggleStatus(emp.id)}
+                    className={`flex-1 font-medium py-2 px-3 rounded-xl transition-colors cursor-pointer text-center ${
+                      darkMode 
+                        ? 'text-zinc-300 hover:text-red-400 bg-zinc-800/80 hover:bg-zinc-800' 
+                        : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                    }`}
+                  >
+                    {emp.isActive ? 'Desactivar' : 'Activar'}
+                  </button>
+                )}
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* VISTA ESCRITORIO: Tabla original (Visible solo en PC: hidden md:block) */}
+      {/* VISTA ESCRITORIO */}
       <div className={`hidden md:block w-full rounded-2xl border transition-colors shadow-sm overflow-hidden ${darkMode ? 'bg-zinc-900/70 border-zinc-800' : 'bg-white border-slate-200'}`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
@@ -304,7 +308,7 @@ export default function EmpleadosPage() {
                     darkMode ? 'hover:bg-zinc-800/30' : 'hover:bg-slate-50/80'
                   }`}>
                     <td className={`py-3.5 px-4 font-semibold ${darkMode ? 'text-zinc-200' : 'text-slate-800'}`}>
-                      {emp.username}
+                      {emp.username} {String(emp.id) === String(user?.id) && <span className="text-[10px] ml-2 opacity-60">(Tú)</span>}
                     </td>
                     <td className={`py-3.5 px-4 ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
                       {emp.email}
@@ -338,16 +342,18 @@ export default function EmpleadosPage() {
                       >
                         Editar
                       </button>
-                      <button
-                        onClick={() => handleToggleStatus(emp.id)}
-                        className={`font-medium text-[11px] px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                          darkMode 
-                            ? 'text-zinc-400 hover:text-red-400 bg-zinc-800/80 hover:bg-zinc-800' 
-                            : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
-                        }`}
-                      >
-                        {emp.isActive ? 'Desactivar' : 'Activar'}
-                      </button>
+                      {String(emp.id) !== String(user?.id) && (
+                        <button
+                          onClick={() => handleToggleStatus(emp.id)}
+                          className={`font-medium text-[11px] px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                            darkMode 
+                              ? 'text-zinc-400 hover:text-red-400 bg-zinc-800/80 hover:bg-zinc-800' 
+                              : 'text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-slate-200 border border-slate-200'
+                          }`}
+                        >
+                          {emp.isActive ? 'Desactivar' : 'Activar'}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -357,7 +363,6 @@ export default function EmpleadosPage() {
         </div>
       </div>
 
-      {/* Modal para Crear/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className={`w-full max-w-md rounded-2xl shadow-2xl border p-6 transition-colors ${
@@ -458,11 +463,12 @@ export default function EmpleadosPage() {
                     type="checkbox"
                     id="isActiveCheck"
                     checked={isActive}
+                    disabled={String(currentEmployeeId) === String(user?.id)}
                     onChange={(e) => setIsActive(e.target.checked)}
-                    className="w-4 h-4 accent-[#5BA535] cursor-pointer rounded"
+                    className={`w-4 h-4 accent-[#5BA535] rounded ${String(currentEmployeeId) === String(user?.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   />
-                  <label htmlFor="isActiveCheck" className="cursor-pointer font-semibold">
-                    Usuario Activo
+                  <label htmlFor="isActiveCheck" className={`font-semibold ${String(currentEmployeeId) === String(user?.id) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
+                    Usuario Activo {String(currentEmployeeId) === String(user?.id) && '(No puedes desactivarte a ti mismo)'}
                   </label>
                 </div>
               )}

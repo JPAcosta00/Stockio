@@ -31,7 +31,9 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // --- CONFIGURACIÓN DUAL DE BASE DE DATOS (MySQL / SQLite) ---
-var dbProvider = builder.Configuration["DatabaseSettings:Provider"];
+// Primero intentamos leer la variable de entorno directa (inyectada por Electron o el sistema)
+var dbProvider = Environment.GetEnvironmentVariable("CUSTOM_DB_PROVIDER") 
+                 ?? builder.Configuration["DatabaseSettings:Provider"];
 
 // Si estamos en Producción (Render) y no está especificado, forzamos MySql de forma segura
 if (builder.Environment.IsProduction() && string.IsNullOrEmpty(dbProvider))

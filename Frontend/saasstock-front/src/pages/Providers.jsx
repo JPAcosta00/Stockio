@@ -35,6 +35,25 @@ export default function Providers() {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [selectedProviderForInvoice, setSelectedProviderForInvoice] = useState(null);
 
+  // Función para formatear el CUIT en tiempo real (XX-XXXXXXXX-X)
+  const handleCuitChange = (e) => {
+    let value = e.target.value.replace(/\D/g, ''); // Solo números
+    if (value.length > 11) value = value.slice(0, 11); // Máximo 11 dígitos
+
+    let formattedCuit = '';
+    if (value.length > 2) {
+      formattedCuit = value.slice(0, 2) + '-' + value.slice(2);
+    } else {
+      formattedCuit = value;
+    }
+
+    if (value.length > 10) {
+      formattedCuit = value.slice(0, 2) + '-' + value.slice(2, 10) + '-' + value.slice(10);
+    }
+
+    setCurrentProvider({ ...currentProvider, cuit: formattedCuit });
+  };
+
   const fetchProviders = async () => {
     try {
       setLoading(true);
@@ -472,9 +491,10 @@ export default function Providers() {
                   <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${darkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>CUIT</label>
                   <input 
                     type="text" 
+                    maxLength={13}
                     value={currentProvider.cuit || ''} 
-                    onChange={(e) => setCurrentProvider({...currentProvider, cuit: e.target.value})}
-                    className={`w-full border rounded-xl px-3.5 py-2.5 outline-none transition-colors ${
+                    onChange={handleCuitChange}
+                    className={`w-full border rounded-xl px-3.5 py-2.5 outline-none font-mono transition-colors ${
                       darkMode ? 'bg-zinc-950 border-zinc-800 text-zinc-100 focus:border-[#5BA535]' : 'bg-zinc-50 border-zinc-200 text-zinc-900 focus:border-[#5BA535]'
                     }`}
                     placeholder="20-12345678-9"

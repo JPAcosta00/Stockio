@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Plus, Trash2, FileText } from 'lucide-react';
+import { X, Plus, Trash2, FileText, PackageCheck, PackageX } from 'lucide-react';
 import { useAlert } from '../context/AlertContext';
 import { useTheme } from '../components/DashboardLayout';
 import apiClient from '../api/apiClient';
@@ -22,11 +22,12 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     };
   }, [isOpen]);
 
-  // Estado del formulario de la factura
+  // Estado del formulario de la factura (con updateStock en false por defecto)
   const [invoiceData, setInvoiceData] = useState({
     providerId: defaultProviderId || '',
     invoiceNumber: '',
     invoiceDate: new Date().toISOString().split('T')[0],
+    updateStock: false, // Por defecto en false para que NO modifique el inventario
     details: []
   });
 
@@ -37,7 +38,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     unitPrice: 0
   });
 
-  // Cargar proveedores y productos al abrir el modal 
+  // Cargar proveedores y productos al abrir el modal[cite: 4]
   useEffect(() => {
     if (!isOpen) return;
 
@@ -53,7 +54,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
         setProviders(provRes.data);
         setProducts(prodRes.data);
 
-        // Si viene un proveedor por defecto, lo fijamos
+        // Si viene un proveedor por defecto, lo fijamos[cite: 4]
         if (defaultProviderId) {
           setInvoiceData(prev => ({ ...prev, providerId: defaultProviderId }));
         }
@@ -68,7 +69,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     fetchData();
   }, [isOpen, defaultProviderId, showAlert]);
 
-  // Agregar un producto a los detalles de la factura
+  // Agregar un producto a los detalles de la factura[cite: 4]
   const handleAddDetail = () => {
     if (!currentItem.productId) {
       showAlert('Seleccioná un producto', 'error');
@@ -87,7 +88,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
 
     const selectedProduct = products.find(p => p.id === currentItem.productId);
 
-    // Evitar duplicados en la lista
+    // Evitar duplicados en la lista[cite: 4]
     const exists = invoiceData.details.find(d => d.productId === currentItem.productId);
     if (exists) {
       showAlert('Este producto ya está agregado en la factura', 'error');
@@ -110,7 +111,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     setCurrentItem({ productId: '', quantity: 1, unitPrice: 0 });
   };
 
-  // Remover ítem de la lista
+  // Remover ítem de la lista[cite: 4]
   const handleRemoveDetail = (productId) => {
     setInvoiceData(prev => ({
       ...prev,
@@ -118,7 +119,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
     }));
   };
 
-  // Calcular el total general
+  // Calcular el total general[cite: 4]
   const calculateTotal = () => {
     return invoiceData.details.reduce((acc, item) => acc + (item.quantity * item.unitPrice), 0);
   };
@@ -142,7 +143,11 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
       setSubmitting(true);
       await apiClient.post('/purchaseinvoices', invoiceData);
 
-      showAlert('Factura de compra registrada con éxito. Stock y cuenta corriente actualizados.', 'success');
+      const successMsg = invoiceData.updateStock 
+        ? 'Factura registrada con éxito. Stock y cuenta corriente actualizados.' 
+        : 'Factura registrada con éxito (Inventario sin modificar).';
+      
+      showAlert(successMsg, 'success');
       if (onInvoiceCreated) onInvoiceCreated();
       onClose();
     } catch (err) {
@@ -236,7 +241,42 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
               </div>
             </div>
 
-            {/* Sección para agregar productos al detalle (Apilada en móviles) */}
+            {/* Selector para modificar o no el inventario */}
+            <div className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
+              invoiceData.updateStock 
+                ? (darkMode ? 'bg-emerald-950/20 border-emerald-900/50' : 'bg-emerald-50 border-emerald-200')
+                : (darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200')
+            }`}>
+              <div className="flex items-center gap-2.5">
+                {invoiceData.updateStock ? (
+                  <PackageCheck className="w-4 h-4 text-[#5BA535]" />
+                ) : (
+                  <PackageX className="w-4 h-4 opacity-50" />
+                )}
+                <div>
+                  <p className="text-xs font-semibold">Modificar Inventario / Stock</p>
+                  <p className={`text-[10px] ${darkMode ? 'text-zinc-400' : 'text-slate-500'}`}>
+                    {invoiceData.updateStock 
+                      ? 'Se sumarán las cantidades al stock actual de los productos.' 
+                      : 'El inventario NO se modificará al registrar esta factura.'}
+                  </p>
+                </div>
+              </div>
+              
+              <button
+                type="button"
+                onClick={() => setInvoiceData(prev => ({ ...prev, updateStock: !prev.updateStock }))}
+                className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  invoiceData.updateStock ? 'bg-[#5BA535]' : (darkMode ? 'bg-zinc-700' : 'bg-slate-300')
+                }`}
+              >
+                <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                  invoiceData.updateStock ? 'translate-x-5' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            {/* Sección para agregar productos al detalle */}
             <div className={`border rounded-xl p-3 space-y-2.5 transition-colors ${
               darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-slate-50 border-slate-200'
             }`}>
@@ -308,7 +348,7 @@ export default function CreatePurchaseInvoiceModal({ isOpen, onClose, onInvoiceC
               </div>
             </div>
 
-            {/* Listado de ítems agregados (Diseño adaptativo: Tarjetas en móvil, Tabla en PC) */}
+            {/* Listado de ítems agregados */}
             <div className={`border rounded-xl max-h-48 overflow-y-auto transition-colors ${darkMode ? 'border-zinc-800 bg-zinc-950/40' : 'border-slate-200 bg-slate-50/50'}`}>
               
               {/* Vista Mobile: Tarjetas */}

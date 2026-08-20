@@ -69,7 +69,11 @@ export default function RegisterForm({ onSwitchToLogin, onSuccess }) {
 
     setLoading(true);
 
-    const result = await register(username, email, password, companyName);
+    // AQUÍ NORMALIZAMOS EL EMAIL A MINÚSCULAS ANTES DE ENVIARLO
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Enviamos el email transformado (dejamos username y companyName tal cual los tipeó)
+    const result = await register(username, normalizedEmail, password, companyName);
     
     if (result.success) {
       onSuccess(); // Avisa de que se registró con éxito
